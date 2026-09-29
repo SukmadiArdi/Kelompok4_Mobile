@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AppProvider } from '@/src/context/AppContext';
+import { AuthProvider } from '@/src/context/AuthContext';
 import { Colors } from '@/src/constants/Theme';
 
 export {
@@ -39,9 +40,11 @@ export default function RootLayout() {
   }
 
   return (
-    <AppProvider>
-      <RootLayoutNav />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <RootLayoutNav />
+      </AppProvider>
+    </AuthProvider>
   );
 }
 
@@ -57,6 +60,27 @@ function RootLayoutNav() {
           contentStyle: { backgroundColor: Colors.background },
         }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="auth/login"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="auth/register"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="auth/forgot-password"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        />
         <Stack.Screen
           name="experience/[id]"
           options={{

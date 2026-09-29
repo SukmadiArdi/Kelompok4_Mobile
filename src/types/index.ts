@@ -137,3 +137,21 @@ export interface Booking {
   guideName: string;
   createdAt: string;
 }
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  bio?: string;
+  badge?: string;
+  role?: 'traveler' | 'artisan' | 'guide';
+  createdAt: string;
+  provider: 'local' | 'firebase';
+}
+
+export interface AuthResponse {
+  success: boolean;
+  user?: User;
+  message?: string;
+}

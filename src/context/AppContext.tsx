@@ -54,7 +54,6 @@ interface AppContextType {
     secure: Record<string, string | null>;
   };
   refreshStorageSnapshot: () => Promise<void>;
-
   // Cart operations
   addToCart: (product: ArtisanProduct, quantity?: number, variant?: string) => void;
   removeFromCart: (productId: string) => void;
@@ -83,7 +82,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [experiences] = useState<Experience[]>(MOCK_EXPERIENCES);
   const [gems, setGems] = useState<HiddenGem[]>(MOCK_HIDDEN_GEMS);
   const [products] = useState<ArtisanProduct[]>(MOCK_ARTISANS);
-
   // States with Local Storage Persistence
   const [cart, setCart] = useState<CartItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -333,7 +331,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSecurityPin(null);
     await refreshStorageSnapshot();
   };
-
   // Add Gem Review
   const addGemReview = (gemId: string, reviewData: Omit<GemReview, 'id' | 'date'>) => {
     const newReview: GemReview = {
@@ -368,7 +365,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bookings,
         savedGemIds,
         favoriteProductIds,
-
         isStorageLoaded,
         userPreferences,
         updateUserPreferences,
@@ -382,7 +378,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clearSecureStorageData,
         storageSnapshot,
         refreshStorageSnapshot,
-
         addToCart,
         removeFromCart,
         updateCartQuantity,
