@@ -296,7 +296,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   </View>
                 )}
               </View>
-
               {/* Footer Summary & Action */}
               <View style={styles.footerSummary}>
                 <View>

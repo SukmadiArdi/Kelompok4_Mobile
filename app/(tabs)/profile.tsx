@@ -22,12 +22,13 @@ import { useAuth } from '@/src/context/AuthContext';
 import { Header } from '@/src/components/common/Header';
 import { getFirebaseStatus } from '@/src/services/firebaseConfig';
 import { GemCard } from '@/src/components/map/GemCard';
+import { StorageManagerView } from '@/src/components/profile/StorageManagerView';
 
 export default function ProfileScreen() {
   const { bookings, gems, savedGemIds } = useApp();
   const { user, isAuthenticated, logout, loginDemo, updateProfile } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'firebase'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'storage' | 'firebase'>('bookings');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -243,6 +244,21 @@ export default function ProfileScreen() {
           </Pressable>
 
           <Pressable
+            onPress={() => setActiveTab('storage')}
+            style={[
+              styles.switchBtn,
+              activeTab === 'storage' && styles.switchBtnActive,
+            ]}>
+            <Text
+              style={[
+                styles.switchText,
+                activeTab === 'storage' && styles.switchTextActive,
+              ]}>
+              Penyimpanan
+            </Text>
+          </Pressable>
+
+          <Pressable
             onPress={() => setActiveTab('firebase')}
             style={[
               styles.switchBtn,
@@ -339,7 +355,10 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Tab 3: Auth & Firebase Integration Status */}
+        {/* Tab 3: Storage Persistence Manager */}
+        {activeTab === 'storage' && <StorageManagerView />}
+
+        {/* Tab 4: Auth & Firebase Integration Status */}
         {activeTab === 'firebase' && (
           <View style={styles.sectionBody}>
             <View style={styles.firebaseCard}>
@@ -390,15 +409,14 @@ export default function ProfileScreen() {
                   • Auth Domain: <Text style={styles.codeText}>EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN</Text>
                 </Text>
                 <Text style={styles.configRow}>
-                  • Penyimpanan Sesi: <Text style={styles.codeText}>AsyncStorage (SDK 57 Compatible)</Text>
+                  • Penyimpanan Sesi: <Text style={styles.codeText}>AsyncStorage & SecureStore Compatible</Text>
                 </Text>
               </View>
 
               <View style={styles.firebaseTipBox}>
                 <Feather name="info" size={16} color={Colors.ocean} />
                 <Text style={styles.firebaseTipText}>
-                  Saat Anda menambahkan Firebase API Key di file .env, aplikasi akan
-                  otomatis beralih ke sinkronisasi Firebase Cloud Auth tanpa perlu mengubah kode aplikasi.
+                  Saat Anda menambahkan Firebase API Key di file .env, aplikasi akan otomatis beralih ke sinkronisasi Firebase Cloud Auth tanpa perlu mengubah kode aplikasi.
                 </Text>
               </View>
             </View>
@@ -733,7 +751,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   switchText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Colors.textSecondary,
   },

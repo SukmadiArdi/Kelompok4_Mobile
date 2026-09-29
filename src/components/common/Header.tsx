@@ -78,7 +78,6 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </Pressable>
         )}
-
         {showProfile && !showBack && (
           <Pressable
             onPress={() => {
