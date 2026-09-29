@@ -1,0 +1,82 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native & Builds
+/ios/
+/android/
+.kotlin/
+*.orig.*
+
+# Environment variables & Private secrets (CRITICAL FOR PRIVACY)
+.env
+.env.*
+.env*.local
+!.env.example
+
+# Certificates, Keystores, Signing Keys
+*.jks
+*.p8
+*.p12
+*.key
+*.keystore
+*.pem
+*.cer
+*.der
+*.mobileprovision
+
+# Cloud & Service Account Credentials
+google-services.json
+GoogleService-Info.plist
+credentials.json
+service-account*.json
+*secret*.json
+
+# EAS & Fastlane
+.eas/
+credentials/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Metro & Bundler
+.metro-health-check*
+
+# Debug & Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# TypeScript & Cache
+*.tsbuildinfo
+.turbo/
+.npm/
+
+# IDE & Editor local settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AI Assistant configs & Local cache
+.claude/
+.gemini/
+.agents/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
