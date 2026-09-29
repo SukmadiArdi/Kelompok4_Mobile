@@ -13,6 +13,7 @@ import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Experience } from '../../types';
 import { Colors } from '../../constants/Theme';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface BookingModalProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   onSuccess,
 }) => {
   const { createBooking } = useApp();
+  const { user, isAuthenticated } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState<string>('Besok, 24 Okt');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
@@ -277,6 +279,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 ))}
               </View>
 
+              {/* Traveler Account Card */}
+              <View style={styles.travelerInfoCard}>
+                <Ionicons name="person-circle-outline" size={24} color={Colors.primary} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.travelerNameText}>
+                    {isAuthenticated && user ? user.name : 'Tamu LokalTrip'}
+                  </Text>
+                  <Text style={styles.travelerEmailText}>
+                    {isAuthenticated && user ? user.email : 'Belum masuk akun (Mode Tamu)'}
+                  </Text>
+                </View>
+                {isAuthenticated && (
+                  <View style={styles.authVerifiedPill}>
+                    <Text style={styles.authVerifiedText}>Akun Aktif</Text>
+                  </View>
+                )}
+              </View>
+
               {/* Footer Summary & Action */}
               <View style={styles.footerSummary}>
                 <View>
@@ -510,6 +530,38 @@ const styles = StyleSheet.create({
   inclusionText: {
     fontSize: 12,
     color: Colors.textSecondary,
+  },
+  travelerInfoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 16,
+  },
+  travelerNameText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  travelerEmailText: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginTop: 1,
+  },
+  authVerifiedPill: {
+    backgroundColor: Colors.secondaryLight,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  authVerifiedText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.secondary,
   },
   footerSummary: {
     flexDirection: 'row',

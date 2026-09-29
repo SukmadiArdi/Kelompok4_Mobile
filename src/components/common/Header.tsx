@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform, Image } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors } from '../../constants/Theme';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface HeaderProps {
   title?: string;
   subtitle?: string;
   showBack?: boolean;
   showCart?: boolean;
+  showProfile?: boolean;
   rightAction?: React.ReactNode;
 }
 
@@ -18,9 +20,11 @@ export const Header: React.FC<HeaderProps> = ({
   subtitle,
   showBack = false,
   showCart = true,
+  showProfile = true,
   rightAction,
 }) => {
   const { cartCount } = useApp();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <View style={styles.headerContainer}>
@@ -71,6 +75,28 @@ export const Header: React.FC<HeaderProps> = ({
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>{cartCount}</Text>
               </View>
+            )}
+          </Pressable>
+        )}
+
+        {showProfile && !showBack && (
+          <Pressable
+            onPress={() => {
+              if (isAuthenticated) {
+                router.push('/(tabs)/profile');
+              } else {
+                router.push('/auth/login' as any);
+              }
+            }}
+            style={({ pressed }) => [styles.profileButton, pressed && styles.buttonPressed]}>
+            {isAuthenticated && user?.avatar ? (
+              <Image source={{ uri: user.avatar }} style={styles.profileAvatarImg} />
+            ) : (
+              <Feather
+                name={isAuthenticated ? 'user-check' : 'user'}
+                size={18}
+                color={isAuthenticated ? Colors.secondary : Colors.textSecondary}
+              />
             )}
           </Pressable>
         )}
@@ -189,6 +215,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 1,
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  profileAvatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
 });
 
