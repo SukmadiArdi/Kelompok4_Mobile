@@ -1,0 +1,267 @@
+[
+  {
+    "id": "exp-1",
+    "title": "Membatik Canting Klasik & Pewarnaan Alami Sogan",
+    "category": "Workshop Seni",
+    "location": "Desa Wisata Giriloyo, Imogiri",
+    "city": "Bantul",
+    "province": "D.I. Yogyakarta",
+    "price": 185000,
+    "duration": "3.5 Jam",
+    "rating": 4.9,
+    "reviewCount": 142,
+    "image": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80"
+    ],
+    "guide": {
+      "id": "guide-1",
+      "name": "Ibu Siti Mulyani",
+      "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
+      "badge": "Master Canting Giriloyo",
+      "rating": 4.95,
+      "tripsCount": 320,
+      "languages": ["Indonesia", "Jawa Alus", "Inggris Dasar"],
+      "bio": "Pewaris generasi ke-3 pembatik keraton Imogiri. Berpengalaman 25 tahun melestarikan motif klasik dengan pewarna kulit kayu mahoni dan tingi.",
+      "verified": true
+    },
+    "highlights": [
+      "Belajar menggambar motif klasik menggunakan canting tembaga asli",
+      "Proses pencelupan warna alami dari rebusan kulit kayu mahoni & tingi",
+      "Kain batik sutra ukuran 50x50 cm hasil karya dibawa pulang",
+      "Minum teh poci gula batu & jajanan pasar khas desa"
+    ],
+    "included": ["Alat canting & lilin malam", "Kain mori premium", "Pewarna alami", "Snack & Teh Poci", "Sertifikat keikutsertaan"],
+    "schedule": [
+      { "time": "09:00", "activity": "Penyambutan, perkenalan filosofi motif batik Yogyakarta" },
+      { "time": "09:30", "activity": "Latihan teknik memegang canting dan melukis pola di atas kain mori" },
+      { "time": "11:00", "activity": "Proses pewarnaan dingin alami dan proses lorot lilin" },
+      { "time": "12:00", "activity": "Penjemuran kain, evaluasi karya, santap kudapan tradisional" }
+    ],
+    "availableSlots": ["09:00 WIB", "13:30 WIB"],
+    "description": "Rasakan kedamaian batin lewat meditasi canting di bawah keteduhan bukit Imogiri. Bersama Ibu Siti, Anda akan diajak menyelami filosofi mendalam di balik setiap guratan motif batik Yogyakarta sambil mencium harum khas lilin malam alami.",
+    "maxParticipants": 8
+  },
+  {
+    "id": "exp-2",
+    "title": "Upacara Suci & Rahasia Tari Kecak Tebing Sunset",
+    "category": "Wisata Adat",
+    "location": "Desa Adat Pecatu, Uluwatu",
+    "city": "Badung",
+    "province": "Bali",
+    "price": 260000,
+    "duration": "4 Jam",
+    "rating": 4.95,
+    "reviewCount": 218,
+    "image": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800&auto=format&fit=crop&q=80"
+    ],
+    "guide": {
+      "id": "guide-2",
+      "name": "Bli Wayan Suardana",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+      "badge": "Tetua Sanggar Seni Pecatu",
+      "rating": 4.98,
+      "tripsCount": 450,
+      "languages": ["Indonesia", "Bali", "Inggris"],
+      "bio": "Penari Kecak sejak usia 14 tahun dan pemandu budaya bersertifikasi kehormatan Desa Adat.",
+      "verified": true
+    },
+    "highlights": [
+      "Akses VIP ke lingkaran latihan penari sebelum pentas utama",
+      "Prosesi canang sari & blessing air suci oleh tetua adat",
+      "Menyaksikan sunset spektakuler 70 meter di atas Samudra Hindia",
+      "Sesi foto eksklusif bersama tokoh Hanoman & Rahwana"
+    ],
+    "included": ["Tiket masuk area privat tebing", "Selendang kamen upacara", "Canang persembahan", "Tempat duduk baris terdepan", "Air kelapa muda segar"],
+    "schedule": [
+      { "time": "16:00", "activity": "Pertemuan di wantilan desa, pemakaian kamen dan pengantar makna epos Ramayana" },
+      { "time": "16:45", "activity": "Menyaksikan prosesi persiapan spiritual para penari" },
+      { "time": "17:30", "activity": "Menempati kursi VIP menyambut matahari terbenam" },
+      { "time": "18:00", "activity": "Pementasan Kecak & atraksi api sakral" },
+      { "time": "19:15", "activity": "Diskusi budaya santai dan foto bersama penari" }
+    ],
+    "availableSlots": ["16:00 WITA"],
+    "description": "Bukan sekadar menonton pertunjukan turis biasa. Bersama Bli Wayan, masuki ruang sakral persiapan doa para penari Kecak dan nikmati magisnya harmoni suara puluhan pria di bibir tebing samudera.",
+    "maxParticipants": 12
+  },
+  {
+    "id": "exp-3",
+    "title": "Kelas Rahasia Rendang Warisan Bundo & Rempah Dapur",
+    "category": "Kuliner Tradisi",
+    "location": "Nagari Koto Nan Ampek",
+    "city": "Payakumbuh",
+    "province": "Sumatera Barat",
+    "price": 210000,
+    "duration": "4.5 Jam",
+    "rating": 4.88,
+    "reviewCount": 96,
+    "image": "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80"
+    ],
+    "guide": {
+      "id": "guide-3",
+      "name": "Uni Rosmawati",
+      "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+      "badge": "Pakar Masakan Minang Tradisional",
+      "rating": 4.92,
+      "tripsCount": 180,
+      "languages": ["Indonesia", "Minang"],
+      "bio": "Pelestari resep rendang kayu bakar khas Luhak Limopuluah dengan 16 racikan rempah murni.",
+      "verified": true
+    },
+    "highlights": [
+      "Menumbuk langsung bumbu dengan batu lado tradisional",
+      "Memasak gulai santan hingga menjadi kalio lalu rendang hitam pekat",
+      "Menggunakan kayu bakar pohon karet untuk aroma smoky otentik",
+      "Makan bajamba bersama keluarga di Rumah Gadang"
+    ],
+    "included": ["Semua bahan daging segar & rempah", "Makan siang bajamba komplit", "1 toples rendang 250gr bawa pulang", "Buku resep rahasia bundo"],
+    "schedule": [
+      { "time": "08:30", "activity": "Belanja rempah segar dan santan peras kental di pasar nagari" },
+      { "time": "09:30", "activity": "Meracik bumbu lado, laos, jahe, ketumbar sangrai" },
+      { "time": "10:30", "activity": "Mengaduk kuali kancah di atas perapian kayu bakar" },
+      { "time": "12:30", "activity": "Makan bajamba khas Minangkabau di serambi Rumah Gadang" }
+    ],
+    "availableSlots": ["08:30 WIB"],
+    "description": "Ketahui rahasia mengapa rendang dinobatkan sebagai salah satu hidangan terlezat di dunia. Belajar langsung teknik mengaduk santan hingga karamelisasi sempurna tanpa membuat daging hancur.",
+    "maxParticipants": 6
+  },
+  {
+    "id": "exp-4",
+    "title": "Menyusuri Lembah Harau & Panjat Tebing Karst Hijau",
+    "category": "Alam & Petualangan",
+    "location": "Lembah Harau, Lima Puluh Kota",
+    "city": "Payakumbuh",
+    "province": "Sumatera Barat",
+    "price": 320000,
+    "duration": "5 Jam",
+    "rating": 4.91,
+    "reviewCount": 84,
+    "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&auto=format&fit=crop&q=80"
+    ],
+    "guide": {
+      "id": "guide-4",
+      "name": "Uda Fajar Harau",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+      "badge": "Guide Karst Berlisensi APGI",
+      "rating": 4.96,
+      "tripsCount": 290,
+      "languages": ["Indonesia", "Inggris", "Minang"],
+      "bio": "Pegiat konservasi tebing granit Harau dan pemandu alam liar dengan dedikasi keselamatan tinggi.",
+      "verified": true
+    },
+    "highlights": [
+      "Trekking di antara dinding granit tegak setinggi 100-300 meter",
+      "Mandi di bawah percikan air terjun tersembunyi Sarasah Aie Luluih",
+      "Piknik kopi kawa daun di hamparan sawah hijau berlatar ngarai",
+      "Eksplorasi gua stalaktit kelelawar alami"
+    ],
+    "included": ["Perlengkapan keamanan trekking & helm", "Kopi kawa daun & ketan srikaya", "Makan siang nasi kapau", "Dokumentasi foto aksi"],
+    "schedule": [
+      { "time": "07:30", "activity": "Briefing rute dan pemanasan di kaki bukit Harau" },
+      { "time": "08:15", "activity": "Trekking jalur pematang sawah menuju ngarai tersembunyi" },
+      { "time": "10:00", "activity": "Menikmati kesegaran air terjun Sarasah" },
+      { "time": "11:30", "activity": "Santap siang lokal di gubuk tepi sawah" }
+    ],
+    "availableSlots": ["07:30 WIB"],
+    "description": "Yosemite-nya Indonesia! Saksikan kemegahan monolit granit purba yang menjulang megah menembus awan dan nikmati hangatnya keramahan petani lokal.",
+    "maxParticipants": 10
+  },
+  {
+    "id": "exp-5",
+    "title": "Anyaman Daun Lontar & Seduh Kopi Tradisi Rote",
+    "category": "Workshop Seni",
+    "location": "Desa Ba'a, Pulau Rote",
+    "city": "Rote Ndao",
+    "province": "Nusa Tenggara Timur",
+    "price": 175000,
+    "duration": "3 Jam",
+    "rating": 4.87,
+    "reviewCount": 52,
+    "image": "https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?w=800&auto=format&fit=crop&q=80"
+    ],
+    "guide": {
+      "id": "guide-5",
+      "name": "Mama Yustina Ndolu",
+      "avatar": "https://images.unsplash.com/photo-1580489944861-546523032283?w=200&auto=format&fit=crop&q=80",
+      "badge": "Perajin Lontar Desa Ba'a",
+      "rating": 4.9,
+      "tripsCount": 120,
+      "languages": ["Indonesia", "Rote"],
+      "bio": "Ketua kelompok perempuan perajin anyaman lontar yang memasok pasar kreatif Kupang sejak 2005.",
+      "verified": true
+    },
+    "highlights": [
+      "Memetik dan mengolah daun lontar segar langsung dari kebun",
+      "Teknik anyaman tikar bi 'u khas Rote Ndao",
+      "Seduh kopi Flores using manual grind traditional style",
+      "Berjalan kaki menyusuri pantai pasir putih Nemberala yang sunyi"
+    ],
+    "included": ["Bahan anyaman lontar", "Set kopi tubruk & kue jawada", "Hasil anyaman dibawa pulang", "Pemanduan warga desa"],
+    "schedule": [
+      { "time": "09:00", "activity": "Perkenalan jenis daun lontar dan alat press tradisional" },
+      { "time": "09:45", "activity": "Praktik anyaman dasar motif bi'u" },
+      { "time": "11:15", "activity": "Sesi seduh kopi dan cerita nelayan Rote" }
+    ],
+    "availableSlots": ["09:00 WITA", "14:00 WITA"],
+    "description": "Hidup lambat ala pulau paling selatan Indonesia. Belajar kesabaran lewat helai demi helai daun lontar sambil menyeruput kopi hitam di beranda rumah panggung khas Rote.",
+    "maxParticipants": 8
+  },
+  {
+    "id": "exp-6",
+    "title": "Sunrise Borobudur & Jalan Sunyi Desa Punthuk",
+    "category": "Wisata Adat",
+    "location": "Bukit Punthuk Setumbu, Magelang",
+    "city": "Magelang",
+    "province": "Jawa Tengah",
+    "price": 295000,
+    "duration": "5 Jam",
+    "rating": 4.93,
+    "reviewCount": 175,
+    "image": "https://images.unsplash.com/photo-1596402184320-417446d49264?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1596402184320-417446d49264?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800&auto=format&fit=crop&q=80"
+    ],
+    "guide": {
+      "id": "guide-6",
+      "name": "Mas Sutopo Wiyono",
+      "avatar": "https://images.unsplash.com/photo-1506794778802-2e11cbc0d312?w=200&auto=format&fit=crop&q=80",
+      "badge": "Juru Kunci Cagar Budaya",
+      "rating": 4.94,
+      "tripsCount": 380,
+      "languages": ["Indonesia", "Jawa", "Inggris"],
+      "bio": "Peneliti mandiri relief Karmavibhangga dan pemandu sunrise resmi kawasan borobudur utara.",
+      "verified": true
+    },
+    "highlights": [
+      "Fenomena siluet Candi Borobudur berkabut dari puncak Punthuk",
+      "Trekking subuh melewati jalan setapak persawah desa Punthuk",
+      "Sarapan nasi jagung & sayur lombok khas Magelang",
+      "Sesi fotografi golden hour bersama komunitas kamera lokal"
+    ],
+    "included": ["Tiket bukit Punthuk Setumbu", "Transportasi jeep desa", "Sarapan tradisional", "Peminjaman tripod foto"],
+    "schedule": [
+      { "time": "04:30", "activity": "Penjemputan di homestay, trekking gelap menuju puncak" },
+      { "time": "05:30", "activity": "Menunggu matahari terbit menyelimuti Merapi-Merbabu" },
+      { "time": "06:45", "activity": "Tur turun melalui kampung tua Candi Asri" },
+      { "time": "08:00", "activity": "Sarapan bersama keluarga inang di saung sawah" }
+    ],
+    "availableSlots": ["04:30 WIB"],
+    "description": "Bangun sebelum azan subuh demi satu momen abadi: siluet stupa purba diselimuti kabut lembah ketika fajar menyentuh wajah Mount Merapi. Perjalanan kontemplatif yang mengubah cara Anda memandang candi.",
+    "maxParticipants": 10
+  }
+]

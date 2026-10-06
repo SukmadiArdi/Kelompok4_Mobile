@@ -1,0 +1,249 @@
+[
+  {
+    "id": "gem-1",
+    "name": "Air Terjun Tanggedu: Canyon Zamrud Sumba",
+    "category": "Air Terjun",
+    "region": "Nusa Tenggara",
+    "location": "Desa Tanggedu, Kanatang",
+    "city": "Sumba Timur",
+    "province": "Nusa Tenggara Timur",
+    "difficulty": "Menantang",
+    "bestTime": "08:00 - 11:00 WITA (Air sangat jernih toska)",
+    "tips": [
+      "Gunakan sandal gunung anti-slip karena batu tebing licin",
+      "Bawa kantong tahan air (dry bag) untuk gawai & kamera",
+      "Wajib membawa air minum sendiri minimal 1.5 liter"
+    ],
+    "etiquette": [
+      "Menjaga kesopanan busana saat berenang",
+      "Wajib didampingi pemuda pemandu desa setempat",
+      "Bawa pulang semua sampah tanpa terkecuali"
+    ],
+    "mapCoords": { "lat": -9.5123, "lng": 120.0894, "xPercent": 62, "yPercent": 70 },
+    "image": "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&auto=format&fit=crop&q=80"
+    ],
+    "likesCount": 528,
+    "reviewsCount": 67,
+    "rating": 4.93,
+    "contributor": {
+      "name": "Rian Nusantara",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+      "badge": "Penjelajah Sumba Intrepid",
+      "date": "12 Mei 2026"
+    },
+    "description": "Tersembunyi di balik perbukitan savana gersang Sumba Timur, Air Terjun Tanggedu membelah formasi tebing kapur purba yang mengingatkan kita pada Grand Canyon versi mini dengan kolam air zamrud toska yang menakjubkan.",
+    "reviews": [
+      {
+        "id": "rev-1",
+        "user": "Alifia Zahra",
+        "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
+        "rating": 5,
+        "comment": "Trek jalannya lumayan bikin ngos-ngosan sekitar 45 menit melewati savana, tapi begitu lihat airnya yang sebiru safir dan celah tebingnya, semua lelah langsung hilang seketika!",
+        "date": "2 minggu lalu"
+      },
+      {
+        "id": "rev-2",
+        "user": "Bayu Pratama",
+        "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=80",
+        "rating": 5,
+        "comment": "Pemandu lokal dari desa Tanggedu sangat ramah dan sigap menolong saat menuruni tebing batu. Pengalaman tak terlupakan di Sumba!",
+        "date": "1 bulan lalu"
+      }
+    ]
+  },
+  {
+    "id": "gem-2",
+    "name": "Desa Adat Senaru & Hutan Bambu Purba Rinjani",
+    "category": "Kampung Adat",
+    "region": "Bali & Lombok",
+    "location": "Lereng Gunung Rinjani, Bayan",
+    "city": "Lombok Utara",
+    "province": "Nusa Tenggara Barat",
+    "difficulty": "Sedang",
+    "bestTime": "06:30 - 09:30 WITA (Kabut pagi sangat magis)",
+    "tips": [
+      "Gunakan jaket hangat karena udara pagi cukup dingin",
+      "Kenakan sepatu yang nyaman untuk berjalan di tanah lembap"
+    ],
+    "etiquette": [
+      "Meminta izin sebelum memotret rumah adat bumbung alang-alang",
+      "Mengucapkan salam \"Tabe\" saat berpapasan dengan tetua kampung"
+    ],
+    "mapCoords": { "lat": -8.3012, "lng": 116.4021, "xPercent": 54, "yPercent": 65 },
+    "image": "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=800&auto=format&fit=crop&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=800&auto=format&fit=crop&q=80"
+    ],
+    "likesCount": 390,
+    "reviewsCount": 45,
+    "rating": 4.88,
+    "contributor": {
+      "name": "Nanda Putri",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+      "badge": "Heritage Seeker",
+      "date": "28 April 2026"
+    },
+    "description": "Sebuah permukiman tradisional suku Sasak yang mempertahankan arsitektur leluhur berbahan bambu, tanah liat, dan atap jerami alang-alang di pintu gerbang hutan pegunungan Rinjani.",
+    "reviews": [
+      {
+        "id": "rev-3",
+        "user": "Hendro Saputra",
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+        "rating": 5,
+        "comment": "Udara sangat sejuk, ketenangan yang tidak bisa ditemukan di kota besar. Warga desa menjamu kami dengan kopi khas yang disangrai di wajan tanah liat.",
+        "date": "3 minggu lalu"
+      }
+    ]
+  },
+  {
+    "id": "gem-3",
+    "name": "Tebing Karang Kasap: Raja Ampat van Pacitan",
+    "category": "Tebing & Sunrise",
+    "region": "Jawa",
+    "location": "Desa Watukarung, Pringkuku",
+    "city": "Pacitan",
+    "province": "Jawa Timur",
+    "difficulty": "Mudah",
+    "bestTime": "05:15 - 06:45 WIB untuk Sunrise emas spektakuler",
+    "tips": [
+      "Datang subuh untuk mendapatkan momen langit ungu kejinggaan",
+      "Jalan setapak telah berundak semen sehingga aman untuk keluarga"
+    ],
+    "etiquette": [
+      "Tidak memanjat pagar pengaman tebing yang menghadap jurang"
+    ],
+    "mapCoords": { "lat": -8.2435, "lng": 110.9912, "xPercent": 42, "yPercent": 62 },
+    "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80"
+    ],
+    "likesCount": 612,
+    "reviewsCount": 88,
+    "rating": 4.91,
+    "contributor": {
+      "name": "Dimas Setiawan",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+      "badge": "Landscape Hunter",
+      "date": "3 Juni 2026"
+    },
+    "description": "Gugusan pulau karang kecil berbalut pepohonan hijau di tengah lautan biru selatan yang menghadirkan lanskap megah mirip Raja Ampat Papua dari atas bukit rumput Pacitan.",
+    "reviews": [
+      {
+        "id": "rev-4",
+        "user": "Tania Maharani",
+        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
+        "rating": 5,
+        "comment": "Sunrise terbaik di Jawa Timur bagian selatan! Angin lautnya sejuk dan pemandangan pulau karangnya luar biasa megah.",
+        "date": "1 minggu lalu"
+      }
+    ]
+  },
+  {
+    "id": "gem-4",
+    "name": "Pantai Mbawana & Tebing Batu Cincin Rahasia",
+    "category": "Pantai Sunyi",
+    "region": "Nusa Tenggara",
+    "location": "Kecamatan Kodi",
+    "city": "Sumba Barat Daya",
+    "province": "Nusa Tenggara Timur",
+    "difficulty": "Sedang",
+    "bestTime": "16:30 - 18:15 WITA (Golden Hour terbenam di balik lengkung karang)",
+    "tips": [
+      "Perhatikan pasang surut air laut sebelum turun ke bibir pantai",
+      "Kamera lensa lebar sangat direkomendasikan untuk sudut tebing"
+    ],
+    "etiquette": [
+      "Menghormati nelayan tradisional setempat yang sedang mencari gurita"
+    ],
+    "mapCoords": { "lat": -9.6201, "lng": 119.0432, "xPercent": 58, "yPercent": 72 },
+    "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80"
+    ],
+    "likesCount": 440,
+    "reviewsCount": 39,
+    "rating": 4.86,
+    "contributor": {
+      "name": "Yogi Pratama",
+      "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=80",
+      "badge": "Ocean Scout",
+      "date": "18 Mei 2026"
+    },
+    "description": "Pantai pasir putih tersembunyi dengan deburan ombak Samudra Hindia yang bertenaga dan formasi tebing karang melengkung menyerupai gerbang alam raksasa.",
+    "reviews": []
+  },
+  {
+    "id": "gem-5",
+    "name": "Lembah Ollon: Savana Swiss Versi Pegunungan Toraja",
+    "category": "Hutan & Lembah",
+    "region": "Sulawesi",
+    "location": "Kecamatan Bonggakaradeng",
+    "city": "Tana Toraja",
+    "province": "Sulawesi Selatan",
+    "difficulty": "Menantang",
+    "bestTime": "06:00 - 10:00 WITA (Kabut savana melayang indah)",
+    "tips": [
+      "Gunakan kendaraan 4WD atau motor trail sewa karena medan berbatu",
+      "Bawa tenda jika ingin bermalam dan melihat jutaan bintang Milky Way"
+    ],
+    "etiquette": [
+      "Tidak mengganggu kawanan kuda liar dan kerbau yang merumput"
+    ],
+    "mapCoords": { "lat": -3.1234, "lng": 119.8211, "xPercent": 65, "yPercent": 46 },
+    "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80"
+    ],
+    "likesCount": 715,
+    "reviewsCount": 92,
+    "rating": 4.96,
+    "contributor": {
+      "name": "Grace Tandililing",
+      "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+      "badge": "Toraja Highlands Explorer",
+      "date": "5 Juni 2026"
+    },
+    "description": "Hamparan bukit savana hijau bergelombang yang dibelah oleh aliran sungai jernih dengan latar puncak pegunungan Toraja yang berkabut misterius.",
+    "reviews": []
+  },
+  {
+    "id": "gem-6",
+    "name": "Taman Sungai Mudal: Mata Air Sejuk Menoreh",
+    "category": "Air Terjun",
+    "region": "Jawa",
+    "location": "Girimulyo, Perbukitan Menoreh",
+    "city": "Kulon Progo",
+    "province": "D.I. Yogyakarta",
+    "difficulty": "Mudah",
+    "bestTime": "08:00 - 11:30 WIB (Air paling jernih dan tenang)",
+    "tips": [
+      "Bawa baju ganti untuk berenang di kolam alami",
+      "Cocok untuk bersantai keluarga dengan gazebo bambu rindang"
+    ],
+    "etiquette": [
+      "Gunakan sabun atau sampo biodegradable jika ingin membersihkan diri"
+    ],
+    "mapCoords": { "lat": -7.7654, "lng": 110.1234, "xPercent": 38, "yPercent": 60 },
+    "image": "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800&auto=format&fit=crop&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800&auto=format&fit=crop&q=80"
+    ],
+    "likesCount": 382,
+    "reviewsCount": 54,
+    "rating": 4.84,
+    "contributor": {
+      "name": "Rian Nusantara",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+      "badge": "Penjelajah Sumba Intrepid",
+      "date": "10 Juni 2026"
+    },
+    "description": "Kolam pemandian mata air alami bertingkat dengan warna air hijau toska segar yang mengalir di sela kebun anggrek dan rimbunnya hutan Perbukitan Menoreh.",
+    "reviews": []
+  }
+]
