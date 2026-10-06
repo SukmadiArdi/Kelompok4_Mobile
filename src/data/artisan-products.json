@@ -1,0 +1,192 @@
+[
+  {
+    "id": "prod-1",
+    "name": "Kain Tenun Ikat Pewarna Alami Motif Kuda Sumba",
+    "category": "Wastra & Batik",
+    "price": 850000,
+    "originalPrice": 1050000,
+    "rating": 4.97,
+    "salesCount": 48,
+    "stock": 5,
+    "image": "https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80"
+    ],
+    "artisan": {
+      "id": "art-1",
+      "name": "Mama Maria Kahi",
+      "craft": "Master Tenun Tradisi Sumba",
+      "village": "Kampung Raja Prailiu",
+      "city": "Sumba Timur",
+      "province": "Nusa Tenggara Timur",
+      "story": "Menenun bukan sekadar pekerjaan merangkai benang, melainkan doa yang dipanjatkan bagi para leluhur Marapu. Membutuhkan waktu 4 hingga 6 bulan untuk menghasilkan satu lembar kain tenun dengan pewarna akar mengkudu dan daun nila murni.",
+      "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
+      "bannerImage": "https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80",
+      "yearsExperience": 32,
+      "verified": true,
+      "quote": "\"Setiap helai benang mengikat kisah bumi dan kehormatan para leluhur.\""
+    },
+    "philosophy": "Motif Kuda (Njara) melambangkan kejantanan, kepemimpinan, dan kebebasan jiwa ksatria Sumba. Pewarnaan merah kecokelatan didapatkan dari rebusan akar mengkudu yang diawetkan bersama minyak kemiri alami.",
+    "materials": ["100% Benang Katun Pintal Tangan", "Pewarna Akar Mengkudu (Kombu)", "Pewarna Daun Nila (Wora)", "Minyak Kemiri"],
+    "dimensions": "220 cm x 95 cm",
+    "weight": "650 gram"
+  },
+  {
+    "id": "prod-2",
+    "name": "Teko Gerabah Terakota Bakar Sekam Kasongan",
+    "category": "Gerabah & Keramik",
+    "price": 165000,
+    "rating": 4.89,
+    "salesCount": 132,
+    "stock": 14,
+    "image": "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=800&auto=format&fit=crop&q=80"
+    ],
+    "artisan": {
+      "id": "art-2",
+      "name": "Mas Joko Susilo",
+      "craft": "Pematung Tanah Liat Studio Kasongan",
+      "village": "Desa Wisata Kasongan",
+      "city": "Bantul",
+      "province": "D.I. Yogyakarta",
+      "story": "Melanjutkan studio gerabah keluarga yang berdiri sejak 1978. Joko menggabungkan teknik putar manual tanah lempung sungai Opak dengan teknik pembakaran asap sekam padi untuk menghasilkan rona kehitaman alami yang rustic.",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+      "bannerImage": "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&auto=format&fit=crop&q=80",
+      "yearsExperience": 18,
+      "verified": true,
+      "quote": "\"Tanah liat mengajarkan kerendahan hati: dari lumpur menjadi bejana kehidupan.\""
+    },
+    "philosophy": "Bentuk teko yang membulat melambangkan kehangatan rahim pertiwi dan kelimpahan rezeki. Hasil seduhan teh poci menggunakan teko tanah liat terbukti mengeluarkan aroma tanah alami yang menenangkan.",
+    "materials": ["Tanah Lempung Endapan Bantul", "Pasir Halus Silika", "Abu Sekam Padi Alami"],
+    "dimensions": "Tinggi 18 cm, Diameter 14 cm, Kapasitas 850 ml",
+    "weight": "900 gram"
+  },
+  {
+    "id": "prod-3",
+    "name": "Tas Ransel Etnik Anjat Anyaman Rotan Dayak Kenyah",
+    "category": "Anyaman Bambu",
+    "price": 340000,
+    "originalPrice": 420000,
+    "rating": 4.92,
+    "salesCount": 75,
+    "stock": 8,
+    "image": "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80"
+    ],
+    "artisan": {
+      "id": "art-3",
+      "name": "Ibu Liling Bua",
+      "craft": "Penganyam Rotan Hutan Dayak",
+      "village": "Desa Pampang",
+      "city": "Kutai Barat",
+      "province": "Kalimantan Timur",
+      "story": "Bahan rotan diambil langsung dari pedalaman hutan Kalimantan secara berkelanjutan. Dianyam dengan ketelitian tinggi dan tali penopang dari serat kulit kayu kapur.",
+      "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+      "bannerImage": "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80",
+      "yearsExperience": 24,
+      "verified": true,
+      "quote": "\"Menjaga hutan adalah menjaga jemari kami tetap menganyam.\""
+    },
+    "philosophy": "Anyaman Anjat adalah tas sakral masyarakat Dayak yang digunakan dalam penjelajahan hutan. Sangat ringan namun memiliki daya tahan puluhan tahun terhadap cuaca tropis.",
+    "materials": ["Rotan Sego Pilihan", "Pewarna Daun Kalawit Hitam", "Tali Kulit Kayu"],
+    "dimensions": "Tinggi 36 cm, Diameter 22 cm",
+    "weight": "380 gram"
+  },
+  {
+    "id": "prod-4",
+    "name": "Patung Garudeya Kayu Cendana Wangi Bali",
+    "category": "Ukiran Kayu",
+    "price": 680000,
+    "rating": 4.98,
+    "salesCount": 29,
+    "stock": 4,
+    "image": "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80"
+    ],
+    "artisan": {
+      "id": "art-4",
+      "name": "I Nyoman Sujana",
+      "craft": "Pematung Legendaris Desa Mas",
+      "village": "Desa Mas, Ubud",
+      "city": "Gianyar",
+      "province": "Bali",
+      "story": "Keluarga Sujana telah mengukir kayu di Ubud selama 4 dekade. Mengkhususkan diri pada figur mitologi pewayangan dengan detail bulu dan anatomi yang sangat presisi.",
+      "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
+      "bannerImage": "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80",
+      "yearsExperience": 28,
+      "verified": true,
+      "quote": "\"Kayu cendana menyimpan wewangian surga yang hidup selamanya.\""
+    },
+    "philosophy": "Garuda melambangkan kesetiaan tanpa batas dan pengorbanan demi membebaskan sang ibu dari perbudakan. Membawa energi perlindungan dan keteguhan hati bagi pemiliknya.",
+    "materials": ["Kayu Cendana Wangi Asli NTT", "Lilin Lebah Alami (Beeswax Polish)"],
+    "dimensions": "Tinggi 24 cm, Lebar 16 cm",
+    "weight": "520 gram"
+  },
+  {
+    "id": "prod-5",
+    "name": "Selendang Sutra Batik Tulis Motif Parang Barong",
+    "category": "Wastra & Batik",
+    "price": 495000,
+    "rating": 4.91,
+    "salesCount": 62,
+    "stock": 7,
+    "image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80"
+    ],
+    "artisan": {
+      "id": "art-5",
+      "name": "Sanggar Danar Arum",
+      "craft": "Kolektif Pembatik Tulis Keraton Solo",
+      "village": "Kampung Batik Laweyan",
+      "city": "Surakarta",
+      "province": "Jawa Tengah",
+      "story": "Kolektif 15 ibu pembatik Laweyan yang melestarikan pakem motif keraton klasik dengan sentuhan kain sutra crepe modern yang jatuh anggun.",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+      "bannerImage": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
+      "yearsExperience": 20,
+      "verified": true,
+      "quote": "\"Garis miring parang adalah ombak yang pantang menyerah menghantam karang.\""
+    },
+    "philosophy": "Parang Barong adalah motif sakral lambang ketajaman budi pekerti, kewibawaan, dan kepemimpinan yang adil luhur.",
+    "materials": ["100% Kain Sutra Crepe Halus", "Malam Tawon Madu", "Pewarna Tumbuhan Sogan"],
+    "dimensions": "200 cm x 60 cm",
+    "weight": "180 gram"
+  },
+  {
+    "id": "prod-6",
+    "name": "Cangkir Keramik Glasir Abu Vulkanik Merapi",
+    "category": "Gerabah & Keramik",
+    "price": 125000,
+    "rating": 4.88,
+    "salesCount": 189,
+    "stock": 22,
+    "image": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80"
+    ],
+    "artisan": {
+      "id": "art-6",
+      "name": "Studio Arga Merapi",
+      "craft": "Pengrajin Keramik Alam Lereng Merapi",
+      "village": "Pakem, Sleman",
+      "city": "Sleman",
+      "province": "D.I. Yogyakarta",
+      "story": "Mengolah berkah endapan abu vulkanik erupsi Gunung Merapi menjadi formula glasir keramik unik bersuhu 1250 derajat Celcius dengan tekstur rintik alami.",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+      "bannerImage": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80",
+      "yearsExperience": 12,
+      "verified": true,
+      "quote": "\"Dari panas magma Merapi terlahir cangkir kopi yang meneduhkan pagi.\""
+    },
+    "philosophy": "Menghadirkan harmoni kekuatan gunung api dan ketenangan ritual minum kopi pagi. Setiap cangkir memiliki gradasi warna unik yang tidak pernah identik.",
+    "materials": ["Tanah Lempung Stoneware Food-Grade", "Glasir Alami Campuran Abu Vulkanik Merapi"],
+    "dimensions": "Tinggi 8.5 cm, Diameter 8 cm, Kapasitas 260 ml",
+    "weight": "280 gram"
+  }
+]
