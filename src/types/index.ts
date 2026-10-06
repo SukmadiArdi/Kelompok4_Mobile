@@ -137,7 +137,6 @@ export interface Booking {
   guideName: string;
   createdAt: string;
 }
-
 export interface User {
   id: string;
   name: string;
@@ -156,4 +155,3 @@ export interface AuthResponse {
   user?: User;
   message?: string;
 }
-
