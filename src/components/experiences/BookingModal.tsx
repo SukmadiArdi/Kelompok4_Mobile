@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   Platform,
-  Alert,
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Experience } from '../../types';
