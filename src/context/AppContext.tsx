@@ -24,6 +24,7 @@ import {
   SECURE_STORAGE_KEYS,
   SecureUserSession,
 } from '../services/secureStorage';
+import { fetchAllAppDataApi } from '../services/apiService';
 
 interface AppContextType {
   experiences: Experience[];
@@ -70,6 +71,15 @@ interface AppContextType {
     guestsCount: number
   ) => Booking;
 
+  // Dynamic REST API Data & Status (Task 02)
+  isLoading: boolean;
+  apiError: string | null;
+  isLiveFromApi: boolean;
+  refreshApiData: () => Promise<void>;
+  setExperiences: React.Dispatch<React.SetStateAction<Experience[]>>;
+  setGems: React.Dispatch<React.SetStateAction<HiddenGem[]>>;
+  setProducts: React.Dispatch<React.SetStateAction<ArtisanProduct[]>>;
+
   // Bookmarking & favorites
   toggleBookmarkGem: (gemId: string) => void;
   toggleFavoriteProduct: (productId: string) => void;
@@ -79,9 +89,12 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [experiences] = useState<Experience[]>(MOCK_EXPERIENCES);
+  const [experiences, setExperiences] = useState<Experience[]>(MOCK_EXPERIENCES);
   const [gems, setGems] = useState<HiddenGem[]>(MOCK_HIDDEN_GEMS);
-  const [products] = useState<ArtisanProduct[]>(MOCK_ARTISANS);
+  const [products, setProducts] = useState<ArtisanProduct[]>(MOCK_ARTISANS);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isLiveFromApi, setIsLiveFromApi] = useState<boolean>(false);
   // States with Local Storage Persistence
   const [cart, setCart] = useState<CartItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -174,6 +187,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     loadStoredAppData();
+  }, []);
+
+  // 2. Initial Data Load & Refresh from REST API (Task 02)
+  const loadApiData = async () => {
+    setIsLoading(true);
+    setApiError(null);
+    try {
+      const result = await fetchAllAppDataApi();
+      setExperiences(result.experiences);
+      setGems(result.gems);
+      setProducts(result.products);
+      setIsLiveFromApi(result.isLiveFromApi);
+    } catch (err: any) {
+      console.warn('Error fetching dynamic data from REST API:', err);
+      setApiError(err?.message || 'Gagal memuat data dari REST API');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApiData();
   }, []);
 
   // Sync snapshot helper
@@ -361,6 +396,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         experiences,
         gems,
         products,
+        // Dynamic REST API Data & Status (Task 02)
+        isLoading,
+        apiError,
+        isLiveFromApi,
+        refreshApiData: loadApiData,
+        setExperiences,
+        setGems,
+        setProducts,
         cart,
         bookings,
         savedGemIds,

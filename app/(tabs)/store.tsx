@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -18,7 +19,7 @@ import { ProductCard } from '@/src/components/store/ProductCard';
 import { ArtisanSpotlight } from '@/src/components/store/ArtisanSpotlight';
 
 export default function StoreScreen() {
-  const { products, cartCount, cartSubtotal } = useApp();
+  const { products, cartCount, cartSubtotal, isLoading, refreshApiData } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
 
@@ -30,13 +31,14 @@ export default function StoreScreen() {
     'Ukiran Kayu',
   ];
 
-  const filteredProducts = products.filter((p) => {
+  const filteredProducts = (products || []).filter((p) => {
+    if (!p) return false;
     const matchesCategory =
       selectedCategory === 'Semua' || p.category === selectedCategory;
     const matchesSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.artisan.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.artisan.village.toLowerCase().includes(search.toLowerCase());
+      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.artisan?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.artisan?.village || '').toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -54,6 +56,14 @@ export default function StoreScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContent}>
         {/* Title Header */}
         <View style={styles.titleSection}>

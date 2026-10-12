@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +18,7 @@ import { BookingModal } from '@/src/components/experiences/BookingModal';
 import { Experience } from '@/src/types';
 
 export default function ExperiencesScreen() {
-  const { experiences } = useApp();
+  const { experiences, isLoading, refreshApiData } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [bookingExperience, setBookingExperience] = useState<Experience | null>(null);
@@ -30,13 +31,14 @@ export default function ExperiencesScreen() {
     'Alam & Petualangan',
   ];
 
-  const filtered = experiences.filter((exp) => {
+  const filtered = (experiences || []).filter((exp) => {
+    if (!exp) return false;
     const matchesCategory =
       selectedCategory === 'Semua' || exp.category === selectedCategory;
     const matchesSearch =
-      exp.title.toLowerCase().includes(search.toLowerCase()) ||
-      exp.location.toLowerCase().includes(search.toLowerCase()) ||
-      exp.guide.name.toLowerCase().includes(search.toLowerCase());
+      (exp.title || '').toLowerCase().includes(search.toLowerCase()) ||
+      (exp.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (exp.guide?.name || '').toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -46,6 +48,14 @@ export default function ExperiencesScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContent}>
         {/* Title Header */}
         <View style={styles.titleSection}>

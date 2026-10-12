@@ -56,15 +56,17 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
             {experience.title}
           </Text>
 
-          <View style={styles.guideMiniRow}>
-            <Image source={{ uri: experience.guide.avatar }} style={styles.guideMiniAvatar} />
-            <Text style={styles.guideMiniName} numberOfLines={1}>
-              {experience.guide.name}
-            </Text>
-            {experience.guide.verified && (
-              <MaterialCommunityIcons name="check-decagram" size={13} color={Colors.ocean} />
-            )}
-          </View>
+          {experience.guide && (
+            <View style={styles.guideMiniRow}>
+              <Image source={{ uri: experience.guide.avatar }} style={styles.guideMiniAvatar} />
+              <Text style={styles.guideMiniName} numberOfLines={1}>
+                {experience.guide.name}
+              </Text>
+              {experience.guide.verified && (
+                <MaterialCommunityIcons name="check-decagram" size={13} color={Colors.ocean} />
+              )}
+            </View>
+          )}
 
           <View style={styles.horizontalFooter}>
             <RatingStars rating={experience.rating} count={experience.reviewCount} />
@@ -107,20 +109,22 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           {experience.title}
         </Text>
 
-        <View style={styles.guideBox}>
-          <Image source={{ uri: experience.guide.avatar }} style={styles.guideAvatar} />
-          <View style={styles.guideInfo}>
-            <View style={styles.guideNameRow}>
-              <Text style={styles.guideName}>{experience.guide.name}</Text>
-              {experience.guide.verified && (
-                <MaterialCommunityIcons name="check-decagram" size={14} color={Colors.ocean} />
-              )}
+        {experience.guide && (
+          <View style={styles.guideBox}>
+            <Image source={{ uri: experience.guide.avatar }} style={styles.guideAvatar} />
+            <View style={styles.guideInfo}>
+              <View style={styles.guideNameRow}>
+                <Text style={styles.guideName}>{experience.guide.name}</Text>
+                {experience.guide.verified && (
+                  <MaterialCommunityIcons name="check-decagram" size={14} color={Colors.ocean} />
+                )}
+              </View>
+              <Text style={styles.guideBadge} numberOfLines={1}>
+                {experience.guide.badge}
+              </Text>
             </View>
-            <Text style={styles.guideBadge} numberOfLines={1}>
-              {experience.guide.badge}
-            </Text>
           </View>
-        </View>
+        )}
 
         <View style={styles.footerRow}>
           <View>

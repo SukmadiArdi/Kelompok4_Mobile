@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -21,13 +22,22 @@ import { GemCard } from '@/src/components/map/GemCard';
 import { HiddenGem } from '@/src/types';
 
 export default function MapScreen() {
-  const { gems } = useApp();
+  const { gems, isLoading, refreshApiData } = useApp();
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [selectedGem, setSelectedGem] = useState<HiddenGem | null>(gems[0]);
+  const [selectedGem, setSelectedGem] = useState<HiddenGem | null>(
+    gems && gems.length > 0 ? gems[0] : null
+  );
   const [showContributeModal, setShowContributeModal] = useState(false);
   const [contributeSuccess, setContributeSuccess] = useState(false);
+
+  // Sinkronisasi selectedGem saat gems dinamis selesai dimuat dari API
+  useEffect(() => {
+    if (!selectedGem && gems && gems.length > 0) {
+      setSelectedGem(gems[0]);
+    }
+  }, [gems, selectedGem]);
 
   // Form states for contribution
   const [newSpotName, setNewSpotName] = useState('');
@@ -43,13 +53,14 @@ export default function MapScreen() {
     'Hutan & Lembah',
   ];
 
-  const filteredGems = gems.filter((gem) => {
+  const filteredGems = (gems || []).filter((gem) => {
+    if (!gem) return false;
     const matchesCategory =
       selectedCategory === 'Semua' || gem.category === selectedCategory;
     const matchesSearch =
-      gem.name.toLowerCase().includes(search.toLowerCase()) ||
-      gem.location.toLowerCase().includes(search.toLowerCase()) ||
-      gem.city.toLowerCase().includes(search.toLowerCase());
+      (gem.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (gem.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (gem.city || '').toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -73,6 +84,14 @@ export default function MapScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContent}>
         {/* Title & Badge */}
         <View style={styles.titleSection}>
@@ -82,7 +101,7 @@ export default function MapScreen() {
           </View>
           <View style={styles.titleRow}>
             <Text style={styles.pageTitle}>Hidden Gems Map</Text>
-            
+
             {/* View Mode Switcher */}
             <View style={styles.toggleContainer}>
               <Pressable
@@ -166,9 +185,19 @@ export default function MapScreen() {
             </Text>
           </View>
 
-          {filteredGems.map((gem) => (
-            <GemCard key={gem.id} gem={gem} />
-          ))}
+          {filteredGems.length > 0 ? (
+            filteredGems.map((gem) => (
+              <GemCard key={gem.id} gem={gem} />
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="compass-outline" size={44} color={Colors.textMuted} />
+              <Text style={styles.emptyTitle}>Tidak ada destinasi ditemukan</Text>
+              <Text style={styles.emptySubtitle}>
+                Coba gunakan kata kunci pencarian lain atau pilih kategori yang berbeda.
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Community Contribution Floating Card */}
@@ -477,5 +506,29 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginVertical: 10,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.text,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 17,
   },
 });

@@ -7,6 +7,7 @@ import {
   Pressable,
   Image,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,24 +23,24 @@ import { BookingModal } from '@/src/components/experiences/BookingModal';
 import { Experience } from '@/src/types';
 
 export default function HomeScreen() {
-  const { experiences, gems, products } = useApp();
+  const { experiences, gems, products, isLoading, refreshApiData } = useApp();
   const [search, setSearch] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
 
   // Filter based on search query
-  const filteredExperiences = experiences.filter((e) =>
-    e.title.toLowerCase().includes(search.toLowerCase()) ||
-    e.location.toLowerCase().includes(search.toLowerCase())
+  const filteredExperiences = (experiences || []).filter((e) =>
+    (e?.title || '').toLowerCase().includes(search.toLowerCase()) ||
+    (e?.location || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const filteredGems = gems.filter((g) =>
-    g.name.toLowerCase().includes(search.toLowerCase()) ||
-    g.location.toLowerCase().includes(search.toLowerCase())
+  const filteredGems = (gems || []).filter((g) =>
+    (g?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (g?.location || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.artisan.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProducts = (products || []).filter((p) =>
+    (p?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p?.artisan?.name || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -48,6 +49,14 @@ export default function HomeScreen() {
       
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContainer}>
         {/* Search Bar */}
         <SearchBar

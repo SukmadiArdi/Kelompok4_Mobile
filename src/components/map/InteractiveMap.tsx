@@ -117,8 +117,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               style={[
                 styles.markerWrapper,
                 {
-                  left: `${gem.mapCoords.xPercent}%`,
-                  top: `${gem.mapCoords.yPercent}%`,
+                  left: `${gem.mapCoords?.xPercent ?? 50}%`,
+                  top: `${gem.mapCoords?.yPercent ?? 50}%`,
                 },
               ]}>
               {isSelected && <View style={[styles.pulseRing, { borderColor: pinColor }]} />}
@@ -133,10 +133,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     gem.category === 'Air Terjun'
                       ? 'water'
                       : gem.category === 'Pantai Sunyi'
-                      ? 'boat'
-                      : gem.category === 'Kampung Adat'
-                      ? 'home'
-                      : 'compass'
+                        ? 'boat'
+                        : gem.category === 'Kampung Adat'
+                          ? 'home'
+                          : 'compass'
                   }
                   size={14}
                   color="#FFF"

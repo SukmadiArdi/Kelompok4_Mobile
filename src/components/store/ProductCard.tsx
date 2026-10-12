@@ -45,11 +45,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         ]}>
         <View style={styles.horizontalImageContainer}>
           <Image source={{ uri: product.image }} style={styles.horizontalImage} />
-          <View style={styles.villageBadge}>
-            <Text style={styles.villageText} numberOfLines={1}>
-              {product.artisan.city}
-            </Text>
-          </View>
+          {product.artisan?.city && (
+            <View style={styles.villageBadge}>
+              <Text style={styles.villageText} numberOfLines={1}>
+                {product.artisan.city}
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.horizontalContent}>
@@ -57,11 +59,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.name}
           </Text>
 
-          <View style={styles.artisanRow}>
-            <Text style={styles.artisanName} numberOfLines={1}>
-              oleh {product.artisan.name}
-            </Text>
-          </View>
+          {product.artisan?.name && (
+            <View style={styles.artisanRow}>
+              <Text style={styles.artisanName} numberOfLines={1}>
+                oleh {product.artisan.name}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.horizontalFooter}>
             <Text style={styles.priceText}>{formatPrice(product.price)}</Text>
@@ -88,12 +92,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Image source={{ uri: product.image }} style={styles.image} />
         
         {/* Village & Artisan origin badge */}
-        <View style={styles.villageBadge}>
-          <Ionicons name="location-sharp" size={11} color="#FFF" />
-          <Text style={styles.villageText}>
-            {product.artisan.village}, {product.artisan.city}
-          </Text>
-        </View>
+        {product.artisan && (
+          <View style={styles.villageBadge}>
+            <Ionicons name="location-sharp" size={11} color="#FFF" />
+            <Text style={styles.villageText}>
+              {product.artisan.village}, {product.artisan.city}
+            </Text>
+          </View>
+        )}
 
         {/* Favorite Button */}
         <Pressable
@@ -129,20 +135,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </Text>
 
         {/* Artisan Story Snippet */}
-        <View style={styles.artisanCard}>
-          <Image source={{ uri: product.artisan.avatar }} style={styles.artisanAvatar} />
-          <View style={styles.artisanInfo}>
-            <View style={styles.artisanTitleRow}>
-              <Text style={styles.artisanName}>{product.artisan.name}</Text>
-              {product.artisan.verified && (
-                <MaterialCommunityIcons name="check-decagram" size={12} color={Colors.ocean} />
-              )}
+        {product.artisan && (
+          <View style={styles.artisanCard}>
+            <Image source={{ uri: product.artisan.avatar }} style={styles.artisanAvatar} />
+            <View style={styles.artisanInfo}>
+              <View style={styles.artisanTitleRow}>
+                <Text style={styles.artisanName}>{product.artisan.name}</Text>
+                {product.artisan.verified && (
+                  <MaterialCommunityIcons name="check-decagram" size={12} color={Colors.ocean} />
+                )}
+              </View>
+              <Text style={styles.artisanCraft} numberOfLines={1}>
+                {product.artisan.craft}
+              </Text>
             </View>
-            <Text style={styles.artisanCraft} numberOfLines={1}>
-              {product.artisan.craft}
-            </Text>
           </View>
-        </View>
+        )}
 
         {/* Price & Add to Cart */}
         <View style={styles.footerRow}>
