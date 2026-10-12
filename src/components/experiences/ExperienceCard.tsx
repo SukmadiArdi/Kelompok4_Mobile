@@ -12,22 +12,40 @@ interface ExperienceCardProps {
   horizontal?: boolean;
 }
 
+const FALLBACK_EXP_IMAGE =
+  'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80';
+const FALLBACK_GUIDE_AVATAR =
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80';
+
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({
   experience,
   onBookPress,
   horizontal = false,
 }) => {
-  const formatPrice = (price: number) => {
+  const [imageError, setImageError] = React.useState(false);
+
+  const formatPrice = (price?: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       maximumFractionDigits: 0,
-    }).format(price);
+    }).format(price ?? 0);
   };
 
   const handleCardPress = () => {
     router.push(`/experience/${experience.id}`);
   };
+
+  const displayImage = !imageError && experience.image ? experience.image : FALLBACK_EXP_IMAGE;
+  const expTitle = experience.title || 'Pengalaman Budaya';
+  const expCategory = experience.category || 'Workshop Seni';
+  const expDuration = experience.duration || '2 Jam';
+  const expLocation = experience.location || `${experience.city || 'Yogyakarta'}, ${experience.province || 'Indonesia'}`;
+  const expRating = experience.rating ?? 4.8;
+  const expReviewCount = experience.reviewCount ?? 0;
+  const guideName = experience.guide?.name || 'Pemandu Lokal';
+  const guideAvatar = experience.guide?.avatar || FALLBACK_GUIDE_AVATAR;
+  const guideBadge = experience.guide?.badge || 'Pemandu Berlisensi';
 
   if (horizontal) {
     return (
@@ -38,9 +56,13 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           pressed && styles.cardPressed,
         ]}>
         <View style={styles.horizontalImageContainer}>
-          <Image source={{ uri: experience.image }} style={styles.horizontalImage} />
+          <Image
+            source={{ uri: displayImage }}
+            style={styles.horizontalImage}
+            onError={() => setImageError(true)}
+          />
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>{experience.category}</Text>
+            <Text style={styles.categoryBadgeText}>{expCategory}</Text>
           </View>
         </View>
 
@@ -48,19 +70,19 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={13} color={Colors.primary} />
             <Text style={styles.locationText} numberOfLines={1}>
-              {experience.city}, {experience.province}
+              {experience.city || 'Yogyakarta'}, {experience.province || 'Indonesia'}
             </Text>
           </View>
 
           <Text style={styles.horizontalTitle} numberOfLines={2}>
-            {experience.title}
+            {expTitle}
           </Text>
 
           {experience.guide && (
             <View style={styles.guideMiniRow}>
-              <Image source={{ uri: experience.guide.avatar }} style={styles.guideMiniAvatar} />
+              <Image source={{ uri: guideAvatar }} style={styles.guideMiniAvatar} />
               <Text style={styles.guideMiniName} numberOfLines={1}>
-                {experience.guide.name}
+                {guideName}
               </Text>
               {experience.guide.verified && (
                 <MaterialCommunityIcons name="check-decagram" size={13} color={Colors.ocean} />
@@ -69,7 +91,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           )}
 
           <View style={styles.horizontalFooter}>
-            <RatingStars rating={experience.rating} count={experience.reviewCount} />
+            <RatingStars rating={expRating} count={expReviewCount} />
             <Text style={styles.priceHighlight}>
               {formatPrice(experience.price)}
             </Text>
@@ -84,13 +106,17 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
       onPress={handleCardPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: experience.image }} style={styles.image} />
+        <Image
+          source={{ uri: displayImage }}
+          style={styles.image}
+          onError={() => setImageError(true)}
+        />
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{experience.category}</Text>
+          <Text style={styles.categoryBadgeText}>{expCategory}</Text>
         </View>
         <View style={styles.durationBadge}>
           <Feather name="clock" size={11} color="#FFF" />
-          <Text style={styles.durationBadgeText}>{experience.duration}</Text>
+          <Text style={styles.durationBadgeText}>{expDuration}</Text>
         </View>
       </View>
 
@@ -99,28 +125,28 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           <View style={styles.locationRow}>
             <Ionicons name="location-sharp" size={13} color={Colors.primary} />
             <Text style={styles.locationText} numberOfLines={1}>
-              {experience.location}
+              {expLocation}
             </Text>
           </View>
-          <RatingStars rating={experience.rating} count={experience.reviewCount} />
+          <RatingStars rating={expRating} count={expReviewCount} />
         </View>
 
         <Text style={styles.title} numberOfLines={2}>
-          {experience.title}
+          {expTitle}
         </Text>
 
         {experience.guide && (
           <View style={styles.guideBox}>
-            <Image source={{ uri: experience.guide.avatar }} style={styles.guideAvatar} />
+            <Image source={{ uri: guideAvatar }} style={styles.guideAvatar} />
             <View style={styles.guideInfo}>
               <View style={styles.guideNameRow}>
-                <Text style={styles.guideName}>{experience.guide.name}</Text>
+                <Text style={styles.guideName}>{guideName}</Text>
                 {experience.guide.verified && (
                   <MaterialCommunityIcons name="check-decagram" size={14} color={Colors.ocean} />
                 )}
               </View>
               <Text style={styles.guideBadge} numberOfLines={1}>
-                {experience.guide.badge}
+                {guideBadge}
               </Text>
             </View>
           </View>

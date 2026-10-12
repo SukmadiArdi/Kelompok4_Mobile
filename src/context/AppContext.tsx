@@ -90,9 +90,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [experiences, setExperiences] = useState<Experience[]>(MOCK_EXPERIENCES);
-  const [gems, setGems] = useState<HiddenGem[]>(MOCK_HIDDEN_GEMS);
-  const [products, setProducts] = useState<ArtisanProduct[]>(MOCK_ARTISANS);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [gems, setGems] = useState<HiddenGem[]>([]);
+  const [products, setProducts] = useState<ArtisanProduct[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLiveFromApi, setIsLiveFromApi] = useState<boolean>(false);

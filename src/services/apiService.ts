@@ -390,6 +390,7 @@ export async function fetchExperiencesApi(): Promise<ApiFetchResult<Experience[]
     console.warn(
       `[ApiService] fetchExperiencesApi failed (${err.message}). Menggunakan fallback data mock.`
     );
+    await delay(SIMULATED_DELAY_MS);
     return {
       data: (experiencesJson as Experience[]) || MOCK_EXPERIENCES,
       isFromApi: false,
@@ -421,6 +422,7 @@ export async function fetchHiddenGemsApi(): Promise<ApiFetchResult<HiddenGem[]>>
     console.warn(
       `[ApiService] fetchHiddenGemsApi failed (${err.message}). Menggunakan fallback data mock.`
     );
+    await delay(SIMULATED_DELAY_MS);
     return {
       data: (hiddenGemsJson as HiddenGem[]) || MOCK_HIDDEN_GEMS,
       isFromApi: false,
@@ -452,6 +454,7 @@ export async function fetchArtisanProductsApi(): Promise<ApiFetchResult<ArtisanP
     console.warn(
       `[ApiService] fetchArtisanProductsApi failed (${err.message}). Menggunakan fallback data mock.`
     );
+    await delay(SIMULATED_DELAY_MS);
     return {
       data: (artisanProductsJson as ArtisanProduct[]) || MOCK_ARTISANS,
       isFromApi: false,
