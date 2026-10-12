@@ -26,7 +26,7 @@ export default function CartScreen() {
     cartCount,
   } = useApp();
 
-  const [appliedPromo, setAppliedPromo] = useState(true);
+  const [appliedPromo] = useState(true);
   const [selectedCourier, setSelectedCourier] = useState('Kurir Desa Pengrajin');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
