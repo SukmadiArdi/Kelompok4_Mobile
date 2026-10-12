@@ -17,7 +17,7 @@ export function useExperiences() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -31,10 +31,30 @@ export function useExperiences() {
   }, []);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    let isCancelled = false;
+    void getExperiences()
+      .then((result) => {
+        if (!isCancelled) {
+          setData(result);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Gagal memuat data experiences');
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
 
-  return { data, loading, error, refresh: fetch };
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  return { data, loading, error, refresh };
 }
 
 export function useHiddenGems() {
@@ -42,7 +62,7 @@ export function useHiddenGems() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -56,10 +76,30 @@ export function useHiddenGems() {
   }, []);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    let isCancelled = false;
+    void getHiddenGems()
+      .then((result) => {
+        if (!isCancelled) {
+          setData(result);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Gagal memuat data hidden gems');
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
 
-  return { data, loading, error, refresh: fetch };
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  return { data, loading, error, refresh };
 }
 
 export function useArtisanProducts() {
@@ -67,7 +107,7 @@ export function useArtisanProducts() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -81,10 +121,30 @@ export function useArtisanProducts() {
   }, []);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    let isCancelled = false;
+    void getArtisanProducts()
+      .then((result) => {
+        if (!isCancelled) {
+          setData(result);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Gagal memuat data produk artisan');
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
 
-  return { data, loading, error, refresh: fetch };
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  return { data, loading, error, refresh };
 }
 
 export function useBookings(userId?: string) {
@@ -92,7 +152,7 @@ export function useBookings(userId?: string) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -103,11 +163,31 @@ export function useBookings(userId?: string) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    let isCancelled = false;
+    void getBookings(userId)
+      .then((result) => {
+        if (!isCancelled) {
+          setData(result);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Gagal memuat data bookings');
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
 
-  return { data, loading, error, refresh: fetch };
+    return () => {
+      isCancelled = true;
+    };
+  }, [userId]);
+
+  return { data, loading, error, refresh };
 }

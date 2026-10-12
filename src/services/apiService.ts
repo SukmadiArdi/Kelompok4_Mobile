@@ -21,7 +21,14 @@ import { INITIAL_BOOKINGS } from '../data/mockData';
 
 // Mengambil Base URL dari environment variable (.env)
 declare const process: { env: Record<string, string | undefined> };
-export const API_BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/+$/, '');
+const trimTrailingSlashes = (url: string): string => {
+  let end = url.length;
+  while (end > 0 && url.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+  return url.slice(0, end);
+};
+export const API_BASE_URL = trimTrailingSlashes(process.env.EXPO_PUBLIC_API_BASE_URL ?? '');
 
 const SIMULATED_DELAY_MS = 350;
 
@@ -42,7 +49,8 @@ export class ApiError extends Error {
  * Helper request HTTP standar dengan timeout 10 detik
  */
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE_URL}${normalizedEndpoint}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
