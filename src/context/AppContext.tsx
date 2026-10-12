@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Experience,
   HiddenGem,
@@ -84,6 +84,7 @@ interface AppContextType {
   toggleBookmarkGem: (gemId: string) => void;
   toggleFavoriteProduct: (productId: string) => void;
   addGemReview: (gemId: string, review: Omit<GemReview, 'id' | 'date'>) => void;
+  addHiddenGem: (gem: Omit<HiddenGem, 'id' | 'likesCount' | 'reviewsCount' | 'rating' | 'reviews'>) => HiddenGem;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -186,7 +187,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     };
 
-    loadStoredAppData();
+    void loadStoredAppData();
   }, []);
 
   // 2. Initial Data Load & Refresh from REST API (Task 02)
@@ -212,145 +213,198 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // Sync snapshot helper
-  const refreshStorageSnapshot = async () => {
+  const refreshStorageSnapshot = useCallback(async () => {
     const localData = await LocalStorage.getAllStoredData();
     const secureData = await SecureStorage.getSecureStorageSnapshot();
     setStorageSnapshot({ local: localData, secure: secureData });
-  };
+  }, []);
 
   // 2. Persist Cart on change
-  const saveCartToStorage = (newCart: CartItem[]) => {
-    setCart(newCart);
-    LocalStorage.setItem(LOCAL_STORAGE_KEYS.CART, newCart).then(refreshStorageSnapshot);
-  };
+  const saveCartToStorage = useCallback(
+    (newCart: CartItem[]) => {
+      setCart(newCart);
+      void LocalStorage.setItem(LOCAL_STORAGE_KEYS.CART, newCart)
+        .then(refreshStorageSnapshot)
+        .catch((err) => console.error('Error saving cart to storage:', err));
+    },
+    [refreshStorageSnapshot]
+  );
 
-  const addToCart = (product: ArtisanProduct, quantity: number = 1, variant?: string) => {
-    const existingIndex = cart.findIndex((item) => item.product.id === product.id);
-    let updated: CartItem[];
-    if (existingIndex > -1) {
-      updated = [...cart];
-      updated[existingIndex].quantity += quantity;
-    } else {
-      updated = [...cart, { product, quantity, selectedVariant: variant }];
-    }
-    saveCartToStorage(updated);
-  };
+  const addToCart = useCallback(
+    (product: ArtisanProduct, quantity: number = 1, variant?: string) => {
+      setCart((prevCart) => {
+        const existingIndex = prevCart.findIndex((item) => item.product.id === product.id);
+        let updated: CartItem[];
+        if (existingIndex > -1) {
+          updated = [...prevCart];
+          updated[existingIndex].quantity += quantity;
+        } else {
+          updated = [...prevCart, { product, quantity, selectedVariant: variant }];
+        }
+        void LocalStorage.setItem(LOCAL_STORAGE_KEYS.CART, updated)
+          .then(refreshStorageSnapshot)
+          .catch((err) => console.error('Error saving cart to storage:', err));
+        return updated;
+      });
+    },
+    [refreshStorageSnapshot]
+  );
 
-  const removeFromCart = (productId: string) => {
-    const updated = cart.filter((item) => item.product.id !== productId);
-    saveCartToStorage(updated);
-  };
+  const removeFromCart = useCallback(
+    (productId: string) => {
+      setCart((prevCart) => {
+        const updated = prevCart.filter((item) => item.product.id !== productId);
+        void LocalStorage.setItem(LOCAL_STORAGE_KEYS.CART, updated)
+          .then(refreshStorageSnapshot)
+          .catch((err) => console.error('Error saving cart to storage:', err));
+        return updated;
+      });
+    },
+    [refreshStorageSnapshot]
+  );
 
-  const updateCartQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-    const updated = cart.map((item) =>
-      item.product.id === productId ? { ...item, quantity } : item
-    );
-    saveCartToStorage(updated);
-  };
+  const updateCartQuantity = useCallback(
+    (productId: string, quantity: number) => {
+      if (quantity <= 0) {
+        removeFromCart(productId);
+        return;
+      }
+      setCart((prevCart) => {
+        const updated = prevCart.map((item) =>
+          item.product.id === productId ? { ...item, quantity } : item
+        );
+        void LocalStorage.setItem(LOCAL_STORAGE_KEYS.CART, updated)
+          .then(refreshStorageSnapshot)
+          .catch((err) => console.error('Error saving cart to storage:', err));
+        return updated;
+      });
+    },
+    [removeFromCart, refreshStorageSnapshot]
+  );
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     saveCartToStorage([]);
-  };
+  }, [saveCartToStorage]);
 
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-  const cartSubtotal = cart.reduce(
-    (total, item) => total + item.product.price * item.quantity,
-    0
+  const cartCount = useMemo(() => cart.reduce((total, item) => total + item.quantity, 0), [cart]);
+  const cartSubtotal = useMemo(
+    () => cart.reduce((total, item) => total + item.product.price * item.quantity, 0),
+    [cart]
   );
 
   // 3. Persist Bookings on change
-  const createBooking = (
-    experience: Experience,
-    date: string,
-    timeSlot: string,
-    guestsCount: number
-  ): Booking => {
-    const newBooking: Booking = {
-      id: `book-${Date.now()}`,
-      experienceId: experience.id,
-      experienceTitle: experience.title,
-      experienceImage: experience.image,
-      location: experience.location,
-      date,
-      timeSlot,
-      guestsCount,
-      totalPrice: experience.price * guestsCount,
-      status: 'Dikonfirmasi',
-      guideName: experience.guide.name,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
+  const createBooking = useCallback(
+    (
+      experience: Experience,
+      date: string,
+      timeSlot: string,
+      guestsCount: number
+    ): Booking => {
+      const newBooking: Booking = {
+        id: `book-${Date.now()}`,
+        experienceId: experience.id,
+        experienceTitle: experience.title,
+        experienceImage: experience.image,
+        location: experience.location,
+        date,
+        timeSlot,
+        guestsCount,
+        totalPrice: experience.price * guestsCount,
+        status: 'Dikonfirmasi',
+        guideName: experience.guide.name,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
 
-    const updatedBookings = [newBooking, ...bookings];
-    setBookings(updatedBookings);
-    LocalStorage.setItem(LOCAL_STORAGE_KEYS.BOOKINGS, updatedBookings).then(
-      refreshStorageSnapshot
-    );
-    return newBooking;
-  };
+      setBookings((prevBookings) => {
+        const updatedBookings = [newBooking, ...prevBookings];
+        void LocalStorage.setItem(LOCAL_STORAGE_KEYS.BOOKINGS, updatedBookings)
+          .then(refreshStorageSnapshot)
+          .catch((err) => console.error('Error saving bookings to storage:', err));
+        return updatedBookings;
+      });
+      return newBooking;
+    },
+    [refreshStorageSnapshot]
+  );
 
   // 4. Persist Bookmark Gems on change
-  const toggleBookmarkGem = (gemId: string) => {
-    const updated = savedGemIds.includes(gemId)
-      ? savedGemIds.filter((id) => id !== gemId)
-      : [...savedGemIds, gemId];
-    setSavedGemIds(updated);
-    LocalStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_GEMS, updated).then(
-      refreshStorageSnapshot
-    );
-  };
+  const toggleBookmarkGem = useCallback(
+    (gemId: string) => {
+      setSavedGemIds((prevIds) => {
+        const updated = prevIds.includes(gemId)
+          ? prevIds.filter((id) => id !== gemId)
+          : [...prevIds, gemId];
+        void LocalStorage.setItem(LOCAL_STORAGE_KEYS.SAVED_GEMS, updated)
+          .then(refreshStorageSnapshot)
+          .catch((err) => console.error('Error saving saved gems to storage:', err));
+        return updated;
+      });
+    },
+    [refreshStorageSnapshot]
+  );
 
   // 5. Persist Favorite Products on change
-  const toggleFavoriteProduct = (productId: string) => {
-    const updated = favoriteProductIds.includes(productId)
-      ? favoriteProductIds.filter((id) => id !== productId)
-      : [...favoriteProductIds, productId];
-    setFavoriteProductIds(updated);
-    LocalStorage.setItem(LOCAL_STORAGE_KEYS.FAVORITE_PRODUCTS, updated).then(
-      refreshStorageSnapshot
-    );
-  };
+  const toggleFavoriteProduct = useCallback(
+    (productId: string) => {
+      setFavoriteProductIds((prevIds) => {
+        const updated = prevIds.includes(productId)
+          ? prevIds.filter((id) => id !== productId)
+          : [...prevIds, productId];
+        void LocalStorage.setItem(LOCAL_STORAGE_KEYS.FAVORITE_PRODUCTS, updated)
+          .then(refreshStorageSnapshot)
+          .catch((err) => console.error('Error saving favorite products to storage:', err));
+        return updated;
+      });
+    },
+    [refreshStorageSnapshot]
+  );
 
   // 6. User Preferences Manager
-  const updateUserPreferences = async (prefs: Partial<UserPreferences>) => {
-    const updated = { ...userPreferences, ...prefs };
-    setUserPreferences(updated);
-    await LocalStorage.setItem(LOCAL_STORAGE_KEYS.USER_PREFERENCES, updated);
-    await refreshStorageSnapshot();
-  };
+  const updateUserPreferences = useCallback(
+    async (prefs: Partial<UserPreferences>) => {
+      const updated = { ...userPreferences, ...prefs };
+      setUserPreferences(updated);
+      await LocalStorage.setItem(LOCAL_STORAGE_KEYS.USER_PREFERENCES, updated);
+      await refreshStorageSnapshot();
+    },
+    [userPreferences, refreshStorageSnapshot]
+  );
 
   // 7. Secure Storage Operations
-  const handleSaveUserSession = async (session: SecureUserSession): Promise<boolean> => {
-    const success = await SecureStorage.saveUserSession(session);
-    if (success) {
-      setUserSession(session);
-      await refreshStorageSnapshot();
-    }
-    return success;
-  };
+  const handleSaveUserSession = useCallback(
+    async (session: SecureUserSession): Promise<boolean> => {
+      const success = await SecureStorage.saveUserSession(session);
+      if (success) {
+        setUserSession(session);
+        await refreshStorageSnapshot();
+      }
+      return success;
+    },
+    [refreshStorageSnapshot]
+  );
 
-  const handleClearUserSession = async (): Promise<boolean> => {
+  const handleClearUserSession = useCallback(async (): Promise<boolean> => {
     const success = await SecureStorage.removeAuthToken();
     await SecureStorage.deleteItem(SECURE_STORAGE_KEYS.USER_CREDENTIALS);
     setUserSession(null);
     await refreshStorageSnapshot();
     return success;
-  };
+  }, [refreshStorageSnapshot]);
 
-  const handleSaveSecurityPin = async (pin: string): Promise<boolean> => {
-    const success = await SecureStorage.setItem(SECURE_STORAGE_KEYS.SECURITY_PIN, pin);
-    if (success) {
-      setSecurityPin(pin);
-      await refreshStorageSnapshot();
-    }
-    return success;
-  };
+  const handleSaveSecurityPin = useCallback(
+    async (pin: string): Promise<boolean> => {
+      const success = await SecureStorage.setItem(SECURE_STORAGE_KEYS.SECURITY_PIN, pin);
+      if (success) {
+        setSecurityPin(pin);
+        await refreshStorageSnapshot();
+      }
+      return success;
+    },
+    [refreshStorageSnapshot]
+  );
 
   // Reset Storage Handlers
-  const clearLocalStorageData = async () => {
+  const clearLocalStorageData = useCallback(async () => {
     await LocalStorage.clearAllAppLocalData();
     setCart([]);
     setBookings([]);
@@ -358,16 +412,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setFavoriteProductIds([]);
     setUserPreferences(DEFAULT_PREFERENCES);
     await refreshStorageSnapshot();
-  };
+  }, [refreshStorageSnapshot]);
 
-  const clearSecureStorageData = async () => {
+  const clearSecureStorageData = useCallback(async () => {
     await SecureStorage.clearAllSecureSession();
     setUserSession(null);
     setSecurityPin(null);
     await refreshStorageSnapshot();
-  };
+  }, [refreshStorageSnapshot]);
+
   // Add Gem Review
-  const addGemReview = (gemId: string, reviewData: Omit<GemReview, 'id' | 'date'>) => {
+  const addGemReview = useCallback((gemId: string, reviewData: Omit<GemReview, 'id' | 'date'>) => {
     const newReview: GemReview = {
       ...reviewData,
       id: `rev-${Date.now()}`,
@@ -388,50 +443,117 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return g;
       })
     );
-  };
+  }, []);
+
+  // Add New Hidden Gem (Community Contribution)
+  const addHiddenGem = useCallback(
+    (
+      newGemData: Omit<
+        HiddenGem,
+        'id' | 'likesCount' | 'reviewsCount' | 'rating' | 'reviews'
+      >
+    ): HiddenGem => {
+      const newGem: HiddenGem = {
+        ...newGemData,
+        id: `gem-${Date.now()}`,
+        likesCount: 1,
+        reviewsCount: 0,
+        rating: 5.0,
+        reviews: [],
+      };
+      setGems((prev) => [newGem, ...prev]);
+      return newGem;
+    },
+    []
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      experiences,
+      gems,
+      products,
+      // Dynamic REST API Data & Status (Task 02)
+      isLoading,
+      apiError,
+      isLiveFromApi,
+      refreshApiData: loadApiData,
+      setExperiences,
+      setGems,
+      setProducts,
+
+      cart,
+      bookings,
+      savedGemIds,
+      favoriteProductIds,
+      isStorageLoaded,
+      userPreferences,
+      updateUserPreferences,
+      userSession,
+      securityPin,
+      saveUserSession: handleSaveUserSession,
+      clearUserSession: handleClearUserSession,
+      saveSecurityPin: handleSaveSecurityPin,
+
+      clearLocalStorageData,
+      clearSecureStorageData,
+      storageSnapshot,
+      refreshStorageSnapshot,
+
+      addToCart,
+      removeFromCart,
+      updateCartQuantity,
+      clearCart,
+      cartCount,
+      cartSubtotal,
+      createBooking,
+      toggleBookmarkGem,
+      toggleFavoriteProduct,
+      addGemReview,
+      addHiddenGem,
+    }),
+    [
+      experiences,
+      gems,
+      products,
+      isLoading,
+      apiError,
+      isLiveFromApi,
+      loadApiData,
+      setExperiences,
+      setGems,
+      setProducts,
+      cart,
+      bookings,
+      savedGemIds,
+      favoriteProductIds,
+      isStorageLoaded,
+      userPreferences,
+      updateUserPreferences,
+      userSession,
+      securityPin,
+      handleSaveUserSession,
+      handleClearUserSession,
+      handleSaveSecurityPin,
+      clearLocalStorageData,
+      clearSecureStorageData,
+      storageSnapshot,
+      refreshStorageSnapshot,
+      addToCart,
+      removeFromCart,
+      updateCartQuantity,
+      clearCart,
+      cartCount,
+      cartSubtotal,
+      createBooking,
+      toggleBookmarkGem,
+      toggleFavoriteProduct,
+      addGemReview,
+      addHiddenGem,
+    ]
+  );
 
   return (
-    <AppContext.Provider
-      value={{
-        experiences,
-        gems,
-        products,
-        // Dynamic REST API Data & Status (Task 02)
-        isLoading,
-        apiError,
-        isLiveFromApi,
-        refreshApiData: loadApiData,
-        setExperiences,
-        setGems,
-        setProducts,
-        cart,
-        bookings,
-        savedGemIds,
-        favoriteProductIds,
-        isStorageLoaded,
-        userPreferences,
-        updateUserPreferences,
-        userSession,
-        securityPin,
-        saveUserSession: handleSaveUserSession,
-        clearUserSession: handleClearUserSession,
-        saveSecurityPin: handleSaveSecurityPin,
-
-        clearLocalStorageData,
-        clearSecureStorageData,
-        storageSnapshot,
-        refreshStorageSnapshot,
-        addToCart,
-        removeFromCart,
-        updateCartQuantity,
-        clearCart,
-        cartCount,
-        cartSubtotal,
-        createBooking,
-        toggleBookmarkGem,
-        toggleFavoriteProduct,
-        addGemReview,
-      }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

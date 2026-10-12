@@ -1,25 +1,65 @@
 /**
- * LokalTrip - API Service & Data Transfer Object (DTO) Mapper
+ * ============================================================
+ * LOKALTRIP API SERVICE — DTO Mapping & REST API Integration
+ * ============================================================
  * Mengikuti konsep Task 02: CONNECT TO REST API
  * 
  * Alur Proses:
  * Mobile App -> REQUEST (Fetch) -> REST API -> JSON -> PARSE -> DATA MODEL (DTO Mapping) -> UI State
+ * 
+ * Fitur:
+ * - DTO interfaces & mappers untuk sanitasi dan transformasi payload REST API
+ * - Mendukung live fetch jika EXPO_PUBLIC_API_BASE_URL / EXPO_PUBLIC_API_URL diatur di .env
+ * - Otomatis fallback ke mock data lokal jika API backend offline/gagal
+ * ============================================================
  */
 
-import { Experience, HiddenGem, ArtisanProduct } from '../types';
+import { Experience, HiddenGem, ArtisanProduct, Booking } from '../types';
 import {
   MOCK_EXPERIENCES,
   MOCK_HIDDEN_GEMS,
   MOCK_ARTISANS,
+  INITIAL_BOOKINGS,
 } from '../data/mockData';
+import experiencesJson from '../data/experiences.json';
+import hiddenGemsJson from '../data/hidden-gems.json';
+import artisanProductsJson from '../data/artisan-products.json';
 
-// Base URL dapat dikonfigurasi melalui .env (EXPO_PUBLIC_API_URL) atau fallback ke MockAPI dummy
-const BASE_API_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'https://api.lokaltrip.id/v1';
+// Mengambil Base URL dari environment variable (.env)
+declare const process: { env: Record<string, string | undefined> };
+const trimTrailingSlashes = (url: string): string => {
+  let end = url.length;
+  while (end > 0 && url.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+  return url.slice(0, end);
+};
 
-// Timeout helper agar request tidak menggantung jika jaringan offline
+export const API_BASE_URL = trimTrailingSlashes(
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+    process.env.EXPO_PUBLIC_API_URL ||
+    'https://api.lokaltrip.id/v1'
+);
+
+const SIMULATED_DELAY_MS = 350;
 const FETCH_TIMEOUT_MS = 6000;
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export class ApiError extends Error {
+  statusCode?: number;
+  constructor(message: string, statusCode?: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+  }
+}
+
+/**
+ * Helper request HTTP dengan timeout untuk operasi aman
+ */
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -37,8 +77,41 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise
   }
 }
 
+/**
+ * Helper request HTTP standar dengan timeout 10 detik
+ */
+async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE_URL}${normalizedEndpoint}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      ...options,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new ApiError(`HTTP Error: ${res.status} ${res.statusText}`, res.status);
+    }
+    return (await res.json()) as T;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if ((error as Error)?.name === 'AbortError') {
+      throw new ApiError('Koneksi timeout. Periksa internet atau server Anda.');
+    }
+    throw error;
+  }
+}
+
 /* =====================================================================
- * 1. DATA TRANSFER OBJECT (DTO) INTERFACES
+ * 1. DATA TRANSFER OBJECT (DTO) INTERFACES (Pola Task 02)
  * Model data mentah seperti yang dikirimkan oleh server REST API
  * ===================================================================== */
 
@@ -159,9 +232,13 @@ export function mapDtoToExperience(item: ExperienceApiDto): Experience {
     image:
       item.image ||
       'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80',
-    images: item.images && item.images.length > 0
-      ? item.images
-      : [item.image || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80'],
+    images:
+      item.images && item.images.length > 0
+        ? item.images
+        : [
+            item.image ||
+              'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80',
+          ],
     guide: {
       id: item.guide?.id || 'guide-default',
       name: item.guide?.name || 'Pemandu Berlisensi',
@@ -207,9 +284,13 @@ export function mapDtoToHiddenGem(item: HiddenGemApiDto): HiddenGem {
     image:
       item.image ||
       'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80',
-    gallery: item.gallery && item.gallery.length > 0
-      ? item.gallery
-      : [item.image || 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80'],
+    gallery:
+      item.gallery && item.gallery.length > 0
+        ? item.gallery
+        : [
+            item.image ||
+              'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80',
+          ],
     likesCount: item.likesCount || item.likes_count || 120,
     reviewsCount: 15,
     rating: Number(item.rating) || 4.85,
@@ -232,16 +313,23 @@ export function mapDtoToArtisanProduct(item: ArtisanProductApiDto): ArtisanProdu
     name: item.name || item.title || 'Kerajinan Nusantara',
     category: (item.category as any) || 'Wastra & Batik',
     price: Number(item.price) || 150000,
-    originalPrice: item.originalPrice || item.original_price ? Number(item.originalPrice || item.original_price) : undefined,
+    originalPrice:
+      item.originalPrice || item.original_price
+        ? Number(item.originalPrice || item.original_price)
+        : undefined,
     rating: Number(item.rating) || 4.9,
     salesCount: item.salesCount || item.sales_count || 25,
     stock: item.stock !== undefined ? Number(item.stock) : 10,
     image:
       item.image ||
       'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80',
-    images: item.images && item.images.length > 0
-      ? item.images
-      : [item.image || 'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80'],
+    images:
+      item.images && item.images.length > 0
+        ? item.images
+        : [
+            item.image ||
+              'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800&auto=format&fit=crop&q=80',
+          ],
     artisan: {
       id: item.artisan?.id || 'artisan-default',
       name: item.artisan?.name || 'Pengrajin Lokal',
@@ -259,7 +347,8 @@ export function mapDtoToArtisanProduct(item: ArtisanProductApiDto): ArtisanProdu
       verified: item.artisan?.verified ?? true,
       quote: item.artisan?.quote || '"Karya tangan, cermin ketulusan."',
     },
-    philosophy: item.philosophy || item.description || 'Dibuat dengan dedikasi dan teknik tradisional khas Nusantara.',
+    philosophy:
+      item.philosophy || item.description || 'Dibuat dengan dedikasi dan teknik tradisional khas Nusantara.',
     materials: ['Bahan Alami Tradisional'],
     dimensions: 'Standar Kriya',
     weight: '500 gram',
@@ -282,7 +371,7 @@ export interface ApiFetchResult<T> {
  */
 export async function fetchExperiencesApi(): Promise<ApiFetchResult<Experience[]>> {
   try {
-    const url = `${BASE_API_URL}/experiences`;
+    const url = `${API_BASE_URL}/experiences`;
     const response = await fetchWithTimeout(url);
 
     if (!response.ok) {
@@ -299,10 +388,10 @@ export async function fetchExperiencesApi(): Promise<ApiFetchResult<Experience[]
     return { data: mapped, isFromApi: true };
   } catch (err: any) {
     console.warn(
-      `[ApiService] fetchExperiencesApi failed (${err.message}). Menggunakan fallback data mock.`,
+      `[ApiService] fetchExperiencesApi failed (${err.message}). Menggunakan fallback data mock.`
     );
     return {
-      data: MOCK_EXPERIENCES,
+      data: (experiencesJson as Experience[]) || MOCK_EXPERIENCES,
       isFromApi: false,
       error: err.message,
     };
@@ -314,7 +403,7 @@ export async function fetchExperiencesApi(): Promise<ApiFetchResult<Experience[]
  */
 export async function fetchHiddenGemsApi(): Promise<ApiFetchResult<HiddenGem[]>> {
   try {
-    const url = `${BASE_API_URL}/gems`;
+    const url = `${API_BASE_URL}/gems`;
     const response = await fetchWithTimeout(url);
 
     if (!response.ok) {
@@ -330,10 +419,10 @@ export async function fetchHiddenGemsApi(): Promise<ApiFetchResult<HiddenGem[]>>
     return { data: mapped, isFromApi: true };
   } catch (err: any) {
     console.warn(
-      `[ApiService] fetchHiddenGemsApi failed (${err.message}). Menggunakan fallback data mock.`,
+      `[ApiService] fetchHiddenGemsApi failed (${err.message}). Menggunakan fallback data mock.`
     );
     return {
-      data: MOCK_HIDDEN_GEMS,
+      data: (hiddenGemsJson as HiddenGem[]) || MOCK_HIDDEN_GEMS,
       isFromApi: false,
       error: err.message,
     };
@@ -345,7 +434,7 @@ export async function fetchHiddenGemsApi(): Promise<ApiFetchResult<HiddenGem[]>>
  */
 export async function fetchArtisanProductsApi(): Promise<ApiFetchResult<ArtisanProduct[]>> {
   try {
-    const url = `${BASE_API_URL}/products`;
+    const url = `${API_BASE_URL}/products`;
     const response = await fetchWithTimeout(url);
 
     if (!response.ok) {
@@ -361,10 +450,10 @@ export async function fetchArtisanProductsApi(): Promise<ApiFetchResult<ArtisanP
     return { data: mapped, isFromApi: true };
   } catch (err: any) {
     console.warn(
-      `[ApiService] fetchArtisanProductsApi failed (${err.message}). Menggunakan fallback data mock.`,
+      `[ApiService] fetchArtisanProductsApi failed (${err.message}). Menggunakan fallback data mock.`
     );
     return {
-      data: MOCK_ARTISANS,
+      data: (artisanProductsJson as ArtisanProduct[]) || MOCK_ARTISANS,
       isFromApi: false,
       error: err.message,
     };
@@ -386,5 +475,184 @@ export async function fetchAllAppDataApi() {
     gems: gemResult.data,
     products: prodResult.data,
     isLiveFromApi: expResult.isFromApi || gemResult.isFromApi || prodResult.isFromApi,
+  };
+}
+
+/* =========================================================================
+ * 4. ENDPOINT INDIVIDUAL & OPERASI CRUD (Kompatibilitas origin/main & useApi)
+ * ========================================================================= */
+
+/**
+ * Mengambil semua daftar experience/wisata budaya
+ * Endpoint: GET /experiences
+ */
+export async function getExperiences(): Promise<Experience[]> {
+  if (API_BASE_URL) {
+    try {
+      const raw = await request<any[]>('/experiences');
+      if (Array.isArray(raw)) {
+        return raw.map(mapDtoToExperience);
+      }
+      return raw as Experience[];
+    } catch (err) {
+      console.warn('[LokalTrip API] Gagal fetch /experiences, fallback ke mock:', err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return (experiencesJson as Experience[]) || MOCK_EXPERIENCES;
+}
+
+/**
+ * Mengambil detail 1 experience berdasarkan ID
+ * Endpoint: GET /experiences/:id
+ */
+export async function getExperienceById(id: string): Promise<Experience | undefined> {
+  if (API_BASE_URL) {
+    try {
+      const raw = await request<any>(`/experiences/${id}`);
+      return raw ? mapDtoToExperience(raw) : undefined;
+    } catch (err) {
+      console.warn(`[LokalTrip API] Gagal fetch /experiences/${id}, fallback ke mock:`, err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return ((experiencesJson as Experience[]) || MOCK_EXPERIENCES).find((item) => item.id === id);
+}
+
+/**
+ * Mengambil semua data hidden gems
+ * Endpoint: GET /gems
+ */
+export async function getHiddenGems(): Promise<HiddenGem[]> {
+  if (API_BASE_URL) {
+    try {
+      const raw = await request<any[]>('/gems');
+      if (Array.isArray(raw)) {
+        return raw.map(mapDtoToHiddenGem);
+      }
+      return raw as HiddenGem[];
+    } catch (err) {
+      console.warn('[LokalTrip API] Gagal fetch /gems, fallback ke mock:', err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return (hiddenGemsJson as HiddenGem[]) || MOCK_HIDDEN_GEMS;
+}
+
+/**
+ * Mengambil detail 1 hidden gem berdasarkan ID
+ * Endpoint: GET /gems/:id
+ */
+export async function getHiddenGemById(id: string): Promise<HiddenGem | undefined> {
+  if (API_BASE_URL) {
+    try {
+      const raw = await request<any>(`/gems/${id}`);
+      return raw ? mapDtoToHiddenGem(raw) : undefined;
+    } catch (err) {
+      console.warn(`[LokalTrip API] Gagal fetch /gems/${id}, fallback ke mock:`, err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return ((hiddenGemsJson as HiddenGem[]) || MOCK_HIDDEN_GEMS).find((item) => item.id === id);
+}
+
+/**
+ * Mengambil seluruh katalog produk UMKM pengrajin lokal
+ * Endpoint: GET /products
+ */
+export async function getArtisanProducts(): Promise<ArtisanProduct[]> {
+  if (API_BASE_URL) {
+    try {
+      const raw = await request<any[]>('/products');
+      if (Array.isArray(raw)) {
+        return raw.map(mapDtoToArtisanProduct);
+      }
+      return raw as ArtisanProduct[];
+    } catch (err) {
+      console.warn('[LokalTrip API] Gagal fetch /products, fallback ke mock:', err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return (artisanProductsJson as ArtisanProduct[]) || MOCK_ARTISANS;
+}
+
+/**
+ * Mengambil detail 1 produk pengrajin berdasarkan ID
+ * Endpoint: GET /products/:id
+ */
+export async function getArtisanProductById(id: string): Promise<ArtisanProduct | undefined> {
+  if (API_BASE_URL) {
+    try {
+      const raw = await request<any>(`/products/${id}`);
+      return raw ? mapDtoToArtisanProduct(raw) : undefined;
+    } catch (err) {
+      console.warn(`[LokalTrip API] Gagal fetch /products/${id}, fallback ke mock:`, err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return ((artisanProductsJson as ArtisanProduct[]) || MOCK_ARTISANS).find((item) => item.id === id);
+}
+
+/**
+ * Mengambil daftar tiket/booking user
+ * Endpoint: GET /bookings
+ */
+export async function getBookings(userId?: string): Promise<Booking[]> {
+  if (API_BASE_URL) {
+    try {
+      const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+      return await request<Booking[]>(`/bookings${query}`);
+    } catch (err) {
+      console.warn('[LokalTrip API] Gagal fetch /bookings, fallback ke mock:', err);
+    }
+  }
+  await delay(SIMULATED_DELAY_MS);
+  return INITIAL_BOOKINGS;
+}
+
+export interface CreateBookingPayload {
+  experienceId: string;
+  date: string;
+  timeSlot: string;
+  guestsCount: number;
+}
+
+/**
+ * Membuat reservasi booking baru
+ * Endpoint: POST /bookings
+ */
+export async function createBooking(payload: CreateBookingPayload): Promise<Booking> {
+  if (API_BASE_URL) {
+    try {
+      return await request<Booking>('/bookings', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.warn('[LokalTrip API] Gagal POST /bookings, fallback ke mock creation:', err);
+    }
+  }
+
+  await delay(SIMULATED_DELAY_MS);
+  const experience = ((experiencesJson as Experience[]) || MOCK_EXPERIENCES).find(
+    (e) => e.id === payload.experienceId
+  );
+  if (!experience) {
+    throw new Error(`Pengalaman tidak ditemukan: ${payload.experienceId}`);
+  }
+
+  return {
+    id: `book-${Date.now()}`,
+    experienceId: experience.id,
+    experienceTitle: experience.title,
+    experienceImage: experience.image,
+    location: experience.location,
+    date: payload.date,
+    timeSlot: payload.timeSlot,
+    guestsCount: payload.guestsCount,
+    totalPrice: experience.price * payload.guestsCount,
+    status: 'Menunggu',
+    guideName: experience.guide.name,
+    createdAt: new Date().toISOString().split('T')[0],
   };
 }

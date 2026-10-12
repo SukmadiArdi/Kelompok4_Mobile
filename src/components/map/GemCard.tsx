@@ -6,12 +6,19 @@ import { HiddenGem } from '../../types';
 import { Colors } from '../../constants/Theme';
 import { useApp } from '../../context/AppContext';
 
+import { openDirections } from '../../utils/mapUtils';
+
 interface GemCardProps {
   gem: HiddenGem;
   horizontal?: boolean;
+  onViewOnMap?: (gem: HiddenGem) => void;
 }
 
-export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => {
+export const GemCard: React.FC<GemCardProps> = ({
+  gem,
+  horizontal = false,
+  onViewOnMap,
+}) => {
   const { savedGemIds, toggleBookmarkGem } = useApp();
   const isBookmarked = savedGemIds.includes(gem.id);
 
@@ -43,7 +50,11 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
           pressed && styles.cardPressed,
         ]}>
         <View style={styles.horizontalImageContainer}>
-          <Image source={{ uri: gem.image }} style={styles.horizontalImage} />
+          <Image
+            source={{ uri: gem.image }}
+            style={styles.horizontalImage}
+            resizeMode="cover"
+          />
           <View
             style={[
               styles.difficultyBadge,
@@ -87,7 +98,11 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
       onPress={handleCardPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: gem.image }} style={styles.image} />
+        <Image
+          source={{ uri: gem.image }}
+          style={styles.image}
+          resizeMode="cover"
+        />
         
         {/* Badges on image */}
         <View style={styles.badgeRow}>
@@ -147,9 +162,38 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
           </Text>
         </View>
 
+        {/* Card Actions: Lihat di Peta & Petunjuk Arah */}
+        <View style={styles.cardActionsRow}>
+          {onViewOnMap && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onViewOnMap(gem);
+              }}
+              style={styles.cardActionMapBtn}>
+              <Ionicons name="map-outline" size={13} color={Colors.secondary} />
+              <Text style={styles.cardActionMapText}>Lihat di Peta</Text>
+            </Pressable>
+          )}
+
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              openDirections(gem.mapCoords.lat, gem.mapCoords.lng, gem.name);
+            }}
+            style={styles.cardActionGpsBtn}>
+            <Ionicons name="navigate-outline" size={13} color={Colors.primary} />
+            <Text style={styles.cardActionGpsText}>Petunjuk Arah (GPS)</Text>
+          </Pressable>
+        </View>
+
         <View style={styles.footerRow}>
           <View style={styles.contributorBox}>
-            <Image source={{ uri: gem.contributor.avatar }} style={styles.contributorAvatar} />
+            <Image
+              source={{ uri: gem.contributor.avatar }}
+              style={styles.contributorAvatar}
+              resizeMode="cover"
+            />
             <View>
               <Text style={styles.contributorName}>{gem.contributor.name}</Text>
               <Text style={styles.contributorDate}>{gem.contributor.badge}</Text>
@@ -384,6 +428,44 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
     fontWeight: '600',
+  },
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 10,
+  },
+  cardActionMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.secondaryLight,
+    borderWidth: 1,
+    borderColor: 'rgba(27, 73, 49, 0.2)',
+  },
+  cardActionMapText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.secondary,
+  },
+  cardActionGpsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.primaryLight,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 83, 56, 0.2)',
+  },
+  cardActionGpsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primary,
   },
 });
 

@@ -21,11 +21,59 @@ import { GemCard } from '@/src/components/map/GemCard';
 import { ProductCard } from '@/src/components/store/ProductCard';
 import { BookingModal } from '@/src/components/experiences/BookingModal';
 import { Experience } from '@/src/types';
+import { externalStyles } from '@/src/constants/styles';
+
+// =========================================================================
+// [MODUL 1 - 5.5. TYPE & INTERFACE]
+// =========================================================================
+interface QuickStatItem {
+  id: string;
+  label: string;
+  count: number;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}
 
 export default function HomeScreen() {
   const { experiences, gems, products, isLoading, refreshApiData } = useApp();
   const [search, setSearch] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
+
+  
+  const quickStats: QuickStatItem[] = [
+    { id: 'stat-exp', label: 'Pengalaman', count: experiences.length, icon: 'compass', color: Colors.primary },
+    { id: 'stat-gem', label: 'Hidden Gems', count: gems.length, icon: 'map', color: Colors.secondary },
+    { id: 'stat-prod', label: 'Karya Budaya', count: products.length, icon: 'basket', color: Colors.accent },
+  ];
+
+  
+  const renderStatPill = (item: QuickStatItem) => {
+    return (
+      <View
+        key={item.id}
+        style={[
+          externalStyles.badge,
+          {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            marginRight: 8,
+          },
+        ]}>
+        <Ionicons name={item.icon} size={14} color={item.color} />
+        <Text
+          style={[
+            externalStyles.badgeText, // External Style
+            { color: Colors.text, marginLeft: 6, fontSize: 12 }, // Inline Style
+          ]}>
+          {item.label}:{' '}
+          <Text style={{ fontWeight: '700', color: item.color }}>{item.count}</Text>
+        </Text>
+      </View>
+    );
+  };
 
   // Filter based on search query
   const filteredExperiences = (experiences || []).filter((e) =>
@@ -59,11 +107,7 @@ export default function HomeScreen() {
         }
         contentContainerStyle={styles.scrollContainer}>
         {/* Search Bar */}
-        <SearchBar
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Cari kelas batik, air terjun rahasia, tenun..."
-        />
+        
 
         {/* Hero Banner */}
         <View style={styles.heroCard}>
@@ -88,6 +132,14 @@ export default function HomeScreen() {
             style={styles.heroImage}
           />
         </View>
+
+       
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 2 }}>
+          {quickStats.map((stat) => renderStatPill(stat))}
+        </ScrollView>
 
         {/* 3 Main Features Access Hub */}
         <View style={styles.featuresHub}>
@@ -252,6 +304,14 @@ export default function HomeScreen() {
             100% pemesanan tur dan pembelian kerajinan di LokalTrip mengalir langsung
             untuk memperkuat ekonomi komunitas adat dan melestarikan budaya adiluhung Indonesia.
           </Text>
+        </View>
+        
+        <View style={styles.impactCard}>
+        <SearchBar
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Cari kelas batik, air terjun rahasia, tenun..."
+        />
         </View>
       </ScrollView>
 

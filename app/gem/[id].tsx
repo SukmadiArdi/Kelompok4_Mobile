@@ -16,6 +16,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/Theme';
 import { useApp } from '@/src/context/AppContext';
 import { RatingStars } from '@/src/components/common/RatingStars';
+import { openDirections, formatCoordinatesDMS } from '@/src/utils/mapUtils';
 
 export default function GemDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -165,6 +166,41 @@ export default function GemDetailScreen() {
             <View style={styles.bestTimeInfo}>
               <Text style={styles.bestTimeTitle}>Waktu Terbaik Berkunjung</Text>
               <Text style={styles.bestTimeDesc}>{gem.bestTime}</Text>
+            </View>
+          </View>
+
+          {/* Location & GPS Navigation Card */}
+          <View style={styles.locationMapCard}>
+            <View style={styles.locationCardHeader}>
+              <View style={styles.locationIconBox}>
+                <Ionicons name="location-sharp" size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.locationHeaderText}>
+                <Text style={styles.locationCardTitle}>Titik Koordinat & Akses GPS</Text>
+                <Text style={styles.locationCardCoords}>
+                  🌐 {formatCoordinatesDMS(gem.mapCoords.lat, gem.mapCoords.lng)}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.locationCardAddress}>
+              {gem.location}, {gem.city}, {gem.province}
+            </Text>
+
+            <View style={styles.locationBtnRow}>
+              <Pressable
+                onPress={() => openDirections(gem.mapCoords.lat, gem.mapCoords.lng, gem.name)}
+                style={styles.openMapsBtn}>
+                <Ionicons name="navigate" size={15} color="#FFF" />
+                <Text style={styles.openMapsBtnText}>Buka Petunjuk Arah (Google Maps)</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => router.push('/(tabs)/map')}
+                style={styles.openInAppMapBtn}>
+                <Ionicons name="map-outline" size={15} color={Colors.secondary} />
+                <Text style={styles.openInAppMapBtnText}>Buka di Hidden Gems Map</Text>
+              </Pressable>
             </View>
           </View>
 
@@ -457,6 +493,83 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#78350F',
     marginTop: 2,
+  },
+  locationMapCard: {
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 20,
+    elevation: 2,
+  },
+  locationCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  locationIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationHeaderText: {
+    flex: 1,
+  },
+  locationCardTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  locationCardCoords: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginTop: 2,
+  },
+  locationCardAddress: {
+    fontSize: 12,
+    color: Colors.text,
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  locationBtnRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  openMapsBtn: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  openMapsBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  openInAppMapBtn: {
+    backgroundColor: Colors.secondaryLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(27, 73, 49, 0.2)',
+  },
+  openInAppMapBtnText: {
+    color: Colors.secondary,
+    fontSize: 12,
+    fontWeight: '700',
   },
   sectionHeader: {
     fontSize: 16,

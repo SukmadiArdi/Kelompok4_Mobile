@@ -1,31 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   Image,
-  Dimensions,
+  Platform,
 } from 'react-native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { HiddenGem } from '../../types';
 import { Colors } from '../../constants/Theme';
+import { MapLeaflet, MapLeafletHandle } from './MapLeaflet';
+import { openDirections, formatCoordinatesDMS } from '../../utils/mapUtils';
 
 interface InteractiveMapProps {
   gems: HiddenGem[];
   selectedGem: HiddenGem | null;
   onSelectGem: (gem: HiddenGem) => void;
+  onTouchStart?: () => void;
+  onTouchEnd?: () => void;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   gems,
   selectedGem,
   onSelectGem,
+  onTouchStart,
+  onTouchEnd,
 }) => {
-  const [activeRegion, setActiveRegion] = useState<string>('Semua');
+  const mapLeafletRef = useRef<MapLeafletHandle | null>(null);
 
-  const regions = ['Semua', 'Jawa', 'Bali & Lombok', 'Nusa Tenggara', 'Sulawesi'];
+  const [activeRegion, setActiveRegion] = useState<string>('Semua');
+  const [mapEngine, setMapEngine] = useState<'osm' | 'schematic'>('osm');
+  const [tileLayer, setTileLayer] = useState<'streets' | 'satellite'>('streets');
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  const regions = [
+    'Semua',
+    'Sumatera',
+    'Jawa',
+    'Bali & Lombok',
+    'Nusa Tenggara',
+    'Sulawesi',
+  ];
 
   const filteredGems =
     activeRegion === 'Semua'
@@ -45,152 +63,405 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
+  // Helper untuk proyeksi koordinat geografis ke kanvas skematik
+  const getSchematicCoords = (gem: HiddenGem, index: number) => {
+    const baseX =
+      gem.mapCoords?.xPercent ??
+      Math.max(8, Math.min(92, ((gem.mapCoords.lng - 95.0) / 46.0) * 100));
+    const baseY =
+      gem.mapCoords?.yPercent ??
+      Math.max(12, Math.min(88, ((6.0 - gem.mapCoords.lat) / 17.0) * 100));
+
+    const offsetX = index % 2 === 0 ? 0 : 3.5;
+    const offsetY = index % 3 === 0 ? 0 : -3;
+
+    return {
+      x: Math.max(6, Math.min(94, baseX + offsetX)),
+      y: Math.max(10, Math.min(90, baseY + offsetY)),
+    };
+  };
+
+  const handlePan = (dx: number, dy: number) => {
+    mapLeafletRef.current?.panBy(dx, dy);
+  };
+
+  const handleZoom = (type: 'in' | 'out') => {
+    if (type === 'in') {
+      mapLeafletRef.current?.zoomIn();
+    } else {
+      mapLeafletRef.current?.zoomOut();
+    }
+  };
+
+  const handleResetCenter = () => {
+    mapLeafletRef.current?.resetView();
+  };
+
+  const currentMapHeight = isExpanded ? 500 : 340;
+
   return (
     <View style={styles.container}>
-      {/* Region Filter Bar */}
-      <View style={styles.regionsContainer}>
-        {regions.map((reg) => {
-          const isActive = activeRegion === reg;
-          return (
-            <Pressable
-              key={reg}
-              onPress={() => setActiveRegion(reg)}
-              style={[
-                styles.regionPill,
-                isActive && styles.regionPillActive,
-              ]}>
-              <Text
+      {/* Top Controls: Region Filters & Map Engine Switcher */}
+      <View style={styles.topControlRow}>
+        <View style={styles.regionsContainer}>
+          {regions.map((reg) => {
+            const isActive = activeRegion === reg;
+            return (
+              <Pressable
+                key={reg}
+                onPress={() => setActiveRegion(reg)}
                 style={[
-                  styles.regionText,
-                  isActive && styles.regionTextActive,
+                  styles.regionPill,
+                  isActive && styles.regionPillActive,
                 ]}>
-                {reg}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  style={[
+                    styles.regionText,
+                    isActive && styles.regionTextActive,
+                  ]}>
+                  {reg}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Engine Switcher (OSM vs Schematic) & Expand Toggle */}
+        <View style={styles.engineBar}>
+          <Pressable
+            onPress={() => setMapEngine('osm')}
+            style={[
+              styles.engineBtn,
+              mapEngine === 'osm' && styles.engineBtnActive,
+            ]}>
+            <Ionicons
+              name="earth"
+              size={13}
+              color={mapEngine === 'osm' ? '#FFF' : Colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.engineBtnText,
+                mapEngine === 'osm' && styles.engineBtnTextActive,
+              ]}>
+              Peta Satelit / OSM
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setMapEngine('schematic')}
+            style={[
+              styles.engineBtn,
+              mapEngine === 'schematic' && styles.engineBtnActive,
+            ]}>
+            <MaterialCommunityIcons
+              name="map-outline"
+              size={13}
+              color={mapEngine === 'schematic' ? '#FFF' : Colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.engineBtnText,
+                mapEngine === 'schematic' && styles.engineBtnTextActive,
+              ]}>
+              Skematik
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setIsExpanded((prev) => !prev)}
+            style={[
+              styles.engineBtn,
+              isExpanded && styles.expandBtnActive,
+            ]}>
+            <Feather
+              name={isExpanded ? 'minimize-2' : 'maximize-2'}
+              size={12}
+              color={isExpanded ? '#FFF' : Colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.engineBtnText,
+                isExpanded && styles.engineBtnTextActive,
+              ]}>
+              {isExpanded ? 'Normal' : 'Perbesar'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
-      {/* Visual Archipelago Canvas */}
-      <View style={styles.mapCanvas}>
-        {/* Ocean Background & Grid lines */}
-        <View style={styles.gridLineHorizontal1} />
-        <View style={styles.gridLineHorizontal2} />
-        <View style={styles.gridLineVertical1} />
-        <View style={styles.gridLineVertical2} />
-
-        {/* Archipelago Island Silhouette Elements */}
-        {/* Sumatra Island Silhouette */}
-        <View style={[styles.islandShape, styles.islandSumatra]}>
-          <Text style={styles.islandLabel}>SUMATERA</Text>
-        </View>
-
-        {/* Kalimantan Island Silhouette */}
-        <View style={[styles.islandShape, styles.islandKalimantan]}>
-          <Text style={styles.islandLabel}>KALIMANTAN</Text>
-        </View>
-
-        {/* Jawa Island Silhouette */}
-        <View style={[styles.islandShape, styles.islandJawa]}>
-          <Text style={styles.islandLabel}>JAWA</Text>
-        </View>
-
-        {/* Sulawesi Silhouette */}
-        <View style={[styles.islandShape, styles.islandSulawesi]}>
-          <Text style={styles.islandLabel}>SULAWESI</Text>
-        </View>
-
-        {/* Bali & Lombok & Sumba Silhouette */}
-        <View style={[styles.islandShape, styles.islandNusaTenggara]}>
-          <Text style={styles.islandLabel}>BALI & NTT</Text>
-        </View>
-
-        {/* Interactive Pin Markers */}
-        {filteredGems.map((gem) => {
-          const isSelected = selectedGem?.id === gem.id;
-          const pinColor = getDifficultyColor(gem.difficulty);
-
-          return (
-            <Pressable
-              key={gem.id}
-              onPress={() => onSelectGem(gem)}
-              style={[
-                styles.markerWrapper,
-                {
-                  left: `${gem.mapCoords?.xPercent ?? 50}%`,
-                  top: `${gem.mapCoords?.yPercent ?? 50}%`,
-                },
-              ]}>
-              {isSelected && <View style={[styles.pulseRing, { borderColor: pinColor }]} />}
-              <View
+      {/* Map View Area */}
+      <View
+        style={[styles.mapFrame, { height: currentMapHeight }]}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onResponderGrant={onTouchStart}
+        onResponderRelease={onTouchEnd}>
+        {mapEngine === 'osm' ? (
+          <View style={styles.osmContainer}>
+            {/* Top-Right: Tile Layer Switcher */}
+            <View style={styles.layerSwitcher}>
+              <Pressable
+                onPress={() => setTileLayer('streets')}
                 style={[
-                  styles.markerPin,
-                  { backgroundColor: isSelected ? Colors.primaryDark : pinColor },
-                  isSelected && styles.markerPinActive,
+                  styles.layerBtn,
+                  tileLayer === 'streets' && styles.layerBtnActive,
                 ]}>
                 <Ionicons
-                  name={
-                    gem.category === 'Air Terjun'
-                      ? 'water'
-                      : gem.category === 'Pantai Sunyi'
-                        ? 'boat'
-                        : gem.category === 'Kampung Adat'
-                          ? 'home'
-                          : 'compass'
-                  }
-                  size={14}
-                  color="#FFF"
+                  name="map"
+                  size={12}
+                  color={tileLayer === 'streets' ? '#FFF' : Colors.text}
                 />
-              </View>
-
-              {/* Mini pin label */}
-              <View style={[styles.markerTitleBadge, isSelected && styles.markerTitleActive]}>
-                <Text style={styles.markerTitleText} numberOfLines={1}>
-                  {gem.name.split(':')[0]}
+                <Text
+                  style={[
+                    styles.layerBtnText,
+                    tileLayer === 'streets' && styles.layerBtnTextActive,
+                  ]}>
+                  Jalan
                 </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setTileLayer('satellite')}
+                style={[
+                  styles.layerBtn,
+                  tileLayer === 'satellite' && styles.layerBtnActive,
+                ]}>
+                <Ionicons
+                  name="globe-outline"
+                  size={12}
+                  color={tileLayer === 'satellite' ? '#FFF' : Colors.text}
+                />
+                <Text
+                  style={[
+                    styles.layerBtnText,
+                    tileLayer === 'satellite' && styles.layerBtnTextActive,
+                  ]}>
+                  Satelit
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Floating Navigation Controls (D-Pad Pan + Zoom) */}
+            <View style={styles.navControlsOverlay}>
+              {/* D-Pad Pan */}
+              <View style={styles.dpadBox}>
+                <Pressable
+                  onPress={() => handlePan(0, -120)}
+                  style={styles.dpadBtn}
+                  hitSlop={6}>
+                  <Feather name="chevron-up" size={16} color={Colors.text} />
+                </Pressable>
+
+                <View style={styles.dpadMiddleRow}>
+                  <Pressable
+                    onPress={() => handlePan(-120, 0)}
+                    style={styles.dpadBtn}
+                    hitSlop={6}>
+                    <Feather name="chevron-left" size={16} color={Colors.text} />
+                  </Pressable>
+                  <Pressable
+                    onPress={handleResetCenter}
+                    style={[styles.dpadBtn, styles.dpadCenterBtn]}
+                    hitSlop={6}>
+                    <Ionicons name="locate" size={13} color={Colors.primary} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handlePan(120, 0)}
+                    style={styles.dpadBtn}
+                    hitSlop={6}>
+                    <Feather name="chevron-right" size={16} color={Colors.text} />
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  onPress={() => handlePan(0, 120)}
+                  style={styles.dpadBtn}
+                  hitSlop={6}>
+                  <Feather name="chevron-down" size={16} color={Colors.text} />
+                </Pressable>
               </View>
-            </Pressable>
-          );
-        })}
 
-        {/* Map Legend Overlay */}
-        <View style={styles.legendCard}>
-          <Text style={styles.legendTitle}>Tingkat Akses:</Text>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-            <Text style={styles.legendText}>Mudah</Text>
-            <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-            <Text style={styles.legendText}>Sedang</Text>
-            <View style={[styles.legendDot, { backgroundColor: Colors.primary }]} />
-            <Text style={styles.legendText}>Menantang</Text>
-          </View>
-        </View>
-
-        {/* Coordinates Compass Badge */}
-        <View style={styles.compassBadge}>
-          <Ionicons name="navigate-circle-outline" size={24} color={Colors.primary} />
-          <Text style={styles.compassText}>ID-GEO GPS</Text>
-        </View>
-      </View>
-
-      {/* Floating Selected Gem Preview Card */}
-      {selectedGem && (
-        <Pressable
-          onPress={() => router.push(`/gem/${selectedGem.id}`)}
-          style={styles.previewCard}>
-          <Image source={{ uri: selectedGem.image }} style={styles.previewImage} />
-          <View style={styles.previewContent}>
-            <View style={styles.previewHeader}>
-              <View style={styles.previewCategory}>
-                <Text style={styles.previewCategoryText}>{selectedGem.category}</Text>
-              </View>
-              <View style={styles.previewRating}>
-                <Ionicons name="star" size={12} color={Colors.accent} />
-                <Text style={styles.previewRatingText}>{selectedGem.rating}</Text>
+              {/* Quick Zoom Buttons */}
+              <View style={styles.zoomBox}>
+                <Pressable
+                  onPress={() => handleZoom('in')}
+                  style={styles.zoomBtn}
+                  hitSlop={6}>
+                  <Feather name="plus" size={14} color={Colors.text} />
+                </Pressable>
+                <View style={styles.zoomDivider} />
+                <Pressable
+                  onPress={() => handleZoom('out')}
+                  style={styles.zoomBtn}
+                  hitSlop={6}>
+                  <Feather name="minus" size={14} color={Colors.text} />
+                </Pressable>
               </View>
             </View>
 
-            <Text style={styles.previewTitle} numberOfLines={1}>
+            <MapLeaflet
+              ref={mapLeafletRef}
+              gems={filteredGems}
+              selectedGem={selectedGem}
+              onSelectGem={onSelectGem}
+              mapType={tileLayer}
+              height={currentMapHeight}
+            />
+          </View>
+        ) : (
+          /* Schematic Vector Map */
+          <View style={styles.mapCanvas}>
+            {/* Ocean Grid lines */}
+            <View style={styles.gridLineHorizontal1} />
+            <View style={styles.gridLineHorizontal2} />
+            <View style={styles.gridLineVertical1} />
+            <View style={styles.gridLineVertical2} />
+
+            {/* Archipelago Islands */}
+            <View style={[styles.islandShape, styles.islandSumatra]}>
+              <Text style={styles.islandLabel}>SUMATERA</Text>
+            </View>
+            <View style={[styles.islandShape, styles.islandKalimantan]}>
+              <Text style={styles.islandLabel}>KALIMANTAN</Text>
+            </View>
+            <View style={[styles.islandShape, styles.islandJawa]}>
+              <Text style={styles.islandLabel}>JAWA</Text>
+            </View>
+            <View style={[styles.islandShape, styles.islandSulawesi]}>
+              <Text style={styles.islandLabel}>SULAWESI</Text>
+            </View>
+            <View style={[styles.islandShape, styles.islandNusaTenggara]}>
+              <Text style={styles.islandLabel}>BALI & NTT</Text>
+            </View>
+            <View style={[styles.islandShape, styles.islandPapua]}>
+              <Text style={styles.islandLabel}>PAPUA</Text>
+            </View>
+
+            {/* Schematic Markers */}
+            {filteredGems.map((gem, index) => {
+              const isSelected = selectedGem?.id === gem.id;
+              const pinColor = getDifficultyColor(gem.difficulty);
+              const coords = getSchematicCoords(gem, index);
+
+              return (
+                <Pressable
+                  key={gem.id}
+                  onPress={() => onSelectGem(gem)}
+                  style={[
+                    styles.markerWrapper,
+                    {
+                      left: `${coords.x}%`,
+                      top: `${coords.y}%`,
+                    },
+                  ]}>
+                  {isSelected && (
+                    <View
+                      style={[styles.pulseRing, { borderColor: pinColor }]}
+                    />
+                  )}
+                  <View
+                    style={[
+                      styles.markerPin,
+                      {
+                        backgroundColor: isSelected
+                          ? Colors.primaryDark
+                          : pinColor,
+                      },
+                      isSelected && styles.markerPinActive,
+                    ]}>
+                    <Ionicons
+                      name={
+                        gem.category === 'Air Terjun'
+                          ? 'water'
+                          : gem.category === 'Pantai Sunyi'
+                          ? 'boat'
+                          : gem.category === 'Kampung Adat'
+                          ? 'home'
+                          : 'compass'
+                      }
+                      size={14}
+                      color="#FFF"
+                    />
+                  </View>
+
+                  <View
+                    style={[
+                      styles.markerTitleBadge,
+                      isSelected && styles.markerTitleActive,
+                    ]}>
+                    <Text
+                      style={[
+                        styles.markerTitleText,
+                        isSelected && styles.markerTitleTextActive,
+                      ]}
+                      numberOfLines={1}>
+                      {gem.name.split(':')[0]}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+
+            {/* Map Legend */}
+            <View style={styles.legendCard}>
+              <Text style={styles.legendTitle}>Akses:</Text>
+              <View style={styles.legendRow}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: '#10B981' }]}
+                />
+                <Text style={styles.legendText}>Mudah</Text>
+                <View
+                  style={[styles.legendDot, { backgroundColor: '#F59E0B' }]}
+                />
+                <Text style={styles.legendText}>Sedang</Text>
+                <View
+                  style={[styles.legendDot, { backgroundColor: Colors.primary }]}
+                />
+                <Text style={styles.legendText}>Menantang</Text>
+              </View>
+            </View>
+
+            {/* Compass badge */}
+            <View style={styles.compassBadge}>
+              <Ionicons name="compass-outline" size={16} color={Colors.primary} />
+              <Text style={styles.compassText}>GPS ID-GEO</Text>
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* Selected Gem Floating Preview Card with Directions Button */}
+      {selectedGem && (
+        <View style={styles.previewCard}>
+          <Pressable
+            onPress={() => router.push(`/gem/${selectedGem.id}`)}
+            style={styles.previewImageContainer}>
+            <Image
+              source={{ uri: selectedGem.image }}
+              style={styles.previewImage}
+              resizeMode="cover"
+            />
+          </Pressable>
+
+          <View style={styles.previewContent}>
+            <View style={styles.previewHeader}>
+              <View style={styles.previewCategory}>
+                <Text style={styles.previewCategoryText}>
+                  {selectedGem.category}
+                </Text>
+              </View>
+              <View style={styles.previewRating}>
+                <Ionicons name="star" size={12} color={Colors.accent} />
+                <Text style={styles.previewRatingText}>
+                  {selectedGem.rating.toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            <Text
+              style={styles.previewTitle}
+              numberOfLines={1}
+              onPress={() => router.push(`/gem/${selectedGem.id}`)}>
               {selectedGem.name}
             </Text>
 
@@ -201,12 +472,35 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               </Text>
             </View>
 
-            <View style={styles.previewFooter}>
-              <Text style={styles.previewActionText}>Lihat Detail & Foto</Text>
-              <Feather name="arrow-right" size={14} color={Colors.primary} />
+            {/* GPS Coordinates Badge */}
+            <Text style={styles.coordsText}>
+              🌐 {formatCoordinatesDMS(selectedGem.mapCoords.lat, selectedGem.mapCoords.lng)}
+            </Text>
+
+            {/* Action Buttons Row */}
+            <View style={styles.actionButtonsRow}>
+              <Pressable
+                onPress={() =>
+                  openDirections(
+                    selectedGem.mapCoords.lat,
+                    selectedGem.mapCoords.lng,
+                    selectedGem.name
+                  )
+                }
+                style={styles.directionsBtn}>
+                <Ionicons name="navigate" size={12} color="#FFF" />
+                <Text style={styles.directionsBtnText}>Petunjuk Arah</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => router.push(`/gem/${selectedGem.id}`)}
+                style={styles.detailBtn}>
+                <Text style={styles.detailBtnText}>Lihat Detail</Text>
+                <Feather name="arrow-right" size={12} color={Colors.primary} />
+              </Pressable>
             </View>
           </View>
-        </Pressable>
+        </View>
       )}
     </View>
   );
@@ -217,16 +511,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
+  topControlRow: {
+    marginBottom: 10,
+    gap: 8,
+  },
   regionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
   },
   regionPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -236,36 +533,163 @@ const styles = StyleSheet.create({
     borderColor: Colors.secondary,
   },
   regionText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Colors.textSecondary,
   },
   regionTextActive: {
     color: '#FFF',
   },
+  engineBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 8,
+    marginTop: 2,
+  },
+  engineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  engineBtnActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  expandBtnActive: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
+  },
+  engineBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  engineBtnTextActive: {
+    color: '#FFF',
+  },
+  mapFrame: {
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: '#E2E8F0',
+    position: 'relative',
+  },
+  osmContainer: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+  },
+  layerSwitcher: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 99,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 8,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  layerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  layerBtnActive: {
+    backgroundColor: Colors.primary,
+  },
+  layerBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  layerBtnTextActive: {
+    color: '#FFF',
+  },
+
+  // On-screen Navigation Controls (D-Pad Pan & Zoom)
+  navControlsOverlay: {
+    position: 'absolute',
+    left: 10,
+    top: 10,
+    zIndex: 99,
+    gap: 8,
+  },
+  dpadBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderRadius: 12,
+    padding: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    elevation: 3,
+  },
+  dpadMiddleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  dpadBtn: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+    backgroundColor: 'rgba(241, 245, 249, 0.8)',
+  },
+  dpadCenterBtn: {
+    backgroundColor: '#FFF',
+  },
+  zoomBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    elevation: 3,
+    width: 32,
+    alignItems: 'center',
+  },
+  zoomBtn: {
+    width: 32,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  zoomDivider: {
+    width: '80%',
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+
+  // Schematic Map
   mapCanvas: {
     width: '100%',
-    height: 320,
-    backgroundColor: '#E6F0FA', // Soft tropical ocean blue
-    borderRadius: 20,
+    height: '100%',
+    backgroundColor: '#E6F0FA',
     position: 'relative',
     overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#C7DCF2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
   },
-  // Map grid
   gridLineHorizontal1: {
     position: 'absolute',
     top: '33%',
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
   },
   gridLineHorizontal2: {
     position: 'absolute',
@@ -273,7 +697,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
   },
   gridLineVertical1: {
     position: 'absolute',
@@ -281,7 +705,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
   },
   gridLineVertical2: {
     position: 'absolute',
@@ -289,94 +713,95 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
   },
-
-  // Island shapes stylized
   islandShape: {
     position: 'absolute',
-    backgroundColor: '#D1E7D6', // Lush tropical vegetation green
+    backgroundColor: '#D1E7D6',
     borderColor: '#A8D5B1',
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
   islandLabel: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
     color: '#3B6E4A',
     opacity: 0.8,
     letterSpacing: 0.5,
   },
   islandSumatra: {
-    top: '20%',
-    left: '6%',
-    width: 90,
-    height: 130,
-    borderRadius: 30,
+    top: '18%',
+    left: '4%',
+    width: 85,
+    height: 120,
+    borderRadius: 28,
     transform: [{ rotate: '-35deg' }],
   },
   islandKalimantan: {
-    top: '18%',
-    left: '36%',
-    width: 95,
-    height: 90,
-    borderRadius: 24,
+    top: '16%',
+    left: '32%',
+    width: 90,
+    height: 85,
+    borderRadius: 22,
   },
   islandJawa: {
-    top: '60%',
-    left: '26%',
-    width: 120,
-    height: 34,
-    borderRadius: 16,
-    transform: [{ rotate: '-4deg' }],
+    top: '62%',
+    left: '22%',
+    width: 125,
+    height: 32,
+    borderRadius: 14,
+    transform: [{ rotate: '-3deg' }],
   },
   islandSulawesi: {
-    top: '22%',
-    left: '64%',
-    width: 60,
-    height: 95,
-    borderRadius: 20,
+    top: '20%',
+    left: '60%',
+    width: 55,
+    height: 90,
+    borderRadius: 18,
     transform: [{ rotate: '12deg' }],
   },
   islandNusaTenggara: {
-    top: '64%',
-    left: '52%',
-    width: 105,
-    height: 36,
-    borderRadius: 14,
+    top: '65%',
+    left: '50%',
+    width: 100,
+    height: 32,
+    borderRadius: 12,
+  },
+  islandPapua: {
+    top: '26%',
+    left: '78%',
+    width: 75,
+    height: 70,
+    borderRadius: 18,
   },
 
   // Markers
   markerWrapper: {
     position: 'absolute',
-    transform: [{ translateX: -18 }, { translateY: -18 }],
+    transform: [{ translateX: -16 }, { translateY: -16 }],
     alignItems: 'center',
     zIndex: 10,
   },
   pulseRing: {
     position: 'absolute',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 2,
     opacity: 0.6,
-    top: -4,
-    left: -4,
+    top: -5,
+    left: -5,
   },
   markerPin: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 4,
     borderWidth: 2,
     borderColor: '#FFF',
+    elevation: 3,
   },
   markerPinActive: {
     transform: [{ scale: 1.2 }],
@@ -387,7 +812,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
-    marginTop: 3,
+    marginTop: 2,
     borderWidth: 1,
     borderColor: Colors.border,
     maxWidth: 90,
@@ -401,47 +826,46 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.text,
   },
-
-  // Map Legend
+  markerTitleTextActive: {
+    color: '#FFF',
+  },
   legendCard: {
     position: 'absolute',
-    bottom: 10,
-    left: 10,
+    bottom: 8,
+    left: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   legendTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '700',
     color: Colors.textSecondary,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   legendDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   legendText: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '600',
     color: Colors.text,
-    marginRight: 6,
+    marginRight: 4,
   },
-
-  // Compass
   compassBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 8,
+    left: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -453,32 +877,32 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   compassText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
     color: Colors.primary,
   },
 
-  // Floating Preview Card
+  // Preview Card
   previewCard: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 12,
     marginTop: 12,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
     elevation: 3,
     gap: 12,
   },
-  previewImage: {
-    width: 90,
-    height: 80,
+  previewImageContainer: {
+    width: 95,
+    height: 105,
     borderRadius: 12,
-    resizeMode: 'cover',
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
   },
   previewContent: {
     flex: 1,
@@ -512,7 +936,7 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
   },
   previewLocationRow: {
@@ -524,12 +948,43 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
   },
-  previewFooter: {
+  coordsText: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  directionsBtn: {
+    backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  previewActionText: {
+  directionsBtnText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  detailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  detailBtnText: {
     fontSize: 11,
     fontWeight: '700',
     color: Colors.primary,
