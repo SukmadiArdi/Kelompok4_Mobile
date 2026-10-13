@@ -4,6 +4,7 @@ import { User, AuthResponse } from '../types';
 import { firebaseConfig, isFirebaseConfigured } from './firebaseConfig';
 import { API_BASE_URL } from './apiConfig';
 import { tokenStorage } from '../utils/tokenStorage';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 /**
  * Helper untuk membuat mock JWT string (Task 01)
@@ -122,9 +123,9 @@ class AuthService {
   }
 
   /**
-   * Login dengan Email & Password (Task 01)
-   * Mengirimkan email & password via method POST ke endpoint /login atau auth provider,
-   * menangkap response access_token (JWT string), dan menyimpannya ke SecureStore.
+   * Login dengan Email & Password (Task 01 - Supabase & Token-Based Authentication)
+   * Menggunakan supabase.auth.signInWithPassword, menangkap data.session.access_token,
+   * menyimpan ke SecureStore, dan mencetak log Supabase JWT Token.
    */
   async login(email: string, password: string): Promise<AuthResponse> {
     const cleanEmail = email.trim().toLowerCase();
@@ -134,7 +135,49 @@ class AuthService {
       return { success: false, message: 'Email dan password wajib diisi.' };
     }
 
-    // 1. Coba REST API backend endpoint /login via POST jika API_BASE_URL tersedia
+    // 1. Coba Autentikasi Menggunakan Supabase Client
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: cleanPass,
+      });
+
+      if (!error && data?.session?.access_token) {
+        const accessToken = data.session.access_token;
+        console.log("Supabase JWT Token:", accessToken);
+
+        // Simpan token ke key 'access_token' via SecureStore
+        await SecureStore.setItemAsync('access_token', accessToken);
+
+        const supabaseUser: User = {
+          id: data.user?.id || `usr-${Date.now()}`,
+          name:
+            data.user?.user_metadata?.name ||
+            data.user?.user_metadata?.full_name ||
+            cleanEmail.split('@')[0],
+          email: data.user?.email || cleanEmail,
+          avatar:
+            data.user?.user_metadata?.avatar_url ||
+            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+          badge: 'Penjelajah Nusantara',
+          role: 'traveler',
+          createdAt:
+            data.user?.created_at?.split('T')[0] ||
+            new Date().toISOString().split('T')[0],
+          provider: 'local',
+        };
+
+        await this.persistUserSession(supabaseUser);
+        return { success: true, user: supabaseUser, access_token: accessToken };
+      } else if (error && isSupabaseConfigured()) {
+        console.warn('Supabase signInWithPassword gagal:', error.message);
+        return { success: false, message: error.message };
+      }
+    } catch (sbErr) {
+      console.warn('Supabase connection attempt error:', sbErr);
+    }
+
+    // 2. Fallback REST API backend endpoint /login via POST jika API_BASE_URL tersedia
     if (API_BASE_URL) {
       try {
         const loginUrl = `${API_BASE_URL}/login`;
@@ -154,7 +197,7 @@ class AuthService {
           const data = await resp.json();
           const accessToken = data.access_token || data.token || data.accessToken;
           if (accessToken) {
-            // Simpan token ke SecureStore sesuai Task 01
+            console.log("Supabase JWT Token:", accessToken);
             await SecureStore.setItemAsync('access_token', accessToken);
             const user: User = data.user || {
               id: data.id || `usr-${Date.now()}`,
@@ -176,7 +219,7 @@ class AuthService {
       }
     }
 
-    // 2. Coba Firebase Auth via REST API jika konfigurasi valid
+    // 3. Fallback Firebase Auth via REST API jika konfigurasi valid
     if (isFirebaseConfigured() && firebaseConfig.apiKey) {
       try {
         const firebaseUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`;
@@ -194,6 +237,7 @@ class AuthService {
         if (resp.ok && data.localId) {
           const accessToken = data.idToken;
           if (accessToken) {
+            console.log("Supabase JWT Token:", accessToken);
             await SecureStore.setItemAsync('access_token', accessToken);
           }
           const firebaseUser: User = {
@@ -219,7 +263,7 @@ class AuthService {
       }
     }
 
-    // 3. Fallback ke Local Mock Store
+    // 4. Fallback ke Local Mock Store (Untuk testing & demo offline)
     const users = await getStoredUsers();
     const matched = users.find(
       (u) => u.email.toLowerCase() === cleanEmail && u.passwordHash === cleanPass
@@ -228,6 +272,7 @@ class AuthService {
     if (matched) {
       const { passwordHash: _, ...safeUser } = matched;
       const accessToken = generateMockJwt(safeUser.id, safeUser.email);
+      console.log("Supabase JWT Token:", accessToken);
       await SecureStore.setItemAsync('access_token', accessToken);
       await this.persistUserSession(safeUser);
       return { success: true, user: safeUser, access_token: accessToken };
@@ -236,6 +281,7 @@ class AuthService {
     // Khusus demo akun Arya Wibowo
     if (cleanEmail === DEFAULT_DEMO_USER.email.toLowerCase() && cleanPass === 'password123') {
       const accessToken = generateMockJwt(DEFAULT_DEMO_USER.id, DEFAULT_DEMO_USER.email);
+      console.log("Supabase JWT Token:", accessToken);
       await SecureStore.setItemAsync('access_token', accessToken);
       await this.persistUserSession(DEFAULT_DEMO_USER);
       return { success: true, user: DEFAULT_DEMO_USER, access_token: accessToken };
@@ -270,7 +316,40 @@ class AuthService {
       return { success: false, message: 'Kata sandi minimal 6 karakter.' };
     }
 
-    // Coba Firebase Sign-up jika dikonfigurasi
+    // 1. Coba Supabase signUp jika dikonfigurasi
+    try {
+      if (isSupabaseConfigured()) {
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: cleanPass,
+          options: {
+            data: { name: cleanName, phone: phone || '' },
+          },
+        });
+        if (!error && data?.session?.access_token) {
+          const accessToken = data.session.access_token;
+          console.log("Supabase JWT Token:", accessToken);
+          await SecureStore.setItemAsync('access_token', accessToken);
+          const sbUser: User = {
+            id: data.user?.id || `usr-${Date.now()}`,
+            name: cleanName,
+            email: cleanEmail,
+            phone: phone || '',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+            badge: 'Penjelajah Pemula',
+            role: 'traveler',
+            createdAt: new Date().toISOString().split('T')[0],
+            provider: 'local',
+          };
+          await this.persistUserSession(sbUser);
+          return { success: true, user: sbUser, access_token: accessToken };
+        }
+      }
+    } catch (sbErr) {
+      console.warn('Supabase signUp attempt error:', sbErr);
+    }
+
+    // 2. Coba Firebase Sign-up jika dikonfigurasi
     if (isFirebaseConfigured() && firebaseConfig.apiKey) {
       try {
         const firebaseUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`;
@@ -288,6 +367,7 @@ class AuthService {
         if (resp.ok && data.localId) {
           const accessToken = data.idToken;
           if (accessToken) {
+            console.log("Supabase JWT Token:", accessToken);
             await SecureStore.setItemAsync('access_token', accessToken);
           }
           const firebaseUser: User = {
@@ -309,7 +389,7 @@ class AuthService {
       }
     }
 
-    // Local Mock DB
+    // 3. Local Mock DB
     const users = await getStoredUsers();
     const exists = users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (exists) {
@@ -335,6 +415,7 @@ class AuthService {
 
     const { passwordHash: _, ...safeUser } = newUser;
     const accessToken = generateMockJwt(safeUser.id, safeUser.email);
+    console.log("Supabase JWT Token:", accessToken);
     await SecureStore.setItemAsync('access_token', accessToken);
     await this.persistUserSession(safeUser);
     return { success: true, user: safeUser, access_token: accessToken };
@@ -345,16 +426,22 @@ class AuthService {
    */
   async loginDemo(): Promise<User> {
     const accessToken = generateMockJwt(DEFAULT_DEMO_USER.id, DEFAULT_DEMO_USER.email);
+    console.log("Supabase JWT Token:", accessToken);
     await SecureStore.setItemAsync('access_token', accessToken);
     await this.persistUserSession(DEFAULT_DEMO_USER);
     return DEFAULT_DEMO_USER;
   }
 
   /**
-   * Logout (Task 03)
-   * Menghapus access_token dari SecureStore dan menghapus user session
+   * Logout (Task 03 - Supabase & SecureStore)
+   * Memanggil signOut pada Supabase Client dan menghapus access_token dari SecureStore.
    */
   async logout(): Promise<void> {
+    try {
+      await supabase.auth.signOut().catch(() => {});
+    } catch (e) {
+      console.warn('Supabase signOut error:', e);
+    }
     try {
       await SecureStore.deleteItemAsync('access_token');
     } catch (e) {

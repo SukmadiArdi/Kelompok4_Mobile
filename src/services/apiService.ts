@@ -15,6 +15,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
+import { supabase } from '../lib/supabase';
 import { Experience, HiddenGem, ArtisanProduct, Booking } from '../types';
 import {
   MOCK_EXPERIENCES,
@@ -60,15 +61,26 @@ export class ApiError extends Error {
 
 /**
  * Helper request HTTP dengan timeout untuk operasi aman.
- * Membaca token dari SecureStore dan menyisipkan header Authorization: Bearer ${token} (Task 02).
+ * Membaca token dari Supabase Session / SecureStore dan menyisipkan header Authorization: Bearer ${token} (Task 02).
+ * Mencetak log Request Headers sebelum fetch.
  * Menangani error 401 (Unauthorized) jika token tidak valid atau expired.
  */
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-  // Baca token dari SecureStore (Task 02)
-  const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  // 1. Ambil token aktif via Supabase session atau fallback dari SecureStore (Task 02)
+  let token: string | null = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token || null;
+  } catch {
+    // Abaikan error jika offline
+  }
+
+  if (!token) {
+    token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  }
 
   const customHeaders = (options.headers as Record<string, string>) || {};
   const headers: Record<string, string> = {
@@ -81,6 +93,9 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Log Request Headers untuk verifikasi terminal (Task 02)
+  console.log("Request Headers:", headers);
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -91,6 +106,7 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise
 
     // Tangani error 401 (Unauthorized) jika token tidak valid atau expired
     if (response.status === 401) {
+      await supabase.auth.signOut().catch(() => {});
       await SecureStore.deleteItemAsync('access_token').catch(() => {});
       throw new ApiError(
         'Sesi autentikasi telah berakhir atau token tidak valid (401 Unauthorized). Silakan login kembali.',
@@ -107,7 +123,8 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise
 
 /**
  * Helper request HTTP standar dengan timeout 10 detik.
- * Membaca token dari SecureStore dan menyisipkan header Authorization: Bearer ${token} (Task 02).
+ * Membaca token dari Supabase Session / SecureStore dan menyisipkan header Authorization: Bearer ${token} (Task 02).
+ * Mencetak log Request Headers sebelum fetch.
  * Menangani error 401 (Unauthorized) jika token tidak valid atau expired.
  */
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -116,8 +133,18 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  // Baca token dari SecureStore (Task 02)
-  const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  // 1. Ambil token aktif via Supabase session atau fallback dari SecureStore (Task 02)
+  let token: string | null = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token || null;
+  } catch {
+    // Abaikan error jika offline
+  }
+
+  if (!token) {
+    token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  }
 
   const customHeaders = (options?.headers as Record<string, string>) || {};
   const headers: Record<string, string> = {
@@ -131,6 +158,9 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Log Request Headers untuk verifikasi terminal (Task 02)
+  console.log("Request Headers:", headers);
+
   try {
     const res = await fetch(url, {
       ...options,
@@ -141,6 +171,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
     // Tangani error 401 (Unauthorized) jika token tidak valid atau expired
     if (res.status === 401) {
+      await supabase.auth.signOut().catch(() => {});
       await SecureStore.deleteItemAsync('access_token').catch(() => {});
       throw new ApiError(
         'Sesi autentikasi telah berakhir atau token tidak valid (401 Unauthorized). Silakan login kembali.',
@@ -764,7 +795,14 @@ export async function loginApi(email: string, password: string): Promise<LoginRe
  * Utility untuk membaca Authorization header dengan Bearer token (Task 02)
  */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  let token: string | null = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token || null;
+  } catch {}
+  if (!token) {
+    token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  }
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

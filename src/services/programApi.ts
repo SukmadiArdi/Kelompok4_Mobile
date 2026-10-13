@@ -11,6 +11,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { PROGRAMS_API_URL, API_TIMEOUT_MS, isApiConfigured } from './apiConfig';
 import { Program, ProgramModel } from '../types/program';
+import { supabase } from '../lib/supabase';
 
 export class ApiError extends Error {
   statusCode?: number;
@@ -24,7 +25,7 @@ export class ApiError extends Error {
 
 /**
  * Wrapper fetch dengan timeout AbortController agar request tidak menggantung.
- * Membaca token dari SecureStore dan menyisipkan Authorization: Bearer ${token}.
+ * Membaca token dari Supabase Session / SecureStore dan menyisipkan Authorization: Bearer ${token}.
  * Menangani error 401 (Unauthorized) jika token tidak valid atau expired.
  */
 async function httpGetJson(url: string): Promise<unknown> {
@@ -33,8 +34,18 @@ async function httpGetJson(url: string): Promise<unknown> {
 
   let response: Response;
   try {
-    // Baca token dari SecureStore (Task 02)
-    const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+    // 1. Ambil token aktif via Supabase session atau fallback dari SecureStore (Task 02)
+    let token: string | null = null;
+    try {
+      const { data } = await supabase.auth.getSession();
+      token = data.session?.access_token || null;
+    } catch {
+      // Abaikan jika offline / dev
+    }
+
+    if (!token) {
+      token = await SecureStore.getItemAsync('access_token').catch(() => null);
+    }
 
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -44,6 +55,9 @@ async function httpGetJson(url: string): Promise<unknown> {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
+
+    // Log Request Headers untuk verifikasi pengujian terminal (Task 02)
+    console.log("Request Headers:", headers);
 
     response = await fetch(url, {
       method: 'GET',
@@ -65,6 +79,7 @@ async function httpGetJson(url: string): Promise<unknown> {
 
   // Tangani error 401 (Unauthorized) jika token tidak valid atau expired
   if (response.status === 401) {
+    await supabase.auth.signOut().catch(() => {});
     await SecureStore.deleteItemAsync('access_token').catch(() => {});
     throw new ApiError(
       'Sesi autentikasi telah berakhir atau token tidak valid (401 Unauthorized). Silakan login kembali.',
