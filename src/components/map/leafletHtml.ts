@@ -152,9 +152,9 @@ export function generateLeafletHtml(config: LeafletMapConfig): string {
     let initialSelectedId = ${JSON.stringify(selectedGemId)};
     const isSatellite = ${mapType === 'satellite' ? 'true' : 'false'};
 
-    // Inisialisasi Peta
+    // Inisialisasi Peta (zoomControl dinonaktifkan karena menggunakan touch gestures)
     const map = L.map('map', {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: false,
       dragging: true,
       touchZoom: true,
