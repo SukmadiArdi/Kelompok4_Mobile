@@ -2,7 +2,7 @@ export const Colors = {
   primary: '#D95338',        // Terracotta Nusantara
   primaryDark: '#B33C24',
   primaryLight: '#FFEDE9',
-  secondary: '#1B4931',      // Forest Emerald
+  secondary: '#ff0000ff',      // Forest Emerald
   secondaryLight: '#E8F5EE',
   accent: '#F59E0B',         // Warm Amber / Gold
   accentLight: '#FEF3C7',

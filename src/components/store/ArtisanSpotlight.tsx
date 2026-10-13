@@ -10,10 +10,17 @@ interface ArtisanSpotlightProps {
 }
 
 export const ArtisanSpotlight: React.FC<ArtisanSpotlightProps> = ({ products }) => {
-  // Extract distinct artisans
-  const artisans = Array.from(
-    new Map(products.map((p) => [p.artisan.id, p.artisan])).values()
+  // Extract distinct artisans safely (menghindari crash jika products kosong atau properti artisan null)
+  const validProducts = (products || []).filter(
+    (p) => Boolean(p && p.artisan && p.artisan.id)
   );
+  const artisans = Array.from(
+    new Map(validProducts.map((p) => [p.artisan.id, p.artisan])).values()
+  );
+
+  if (artisans.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

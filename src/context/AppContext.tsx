@@ -24,6 +24,7 @@ import {
   SECURE_STORAGE_KEYS,
   SecureUserSession,
 } from '../services/secureStorage';
+import { fetchAllAppDataApi } from '../services/apiService';
 
 interface AppContextType {
   experiences: Experience[];
@@ -70,6 +71,15 @@ interface AppContextType {
     guestsCount: number
   ) => Booking;
 
+  // Dynamic REST API Data & Status (Task 02)
+  isLoading: boolean;
+  apiError: string | null;
+  isLiveFromApi: boolean;
+  refreshApiData: () => Promise<void>;
+  setExperiences: React.Dispatch<React.SetStateAction<Experience[]>>;
+  setGems: React.Dispatch<React.SetStateAction<HiddenGem[]>>;
+  setProducts: React.Dispatch<React.SetStateAction<ArtisanProduct[]>>;
+
   // Bookmarking & favorites
   toggleBookmarkGem: (gemId: string) => void;
   toggleFavoriteProduct: (productId: string) => void;
@@ -80,9 +90,12 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [experiences] = useState<Experience[]>(MOCK_EXPERIENCES);
-  const [gems, setGems] = useState<HiddenGem[]>(MOCK_HIDDEN_GEMS);
-  const [products] = useState<ArtisanProduct[]>(MOCK_ARTISANS);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [gems, setGems] = useState<HiddenGem[]>([]);
+  const [products, setProducts] = useState<ArtisanProduct[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isLiveFromApi, setIsLiveFromApi] = useState<boolean>(false);
   // States with Local Storage Persistence
   const [cart, setCart] = useState<CartItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);

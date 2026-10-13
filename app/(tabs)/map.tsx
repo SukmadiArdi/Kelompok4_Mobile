@@ -39,6 +39,13 @@ export default function MapScreen() {
   const [tempDifficulty, setTempDifficulty] = useState('Semua');
   const [tempSort, setTempSort] = useState<'popular' | 'rating' | 'name'>('popular');
 
+  // Sinkronisasi selectedGemId saat gems dinamis selesai dimuat dari API
+  useEffect(() => {
+    if (!selectedGemId && gems && gems.length > 0) {
+      setSelectedGemId(gems[0].id);
+    }
+  }, [gems, selectedGemId]);
+
   // Form states for contribution
   const [showContributeModal, setShowContributeModal] = useState(false);
   const [contributeSuccess, setContributeSuccess] = useState(false);
@@ -176,6 +183,18 @@ export default function MapScreen() {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   };
 
+  // Gem aktif yang terpilih: bila ada yang cocok di list filtered, gunakan itu, jika tidak fallback ke item pertama
+  const activeGem =
+    filteredGems.find((g) => g.id === selectedGemId) ||
+    filteredGems[0] ||
+    null;
+
+  const handleSelectGemAndScroll = (gem: HiddenGem) => {
+    setSelectedGemId(gem.id);
+    setViewMode('map');
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   const handleContributeSubmit = () => {
     if (!newSpotName.trim()) {
       return;
@@ -259,6 +278,14 @@ export default function MapScreen() {
         ref={scrollRef}
         scrollEnabled={scrollEnabled}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContent}>
         {/* Title & Badge */}
         <View style={styles.titleSection}>
