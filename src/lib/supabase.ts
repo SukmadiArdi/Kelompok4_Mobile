@@ -65,10 +65,14 @@ const supabaseAnonKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_key';
 
 export const isSupabaseConfigured = (): boolean => {
+  const url = (process.env.EXPO_PUBLIC_SUPABASE_URL || '').trim();
+  const key = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '').trim();
   return (
-    !!process.env.EXPO_PUBLIC_SUPABASE_URL &&
-    !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY &&
-    !process.env.EXPO_PUBLIC_SUPABASE_URL.includes('xyzcompany')
+    !!url &&
+    !!key &&
+    !url.includes('xyzcompany') &&
+    !key.includes('GANTI_DENGAN_') &&
+    !key.includes('dummy_anon_key')
   );
 };
 
