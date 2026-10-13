@@ -154,4 +154,6 @@ export interface AuthResponse {
   success: boolean;
   user?: User;
   message?: string;
+  access_token?: string;
+  token?: string;
 }

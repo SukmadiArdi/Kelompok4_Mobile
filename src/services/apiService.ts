@@ -14,6 +14,7 @@
  * ============================================================
  */
 
+import * as SecureStore from 'expo-secure-store';
 import { Experience, HiddenGem, ArtisanProduct, Booking } from '../types';
 import {
   MOCK_EXPERIENCES,
@@ -58,18 +59,45 @@ export class ApiError extends Error {
 }
 
 /**
- * Helper request HTTP dengan timeout untuk operasi aman
+ * Helper request HTTP dengan timeout untuk operasi aman.
+ * Membaca token dari SecureStore dan menyisipkan header Authorization: Bearer ${token} (Task 02).
+ * Menangani error 401 (Unauthorized) jika token tidak valid atau expired.
  */
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
+  // Baca token dari SecureStore (Task 02)
+  const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+
+  const customHeaders = (options.headers as Record<string, string>) || {};
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    ...customHeaders,
+  };
+
+  // Sisipkan header Authorization jika token tersedia
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
+      headers,
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
+
+    // Tangani error 401 (Unauthorized) jika token tidak valid atau expired
+    if (response.status === 401) {
+      await SecureStore.deleteItemAsync('access_token').catch(() => {});
+      throw new ApiError(
+        'Sesi autentikasi telah berakhir atau token tidak valid (401 Unauthorized). Silakan login kembali.',
+        401
+      );
+    }
+
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -78,7 +106,9 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise
 }
 
 /**
- * Helper request HTTP standar dengan timeout 10 detik
+ * Helper request HTTP standar dengan timeout 10 detik.
+ * Membaca token dari SecureStore dan menyisipkan header Authorization: Bearer ${token} (Task 02).
+ * Menangani error 401 (Unauthorized) jika token tidak valid atau expired.
  */
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -86,16 +116,37 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+  // Baca token dari SecureStore (Task 02)
+  const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+
+  const customHeaders = (options?.headers as Record<string, string>) || {};
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    ...customHeaders,
+  };
+
+  // Sisipkan header Authorization jika token tersedia
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
     const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
       ...options,
+      headers,
+      signal: controller.signal,
     });
     clearTimeout(timeoutId);
+
+    // Tangani error 401 (Unauthorized) jika token tidak valid atau expired
+    if (res.status === 401) {
+      await SecureStore.deleteItemAsync('access_token').catch(() => {});
+      throw new ApiError(
+        'Sesi autentikasi telah berakhir atau token tidak valid (401 Unauthorized). Silakan login kembali.',
+        401
+      );
+    }
 
     if (!res.ok) {
       throw new ApiError(`HTTP Error: ${res.status} ${res.statusText}`, res.status);
@@ -659,3 +710,61 @@ export async function createBooking(payload: CreateBookingPayload): Promise<Book
     createdAt: new Date().toISOString().split('T')[0],
   };
 }
+
+/* =========================================================================
+ * 5. AUTH & SECURE TOKEN ENDPOINTS (Task 01 & Task 02)
+ * ========================================================================= */
+
+export interface LoginResponseDto {
+  access_token: string;
+  user?: any;
+  message?: string;
+}
+
+/**
+ * Endpoint Login (Task 01)
+ * Mengirimkan email & password via method POST ke /login
+ * Menangkap response access_token (JWT string) dan menyimpannya ke SecureStore.
+ */
+export async function loginApi(email: string, password: string): Promise<LoginResponseDto> {
+  const url = `${API_BASE_URL}/login`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new ApiError('Email atau kata sandi tidak valid (401 Unauthorized)', 401);
+    }
+    throw new ApiError(`Gagal masuk ke server (${response.status})`, response.status);
+  }
+
+  const data = await response.json();
+  const token = data.access_token || data.token || data.accessToken;
+  if (!token) {
+    throw new ApiError('Response dari server tidak memuat access_token');
+  }
+
+  // Simpan token ke SecureStore (Task 01)
+  await SecureStore.setItemAsync('access_token', token);
+
+  return {
+    access_token: token,
+    user: data.user,
+    message: data.message,
+  };
+}
+
+/**
+ * Utility untuk membaca Authorization header dengan Bearer token (Task 02)
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+

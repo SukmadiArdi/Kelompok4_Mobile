@@ -1,6 +1,40 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { User, AuthResponse } from '../types';
 import { firebaseConfig, isFirebaseConfigured } from './firebaseConfig';
+import { API_BASE_URL } from './apiConfig';
+import { tokenStorage } from '../utils/tokenStorage';
+
+/**
+ * Helper untuk membuat mock JWT string (Task 01)
+ */
+export function generateMockJwt(userId: string, email: string): string {
+  const base64Url = (str: string): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    let output = '';
+    for (
+      let block = 0, charCode, i = 0, map = chars;
+      str.charAt(i | 0) || ((map = '='), i % 1);
+      output += map.charAt(63 & (block >> (8 - (i % 1) * 8)))
+    ) {
+      charCode = str.charCodeAt((i += 3 / 4));
+      block = (block << 8) | charCode;
+    }
+    return output.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+
+  const header = base64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = base64Url(
+    JSON.stringify({
+      sub: userId,
+      email,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+    })
+  );
+  const signature = 'sec_sign_' + Math.random().toString(36).substring(2, 15);
+  return `${header}.${payload}.${signature}`;
+}
 
 const CURRENT_USER_KEY = '@lokaltrip_auth_user';
 const USERS_DB_KEY = '@lokaltrip_users_store';
@@ -88,8 +122,9 @@ class AuthService {
   }
 
   /**
-   * Login dengan Email & Password
-   * Mendukung Firebase Cloud Auth jika API Key tersedia, atau Local Mock Store jika offline/demo
+   * Login dengan Email & Password (Task 01)
+   * Mengirimkan email & password via method POST ke endpoint /login atau auth provider,
+   * menangkap response access_token (JWT string), dan menyimpannya ke SecureStore.
    */
   async login(email: string, password: string): Promise<AuthResponse> {
     const cleanEmail = email.trim().toLowerCase();
@@ -99,7 +134,49 @@ class AuthService {
       return { success: false, message: 'Email dan password wajib diisi.' };
     }
 
-    // 1. Coba Firebase Auth via REST API jika konfigurasi valid
+    // 1. Coba REST API backend endpoint /login via POST jika API_BASE_URL tersedia
+    if (API_BASE_URL) {
+      try {
+        const loginUrl = `${API_BASE_URL}/login`;
+        const resp = await fetch(loginUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            email: cleanEmail,
+            password: cleanPass,
+          }),
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          const accessToken = data.access_token || data.token || data.accessToken;
+          if (accessToken) {
+            // Simpan token ke SecureStore sesuai Task 01
+            await SecureStore.setItemAsync('access_token', accessToken);
+            const user: User = data.user || {
+              id: data.id || `usr-${Date.now()}`,
+              name: data.name || cleanEmail.split('@')[0],
+              email: cleanEmail,
+              badge: 'Penjelajah Nusantara',
+              role: 'traveler',
+              createdAt: new Date().toISOString().split('T')[0],
+              provider: 'local',
+            };
+            await this.persistUserSession(user);
+            return { success: true, user, access_token: accessToken };
+          }
+        } else if (resp.status === 401) {
+          return { success: false, message: 'Email atau kata sandi tidak sesuai (401 Unauthorized).' };
+        }
+      } catch (apiErr) {
+        console.warn('REST API /login tidak terhubung, fallback ke provider lokal:', apiErr);
+      }
+    }
+
+    // 2. Coba Firebase Auth via REST API jika konfigurasi valid
     if (isFirebaseConfigured() && firebaseConfig.apiKey) {
       try {
         const firebaseUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`;
@@ -115,6 +192,10 @@ class AuthService {
 
         const data = await resp.json();
         if (resp.ok && data.localId) {
+          const accessToken = data.idToken;
+          if (accessToken) {
+            await SecureStore.setItemAsync('access_token', accessToken);
+          }
           const firebaseUser: User = {
             id: data.localId,
             name: data.displayName || cleanEmail.split('@')[0],
@@ -126,7 +207,7 @@ class AuthService {
             provider: 'firebase',
           };
           await this.persistUserSession(firebaseUser);
-          return { success: true, user: firebaseUser };
+          return { success: true, user: firebaseUser, access_token: accessToken };
         } else if (data.error && data.error.message) {
           const errCode = data.error.message;
           if (errCode.includes('EMAIL_NOT_FOUND') || errCode.includes('INVALID_PASSWORD') || errCode.includes('INVALID_LOGIN_CREDENTIALS')) {
@@ -138,7 +219,7 @@ class AuthService {
       }
     }
 
-    // 2. Fallback ke Local Mock Store
+    // 3. Fallback ke Local Mock Store
     const users = await getStoredUsers();
     const matched = users.find(
       (u) => u.email.toLowerCase() === cleanEmail && u.passwordHash === cleanPass
@@ -146,14 +227,18 @@ class AuthService {
 
     if (matched) {
       const { passwordHash: _, ...safeUser } = matched;
+      const accessToken = generateMockJwt(safeUser.id, safeUser.email);
+      await SecureStore.setItemAsync('access_token', accessToken);
       await this.persistUserSession(safeUser);
-      return { success: true, user: safeUser };
+      return { success: true, user: safeUser, access_token: accessToken };
     }
 
     // Khusus demo akun Arya Wibowo
     if (cleanEmail === DEFAULT_DEMO_USER.email.toLowerCase() && cleanPass === 'password123') {
+      const accessToken = generateMockJwt(DEFAULT_DEMO_USER.id, DEFAULT_DEMO_USER.email);
+      await SecureStore.setItemAsync('access_token', accessToken);
       await this.persistUserSession(DEFAULT_DEMO_USER);
-      return { success: true, user: DEFAULT_DEMO_USER };
+      return { success: true, user: DEFAULT_DEMO_USER, access_token: accessToken };
     }
 
     return {
@@ -201,6 +286,10 @@ class AuthService {
 
         const data = await resp.json();
         if (resp.ok && data.localId) {
+          const accessToken = data.idToken;
+          if (accessToken) {
+            await SecureStore.setItemAsync('access_token', accessToken);
+          }
           const firebaseUser: User = {
             id: data.localId,
             name: cleanName,
@@ -213,7 +302,7 @@ class AuthService {
             provider: 'firebase',
           };
           await this.persistUserSession(firebaseUser);
-          return { success: true, user: firebaseUser };
+          return { success: true, user: firebaseUser, access_token: accessToken };
         }
       } catch (err) {
         console.warn('Firebase registration fallback to local:', err);
@@ -245,22 +334,32 @@ class AuthService {
     await saveStoredUsers(users);
 
     const { passwordHash: _, ...safeUser } = newUser;
+    const accessToken = generateMockJwt(safeUser.id, safeUser.email);
+    await SecureStore.setItemAsync('access_token', accessToken);
     await this.persistUserSession(safeUser);
-    return { success: true, user: safeUser };
+    return { success: true, user: safeUser, access_token: accessToken };
   }
 
   /**
    * 1-Click Demo Login
    */
   async loginDemo(): Promise<User> {
+    const accessToken = generateMockJwt(DEFAULT_DEMO_USER.id, DEFAULT_DEMO_USER.email);
+    await SecureStore.setItemAsync('access_token', accessToken);
     await this.persistUserSession(DEFAULT_DEMO_USER);
     return DEFAULT_DEMO_USER;
   }
 
   /**
-   * Logout
+   * Logout (Task 03)
+   * Menghapus access_token dari SecureStore dan menghapus user session
    */
   async logout(): Promise<void> {
+    try {
+      await SecureStore.deleteItemAsync('access_token');
+    } catch (e) {
+      console.warn('Failed to delete access_token:', e);
+    }
     try {
       await AsyncStorage.removeItem(CURRENT_USER_KEY);
     } catch (e) {

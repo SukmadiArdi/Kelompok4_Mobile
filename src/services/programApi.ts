@@ -8,6 +8,7 @@
  *   UI tidak pernah melakukan parsing JSON secara langsung.
  */
 
+import * as SecureStore from 'expo-secure-store';
 import { PROGRAMS_API_URL, API_TIMEOUT_MS, isApiConfigured } from './apiConfig';
 import { Program, ProgramModel } from '../types/program';
 
@@ -23,6 +24,8 @@ export class ApiError extends Error {
 
 /**
  * Wrapper fetch dengan timeout AbortController agar request tidak menggantung.
+ * Membaca token dari SecureStore dan menyisipkan Authorization: Bearer ${token}.
+ * Menangani error 401 (Unauthorized) jika token tidak valid atau expired.
  */
 async function httpGetJson(url: string): Promise<unknown> {
   const controller = new AbortController();
@@ -30,11 +33,21 @@ async function httpGetJson(url: string): Promise<unknown> {
 
   let response: Response;
   try {
+    // Baca token dari SecureStore (Task 02)
+    const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+
+    // Sisipkan header Authorization jika token tersedia
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     response = await fetch(url, {
       method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers,
       signal: controller.signal,
     });
   } catch (err) {
@@ -49,6 +62,15 @@ async function httpGetJson(url: string): Promise<unknown> {
     );
   }
   clearTimeout(timeoutId);
+
+  // Tangani error 401 (Unauthorized) jika token tidak valid atau expired
+  if (response.status === 401) {
+    await SecureStore.deleteItemAsync('access_token').catch(() => {});
+    throw new ApiError(
+      'Sesi autentikasi telah berakhir atau token tidak valid (401 Unauthorized). Silakan login kembali.',
+      401
+    );
+  }
 
   if (!response.ok) {
     throw new ApiError(
