@@ -64,27 +64,56 @@ async function httpGetJson(url: string): Promise<unknown> {
   }
 }
 
+// Mock Data Program Prioritas PresidenKu sesuai modul Task 03
+const MOCK_PROGRAMS_RAW = [
+  {
+    id: 1,
+    name: 'Program Pendidikan',
+    description: 'Peningkatan kualitas pendidikan di Indonesia.',
+    image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=300&auto=format&fit=crop&q=80',
+    status: 'active',
+  },
+  {
+    id: 2,
+    name: 'Program Lingkungan',
+    description: 'Lingkungan yang lebih baik untuk masa depan.',
+    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=300&auto=format&fit=crop&q=80',
+    status: 'active',
+  },
+  {
+    id: 3,
+    name: 'Program Kesehatan',
+    description: 'Masyarakat sehat dan sejahtera.',
+    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=300&auto=format&fit=crop&q=80',
+    status: 'active',
+  },
+];
+
 /**
  * Ambil daftar program dari REST API.
  * Menerima beberapa bentuk response umum: array langsung, `{ data: [...] }`,
  * atau `{ results: [...] }` — semuanya dipetakan lewat ProgramModel.
  */
 export async function fetchPrograms(): Promise<Program[]> {
-  if (!isApiConfigured()) {
-    throw new ApiError(
-      'Endpoint REST API belum dikonfigurasi. Isi EXPO_PUBLIC_API_BASE_URL pada file .env (salin dari .env.example), lalu restart aplikasi.'
-    );
+  if (isApiConfigured()) {
+    try {
+      const json = await httpGetJson(PROGRAMS_API_URL);
+
+      const list: unknown = Array.isArray(json)
+        ? json
+        : (json as Record<string, unknown>)?.data ??
+          (json as Record<string, unknown>)?.results ??
+          [];
+
+      return ProgramModel.fromList(list);
+    } catch (err) {
+      console.warn('[programApi] Gagal fetch dari REST API, beralih ke fallback data:', err);
+    }
   }
 
-  const json = await httpGetJson(PROGRAMS_API_URL);
-
-  const list: unknown = Array.isArray(json)
-    ? json
-    : (json as Record<string, unknown>)?.data ??
-      (json as Record<string, unknown>)?.results ??
-      [];
-
-  return ProgramModel.fromList(list);
+  // Simulasi latensi jaringan (300ms) agar loading state dan transisi UI teruji
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  return ProgramModel.fromList(MOCK_PROGRAMS_RAW);
 }
 
 export default { fetchPrograms };

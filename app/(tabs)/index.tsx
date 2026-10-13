@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   Image,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,27 +18,101 @@ import { ExperienceCard } from '@/src/components/experiences/ExperienceCard';
 import { GemCard } from '@/src/components/map/GemCard';
 import { ProductCard } from '@/src/components/store/ProductCard';
 import { BookingModal } from '@/src/components/experiences/BookingModal';
+import {
+  LoadingView,
+  ErrorView,
+  EmptyView,
+  ApiStatusBar,
+} from '@/src/components/common/ApiStateView';
+import { usePrograms } from '@/src/hooks/usePrograms';
+import { ProgramList } from '@/src/components/programs/ProgramList';
 import { Experience } from '@/src/types';
+import { externalStyles } from '@/src/constants/styles';
+
+// =========================================================================
+// [MODUL 1 - 5.5. TYPE & INTERFACE]
+// =========================================================================
+interface QuickStatItem {
+  id: string;
+  label: string;
+  count: number;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}
 
 export default function HomeScreen() {
-  const { experiences, gems, products } = useApp();
+  const {
+    experiences,
+    gems,
+    products,
+    isLoading,
+    apiError,
+    isLiveFromApi,
+    refreshApiData,
+  } = useApp();
+
+  const {
+    programs,
+    isLoading: isProgramsLoading,
+    isError: isProgramsError,
+    isEmpty: isProgramsEmpty,
+    errorMessage: programsError,
+    retry: retryPrograms,
+  } = usePrograms();
+
   const [search, setSearch] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
 
+  
+  const quickStats: QuickStatItem[] = [
+    { id: 'stat-exp', label: 'Pengalaman', count: experiences.length, icon: 'compass', color: Colors.primary },
+    { id: 'stat-gem', label: 'Hidden Gems', count: gems.length, icon: 'map', color: Colors.secondary },
+    { id: 'stat-prod', label: 'Karya Budaya', count: products.length, icon: 'basket', color: Colors.accent },
+  ];
+
+  
+  const renderStatPill = (item: QuickStatItem) => {
+    return (
+      <View
+        key={item.id}
+        style={[
+          externalStyles.badge,
+          {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            marginRight: 8,
+          },
+        ]}>
+        <Ionicons name={item.icon} size={14} color={item.color} />
+        <Text
+          style={[
+            externalStyles.badgeText, // External Style
+            { color: Colors.text, marginLeft: 6, fontSize: 12 }, // Inline Style
+          ]}>
+          {item.label}:{' '}
+          <Text style={{ fontWeight: '700', color: item.color }}>{item.count}</Text>
+        </Text>
+      </View>
+    );
+  };
+
   // Filter based on search query
-  const filteredExperiences = experiences.filter((e) =>
-    e.title.toLowerCase().includes(search.toLowerCase()) ||
-    e.location.toLowerCase().includes(search.toLowerCase())
+  const filteredExperiences = (experiences || []).filter((e) =>
+    (e?.title || '').toLowerCase().includes(search.toLowerCase()) ||
+    (e?.location || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const filteredGems = gems.filter((g) =>
-    g.name.toLowerCase().includes(search.toLowerCase()) ||
-    g.location.toLowerCase().includes(search.toLowerCase())
+  const filteredGems = (gems || []).filter((g) =>
+    (g?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (g?.location || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.artisan.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProducts = (products || []).filter((p) =>
+    (p?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p?.artisan?.name || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -48,14 +121,15 @@ export default function HomeScreen() {
       
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading || isProgramsLoading}
+            onRefresh={handleRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContainer}>
-        {/* Search Bar */}
-        <SearchBar
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Cari kelas batik, air terjun rahasia, tenun..."
-        />
-
         {/* Hero Banner */}
         <View style={styles.heroCard}>
           <View style={styles.heroTextContent}>
@@ -79,6 +153,14 @@ export default function HomeScreen() {
             style={styles.heroImage}
           />
         </View>
+
+        {/* Quick Stats Pill Carousel */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statsScrollContent}>
+          {quickStats.map((stat) => renderStatPill(stat))}
+        </ScrollView>
 
         {/* 3 Main Features Access Hub */}
         <View style={styles.featuresHub}>
@@ -156,6 +238,35 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Task 03: Program Prioritas (PresidenKu REST API Module) */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <View style={styles.taskBadge}>
+                <Ionicons name="cloud-done-outline" size={12} color={Colors.primary} />
+                <Text style={styles.taskBadgeText}>Task 03: Display API Data</Text>
+              </View>
+              <Text style={styles.sectionTitle}>Program Prioritas</Text>
+              <Text style={styles.sectionSubtitle}>
+                Data program strategis PresidenKu via REST API
+              </Text>
+            </View>
+            <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
+              <Ionicons name="refresh" size={12} color={Colors.primary} />
+              <Text style={styles.seeAllText}>Refresh</Text>
+            </Pressable>
+          </View>
+
+          <ProgramList
+            programs={programs}
+            isLoading={isProgramsLoading}
+            isError={isProgramsError}
+            isEmpty={isProgramsEmpty}
+            errorMessage={programsError}
+            onRetry={retryPrograms}
+          />
+        </View>
+
         {/* Section 1: Booking Experience Highlights */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
@@ -170,19 +281,29 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}>
-            {filteredExperiences.map((exp) => (
-              <ExperienceCard
-                key={exp.id}
-                experience={exp}
-                horizontal={true}
-                onBookPress={(item) => setSelectedExpForBooking(item)}
-              />
-            ))}
-          </ScrollView>
+          {isLoading && experiences.length === 0 ? (
+            <LoadingView message="Memuat pengalaman budaya..." />
+          ) : filteredExperiences.length === 0 ? (
+            <EmptyView
+              title="Belum Ada Pengalaman"
+              subtitle="Data pengalaman belum tersedia dari server."
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}>
+              {filteredExperiences.map((exp) => (
+                <ExperienceCard
+                  key={exp.id}
+                  experience={exp}
+                  horizontal={true}
+                  onBookPress={(item) => setSelectedExpForBooking(item)}
+                />
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Section 2: Hidden Gems Highlights */}
@@ -199,14 +320,24 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}>
-            {filteredGems.map((gem) => (
-              <GemCard key={gem.id} gem={gem} horizontal={true} />
-            ))}
-          </ScrollView>
+          {isLoading && gems.length === 0 ? (
+            <LoadingView message="Memuat hidden gems..." />
+          ) : filteredGems.length === 0 ? (
+            <EmptyView
+              title="Belum Ada Hidden Gems"
+              subtitle="Data lokasi tersembunyi belum tersedia dari server."
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}>
+              {filteredGems.map((gem) => (
+                <GemCard key={gem.id} gem={gem} horizontal={true} />
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Section 3: Artisan Store Highlights */}
@@ -223,14 +354,24 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}>
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} horizontal={true} />
-            ))}
-          </ScrollView>
+          {isLoading && products.length === 0 ? (
+            <LoadingView message="Memuat produk kerajinan..." />
+          ) : filteredProducts.length === 0 ? (
+            <EmptyView
+              title="Belum Ada Karya Budaya"
+              subtitle="Data produk kerajinan belum tersedia dari server."
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}>
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} horizontal={true} />
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Community & Impact Mission Banner */}
@@ -244,6 +385,7 @@ export default function HomeScreen() {
             untuk memperkuat ekonomi komunitas adat dan melestarikan budaya adiluhung Indonesia.
           </Text>
         </View>
+
       </ScrollView>
 
       {/* Booking Modal */}
@@ -263,7 +405,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContainer: {
-    paddingBottom: 30,
+    paddingBottom: 36,
   },
   heroCard: {
     marginHorizontal: 20,
@@ -272,7 +414,7 @@ const styles = StyleSheet.create({
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -315,18 +457,22 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     opacity: 0.9,
   },
+  statsScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 22,
+  },
   featuresHub: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   hubTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
     color: Colors.text,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   featureCardsRow: {
-    gap: 10,
+    gap: 12,
   },
   featureCard: {
     borderRadius: 16,
@@ -372,7 +518,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   sectionContainer: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -382,14 +528,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
     color: Colors.text,
   },
   sectionSubtitle: {
     fontSize: 12,
     color: Colors.textSecondary,
-    marginTop: 2,
+    marginTop: 3,
   },
   seeAllText: {
     fontSize: 12,
@@ -401,10 +547,11 @@ const styles = StyleSheet.create({
   },
   impactCard: {
     marginHorizontal: 20,
-    marginTop: 8,
+    marginTop: 4,
+    marginBottom: 16,
     backgroundColor: Colors.surface,
     borderRadius: 18,
-    padding: 20,
+    padding: 22,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
@@ -435,5 +582,35 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  searchWrapper: {
+    marginBottom: 10,
+  },
+  taskBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  taskBadgeText: {
+    color: Colors.primary,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  refreshPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.surfaceSubtle,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
 });

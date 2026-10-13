@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,10 +15,16 @@ import { SearchBar } from '@/src/components/common/SearchBar';
 import { CategoryPills } from '@/src/components/common/CategoryPills';
 import { ExperienceCard } from '@/src/components/experiences/ExperienceCard';
 import { BookingModal } from '@/src/components/experiences/BookingModal';
+import {
+  LoadingView,
+  ErrorView,
+  EmptyView,
+  ApiStatusBar,
+} from '@/src/components/common/ApiStateView';
 import { Experience } from '@/src/types';
 
 export default function ExperiencesScreen() {
-  const { experiences } = useApp();
+  const { experiences, isLoading, apiError, isLiveFromApi, refreshApiData } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [bookingExperience, setBookingExperience] = useState<Experience | null>(null);
@@ -30,13 +37,14 @@ export default function ExperiencesScreen() {
     'Alam & Petualangan',
   ];
 
-  const filtered = experiences.filter((exp) => {
+  const filtered = (experiences || []).filter((exp) => {
+    if (!exp) return false;
     const matchesCategory =
       selectedCategory === 'Semua' || exp.category === selectedCategory;
     const matchesSearch =
-      exp.title.toLowerCase().includes(search.toLowerCase()) ||
-      exp.location.toLowerCase().includes(search.toLowerCase()) ||
-      exp.guide.name.toLowerCase().includes(search.toLowerCase());
+      (exp.title || '').toLowerCase().includes(search.toLowerCase()) ||
+      (exp.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (exp.guide?.name || '').toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -46,6 +54,14 @@ export default function ExperiencesScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContent}>
         {/* Title Header */}
         <View style={styles.titleSection}>
@@ -59,6 +75,9 @@ export default function ExperiencesScreen() {
             lokal berlisensi.
           </Text>
         </View>
+
+        {/* Status Indikator REST API */}
+        <ApiStatusBar isLive={isLiveFromApi} onRefresh={refreshApiData} />
 
         {/* Search */}
         <SearchBar
@@ -81,8 +100,32 @@ export default function ExperiencesScreen() {
           </Text>
         </View>
 
-        {/* Experiences List */}
-        {filtered.length > 0 ? (
+        {/* State-driven Content Rendering: Loading -> Error -> Empty -> List */}
+        {isLoading && (!experiences || experiences.length === 0) ? (
+          <LoadingView message="Memuat data pengalaman budaya..." />
+        ) : apiError && (!experiences || experiences.length === 0) ? (
+          <ErrorView
+            title="Gagal Mengambil Data"
+            message={apiError}
+            onRetry={refreshApiData}
+          />
+        ) : !experiences || experiences.length === 0 ? (
+          <EmptyView
+            title="Belum Ada Pengalaman Budaya"
+            subtitle="Katalog tur dan lokakarya budaya belum tersedia dari server."
+            onRefresh={refreshApiData}
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyView
+            icon="search-outline"
+            title="Tidak Ada Pengalaman Ditemukan"
+            subtitle="Coba gunakan kata kunci pencarian lain atau ganti filter kategori."
+            onRefresh={() => {
+              setSearch('');
+              setSelectedCategory('Semua');
+            }}
+          />
+        ) : (
           filtered.map((exp) => (
             <ExperienceCard
               key={exp.id}
@@ -90,14 +133,6 @@ export default function ExperiencesScreen() {
               onBookPress={(item) => setBookingExperience(item)}
             />
           ))
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={48} color={Colors.textMuted} />
-            <Text style={styles.emptyTitle}>Tidak ada pengalaman ditemukan</Text>
-            <Text style={styles.emptySubtitle}>
-              Coba gunakan kata kunci pencarian lain atau ganti kategori.
-            </Text>
-          </View>
         )}
       </ScrollView>
 

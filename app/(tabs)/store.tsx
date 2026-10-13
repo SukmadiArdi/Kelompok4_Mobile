@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -16,9 +17,23 @@ import { SearchBar } from '@/src/components/common/SearchBar';
 import { CategoryPills } from '@/src/components/common/CategoryPills';
 import { ProductCard } from '@/src/components/store/ProductCard';
 import { ArtisanSpotlight } from '@/src/components/store/ArtisanSpotlight';
+import {
+  LoadingView,
+  ErrorView,
+  EmptyView,
+  ApiStatusBar,
+} from '@/src/components/common/ApiStateView';
 
 export default function StoreScreen() {
-  const { products, cartCount, cartSubtotal } = useApp();
+  const {
+    products,
+    cartCount,
+    cartSubtotal,
+    isLoading,
+    apiError,
+    isLiveFromApi,
+    refreshApiData,
+  } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
 
@@ -30,13 +45,14 @@ export default function StoreScreen() {
     'Ukiran Kayu',
   ];
 
-  const filteredProducts = products.filter((p) => {
+  const filteredProducts = (products || []).filter((p) => {
+    if (!p) return false;
     const matchesCategory =
       selectedCategory === 'Semua' || p.category === selectedCategory;
     const matchesSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.artisan.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.artisan.village.toLowerCase().includes(search.toLowerCase());
+      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.artisan?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.artisan?.village || '').toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -54,6 +70,14 @@ export default function StoreScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshApiData}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         contentContainerStyle={styles.scrollContent}>
         {/* Title Header */}
         <View style={styles.titleSection}>
@@ -67,6 +91,9 @@ export default function StoreScreen() {
             pengrajin nusantara tanpa perantara.
           </Text>
         </View>
+
+        {/* Status Indikator REST API */}
+        <ApiStatusBar isLive={isLiveFromApi} onRefresh={refreshApiData} />
 
         {/* Search */}
         <SearchBar
@@ -94,9 +121,36 @@ export default function StoreScreen() {
             </Text>
           </View>
 
-          {filteredProducts.map((prod) => (
-            <ProductCard key={prod.id} product={prod} />
-          ))}
+          {/* State-driven Content Rendering: Loading -> Error -> Empty -> List */}
+          {isLoading && (!products || products.length === 0) ? (
+            <LoadingView message="Memuat data produk kerajinan..." />
+          ) : apiError && (!products || products.length === 0) ? (
+            <ErrorView
+              title="Gagal Mengambil Katalog Produk"
+              message={apiError}
+              onRetry={refreshApiData}
+            />
+          ) : !products || products.length === 0 ? (
+            <EmptyView
+              title="Belum Ada Produk Kerajinan"
+              subtitle="Katalog kerajinan tangan dari server belum tersedia saat ini."
+              onRefresh={refreshApiData}
+            />
+          ) : filteredProducts.length === 0 ? (
+            <EmptyView
+              icon="search-outline"
+              title="Produk Tidak Ditemukan"
+              subtitle="Coba gunakan kata kunci pencarian lain atau pilih kategori lain."
+              onRefresh={() => {
+                setSearch('');
+                setSelectedCategory('Semua');
+              }}
+            />
+          ) : (
+            filteredProducts.map((prod) => (
+              <ProductCard key={prod.id} product={prod} />
+            ))
+          )}
         </View>
       </ScrollView>
 

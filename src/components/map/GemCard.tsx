@@ -6,16 +6,24 @@ import { HiddenGem } from '../../types';
 import { Colors } from '../../constants/Theme';
 import { useApp } from '../../context/AppContext';
 
+import { openDirections } from '../../utils/mapUtils';
+
 interface GemCardProps {
   gem: HiddenGem;
   horizontal?: boolean;
+  onViewOnMap?: (gem: HiddenGem) => void;
 }
 
-export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => {
+export const GemCard: React.FC<GemCardProps> = ({
+  gem,
+  horizontal = false,
+  onViewOnMap,
+}) => {
   const { savedGemIds, toggleBookmarkGem } = useApp();
+  const [imageError, setImageError] = React.useState(false);
   const isBookmarked = savedGemIds.includes(gem.id);
 
-  const getDifficultyColor = (diff: string) => {
+  const getDifficultyColor = (diff?: string) => {
     switch (diff) {
       case 'Mudah':
         return { bg: '#E8F5EE', text: '#1B4931' };
@@ -28,11 +36,27 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
     }
   };
 
-  const diffColor = getDifficultyColor(gem.difficulty);
+  const gemDifficulty = gem.difficulty || 'Sedang';
+  const diffColor = getDifficultyColor(gemDifficulty);
 
   const handleCardPress = () => {
     router.push(`/gem/${gem.id}`);
   };
+
+  const displayImage = !imageError && gem.image ? gem.image : FALLBACK_GEM_IMAGE;
+  const gemName = gem.name || 'Destinasi Tersembunyi';
+  const gemCategory = gem.category || 'Air Terjun';
+  const gemCity = gem.city || 'Indonesia';
+  const gemLocation = gem.location || `${gem.city || 'Indonesia'}, ${gem.province || ''}`;
+  const gemDesc = gem.description || 'Destinasi wisata tersembunyi dengan keindahan alami.';
+  const gemBestTime = gem.bestTime || 'Pagi / Sore';
+  const gemLikes = gem.likesCount ?? 0;
+  const gemReviews = gem.reviewsCount ?? 0;
+  const contributorName = gem.contributor?.name || 'Komunitas Penjelajah';
+  const contributorAvatar = gem.contributor?.avatar || FALLBACK_CONTRIBUTOR_AVATAR;
+  const contributorBadge = gem.contributor?.badge || 'Penjelajah Nusantara';
+  const safeLat = gem.mapCoords?.lat ?? -7.8013;
+  const safeLng = gem.mapCoords?.lng ?? 110.3644;
 
   if (horizontal) {
     return (
@@ -43,14 +67,18 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
           pressed && styles.cardPressed,
         ]}>
         <View style={styles.horizontalImageContainer}>
-          <Image source={{ uri: gem.image }} style={styles.horizontalImage} />
+          <Image
+            source={{ uri: gem.image }}
+            style={styles.horizontalImage}
+            resizeMode="cover"
+          />
           <View
             style={[
               styles.difficultyBadge,
               { backgroundColor: diffColor.bg },
             ]}>
             <Text style={[styles.difficultyText, { color: diffColor.text }]}>
-              {gem.difficulty}
+              {gemDifficulty}
             </Text>
           </View>
         </View>
@@ -59,22 +87,22 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={12} color={Colors.primary} />
             <Text style={styles.locationText} numberOfLines={1}>
-              {gem.city}
+              {gemCity}
             </Text>
           </View>
 
           <Text style={styles.horizontalTitle} numberOfLines={2}>
-            {gem.name}
+            {gemName}
           </Text>
 
           <View style={styles.horizontalFooter}>
             <View style={styles.metaStat}>
               <Ionicons name="heart" size={13} color={Colors.primary} />
-              <Text style={styles.metaStatText}>{gem.likesCount}</Text>
+              <Text style={styles.metaStatText}>{gemLikes}</Text>
             </View>
             <View style={styles.metaStat}>
               <Ionicons name="chatbubble-outline" size={12} color={Colors.textSecondary} />
-              <Text style={styles.metaStatText}>{gem.reviewsCount}</Text>
+              <Text style={styles.metaStatText}>{gemReviews}</Text>
             </View>
           </View>
         </View>
@@ -87,12 +115,16 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
       onPress={handleCardPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: gem.image }} style={styles.image} />
+        <Image
+          source={{ uri: gem.image }}
+          style={styles.image}
+          resizeMode="cover"
+        />
         
         {/* Badges on image */}
         <View style={styles.badgeRow}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>{gem.category}</Text>
+            <Text style={styles.categoryBadgeText}>{gemCategory}</Text>
           </View>
           <View
             style={[
@@ -100,7 +132,7 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
               { backgroundColor: diffColor.bg },
             ]}>
             <Text style={[styles.difficultyText, { color: diffColor.text }]}>
-              {gem.difficulty}
+              {gemDifficulty}
             </Text>
           </View>
         </View>
@@ -128,42 +160,71 @@ export const GemCard: React.FC<GemCardProps> = ({ gem, horizontal = false }) => 
         <View style={styles.locationRow}>
           <Ionicons name="location-sharp" size={13} color={Colors.primary} />
           <Text style={styles.locationText} numberOfLines={1}>
-            {gem.location}, {gem.province}
+            {gemLocation}
           </Text>
         </View>
 
         <Text style={styles.title} numberOfLines={2}>
-          {gem.name}
+          {gemName}
         </Text>
 
         <Text style={styles.description} numberOfLines={2}>
-          {gem.description}
+          {gemDesc}
         </Text>
 
         <View style={styles.bestTimePill}>
           <Feather name="sun" size={12} color={Colors.accent} />
           <Text style={styles.bestTimeText} numberOfLines={1}>
-            {gem.bestTime}
+            {gemBestTime}
           </Text>
+        </View>
+
+        {/* Card Actions: Lihat di Peta & Petunjuk Arah */}
+        <View style={styles.cardActionsRow}>
+          {onViewOnMap && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onViewOnMap(gem);
+              }}
+              style={styles.cardActionMapBtn}>
+              <Ionicons name="map-outline" size={13} color={Colors.secondary} />
+              <Text style={styles.cardActionMapText}>Lihat di Peta</Text>
+            </Pressable>
+          )}
+
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              openDirections(gem.mapCoords.lat, gem.mapCoords.lng, gem.name);
+            }}
+            style={styles.cardActionGpsBtn}>
+            <Ionicons name="navigate-outline" size={13} color={Colors.primary} />
+            <Text style={styles.cardActionGpsText}>Petunjuk Arah (GPS)</Text>
+          </Pressable>
         </View>
 
         <View style={styles.footerRow}>
           <View style={styles.contributorBox}>
-            <Image source={{ uri: gem.contributor.avatar }} style={styles.contributorAvatar} />
+            <Image
+              source={{ uri: gem.contributor.avatar }}
+              style={styles.contributorAvatar}
+              resizeMode="cover"
+            />
             <View>
               <Text style={styles.contributorName}>{gem.contributor.name}</Text>
               <Text style={styles.contributorDate}>{gem.contributor.badge}</Text>
             </View>
-          </View>
+          )}
 
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Ionicons name="heart" size={15} color={Colors.primary} />
-              <Text style={styles.statNumber}>{gem.likesCount}</Text>
+              <Text style={styles.statNumber}>{gemLikes}</Text>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="chatbubble-ellipses-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.statNumber}>{gem.reviewsCount}</Text>
+              <Text style={styles.statNumber}>{gemReviews}</Text>
             </View>
           </View>
         </View>
@@ -384,6 +445,44 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
     fontWeight: '600',
+  },
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 10,
+  },
+  cardActionMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.secondaryLight,
+    borderWidth: 1,
+    borderColor: 'rgba(27, 73, 49, 0.2)',
+  },
+  cardActionMapText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.secondary,
+  },
+  cardActionGpsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.primaryLight,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 83, 56, 0.2)',
+  },
+  cardActionGpsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primary,
   },
 });
 
