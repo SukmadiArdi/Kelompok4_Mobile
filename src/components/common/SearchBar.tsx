@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, Pressable } from 'react-native';
+import { View, TextInput, StyleSheet, Pressable, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/Theme';
 
@@ -9,6 +9,7 @@ interface SearchBarProps {
   placeholder?: string;
   onFilterPress?: () => void;
   showFilter?: boolean;
+  filterBadgeCount?: number;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -17,6 +18,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = 'Cari tur budaya, hidden gem, kerajinan...',
   onFilterPress,
   showFilter = true,
+  filterBadgeCount = 0,
 }) => {
   return (
     <View style={styles.container}>
@@ -39,8 +41,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       {showFilter && (
         <Pressable
           onPress={onFilterPress}
-          style={({ pressed }) => [styles.filterButton, pressed && styles.buttonPressed]}>
-          <Feather name="sliders" size={18} color={Colors.primary} />
+          style={({ pressed }) => [
+            styles.filterButton,
+            filterBadgeCount > 0 && styles.filterButtonActive,
+            pressed && styles.buttonPressed,
+          ]}>
+          <Feather
+            name="sliders"
+            size={18}
+            color={filterBadgeCount > 0 ? '#FFF' : Colors.primary}
+          />
+          {filterBadgeCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{filterBadgeCount}</Text>
+            </View>
+          )}
         </Pressable>
       )}
     </View>
@@ -92,6 +107,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#FED7D0',
+    position: 'relative',
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.secondary,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  filterBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '800',
   },
   buttonPressed: {
     opacity: 0.7,

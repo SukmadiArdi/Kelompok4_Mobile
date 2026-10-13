@@ -6,8 +6,6 @@ import {
   ScrollView,
   Pressable,
   Image,
-  Platform,
-  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -65,17 +63,11 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
 
-  const handleRefresh = async () => {
-    await Promise.all([
-      refreshApiData(),
-      Promise.resolve(retryPrograms()),
-    ]);
-  };
-
+  
   const quickStats: QuickStatItem[] = [
-    { id: 'stat-exp', label: 'Pengalaman', count: experiences?.length || 0, icon: 'compass', color: Colors.primary },
-    { id: 'stat-gem', label: 'Hidden Gems', count: gems?.length || 0, icon: 'map', color: Colors.secondary },
-    { id: 'stat-prod', label: 'Karya Budaya', count: products?.length || 0, icon: 'basket', color: Colors.accent },
+    { id: 'stat-exp', label: 'Pengalaman', count: experiences.length, icon: 'compass', color: Colors.primary },
+    { id: 'stat-gem', label: 'Hidden Gems', count: gems.length, icon: 'map', color: Colors.secondary },
+    { id: 'stat-prod', label: 'Karya Budaya', count: products.length, icon: 'basket', color: Colors.accent },
   ];
 
   
@@ -162,31 +154,11 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* REST API Status Banner */}
-        <ApiStatusBar isLive={isLiveFromApi} onRefresh={handleRefresh} />
-
-        {/* Search Bar */}
-        <View style={styles.searchWrapper}>
-          <SearchBar
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Cari kelas batik, air terjun rahasia, tenun..."
-          />
-        </View>
-
-        {/* API Error Feedback Banner if initial load failed */}
-        {apiError && experiences.length === 0 && gems.length === 0 && products.length === 0 && (
-          <ErrorView
-            title="Gagal Sinkronisasi REST API"
-            message={apiError}
-            onRetry={handleRefresh}
-          />
-        )}
-
+        {/* Quick Stats Pill Carousel */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 2 }}>
+          contentContainerStyle={styles.statsScrollContent}>
           {quickStats.map((stat) => renderStatPill(stat))}
         </ScrollView>
 
@@ -413,6 +385,7 @@ export default function HomeScreen() {
             untuk memperkuat ekonomi komunitas adat dan melestarikan budaya adiluhung Indonesia.
           </Text>
         </View>
+
       </ScrollView>
 
       {/* Booking Modal */}
@@ -432,7 +405,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContainer: {
-    paddingBottom: 30,
+    paddingBottom: 36,
   },
   heroCard: {
     marginHorizontal: 20,
@@ -441,7 +414,7 @@ const styles = StyleSheet.create({
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -484,18 +457,22 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     opacity: 0.9,
   },
+  statsScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 22,
+  },
   featuresHub: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   hubTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
     color: Colors.text,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   featureCardsRow: {
-    gap: 10,
+    gap: 12,
   },
   featureCard: {
     borderRadius: 16,
@@ -541,7 +518,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   sectionContainer: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -551,14 +528,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
     color: Colors.text,
   },
   sectionSubtitle: {
     fontSize: 12,
     color: Colors.textSecondary,
-    marginTop: 2,
+    marginTop: 3,
   },
   seeAllText: {
     fontSize: 12,
@@ -570,10 +547,11 @@ const styles = StyleSheet.create({
   },
   impactCard: {
     marginHorizontal: 20,
-    marginTop: 8,
+    marginTop: 4,
+    marginBottom: 16,
     backgroundColor: Colors.surface,
     borderRadius: 18,
-    padding: 20,
+    padding: 22,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.border,

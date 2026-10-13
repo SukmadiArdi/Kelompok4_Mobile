@@ -190,28 +190,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     void loadStoredAppData();
   }, []);
 
-  // 2. Initial Data Load & Refresh from REST API (Task 02)
-  const loadApiData = async () => {
-    setIsLoading(true);
-    setApiError(null);
-    try {
-      const result = await fetchAllAppDataApi();
-      setExperiences(result.experiences);
-      setGems(result.gems);
-      setProducts(result.products);
-      setIsLiveFromApi(result.isLiveFromApi);
-    } catch (err: any) {
-      console.warn('Error fetching dynamic data from REST API:', err);
-      setApiError(err?.message || 'Gagal memuat data dari REST API');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadApiData();
-  }, []);
-
   // Sync snapshot helper
   const refreshStorageSnapshot = useCallback(async () => {
     const localData = await LocalStorage.getAllStoredData();
@@ -472,15 +450,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       experiences,
       gems,
       products,
-      // Dynamic REST API Data & Status (Task 02)
-      isLoading,
-      apiError,
-      isLiveFromApi,
-      refreshApiData: loadApiData,
-      setExperiences,
-      setGems,
-      setProducts,
-
       cart,
       bookings,
       savedGemIds,
@@ -515,13 +484,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       experiences,
       gems,
       products,
-      isLoading,
-      apiError,
-      isLiveFromApi,
-      loadApiData,
-      setExperiences,
-      setGems,
-      setProducts,
       cart,
       bookings,
       savedGemIds,
