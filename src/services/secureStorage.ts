@@ -10,7 +10,7 @@ import { Platform } from 'react-native';
  * - Secret Key / API Token Sensitif
  */
 export const SECURE_STORAGE_KEYS = {
-  AUTH_TOKEN: 'lokaltrip_sec_auth_token_v1',
+  AUTH_TOKEN: 'access_token',
   USER_CREDENTIALS: 'lokaltrip_sec_user_creds_v1',
   SECURITY_PIN: 'lokaltrip_sec_pin_v1',
   PAYMENT_KEY: 'lokaltrip_sec_payment_key_v1',

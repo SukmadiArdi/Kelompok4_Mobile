@@ -463,6 +463,7 @@ export default function ProfileScreen() {
                 />
               </View>
 
+
               <View style={styles.modalInputGroup}>
                 <Text style={styles.modalLabel}>Bio Singkat</Text>
                 <TextInput
