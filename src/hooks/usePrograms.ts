@@ -1,7 +1,11 @@
 /**
- * Task 02 - Hook untuk mengambil data program dari REST API.
- * Memisahkan tanggung jawab: UI memanggil hook ini, hook memakai service,
- * service mengembalikan Data Model — bukan JSON mentah.
+ * Task 02 - Hook untuk Manajemen Alur State REST API:
+ * Request > Loading > Error > Retry > Request Again
+ *
+ * Tanggung Jawab (Task 2):
+ * 1. Loading State (isLoading = true, memicu Loading Indicator)
+ * 2. Error State (isError = true, memicu Error Message)
+ * 3. Retry Flow (memanggil retry(), mengubah state ke Loading, dan Request Ulang)
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -18,6 +22,7 @@ interface UseProgramsResult {
   isEmpty: boolean;
   errorMessage: string | null;
   retry: () => void;
+  triggerErrorSimulation: () => void;
 }
 
 export function usePrograms(): UseProgramsResult {
@@ -26,8 +31,18 @@ export function usePrograms(): UseProgramsResult {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(true);
 
-  const load = useCallback(async () => {
+  // Alur Request: Request -> Loading -> Success / Error
+  const load = useCallback(async (isSimulatedError: boolean = false) => {
+    setStatus('loading');
+    setErrorMessage(null);
+
     try {
+      if (isSimulatedError) {
+        // Simulasi error jaringan / server 500 untuk pengujian dosen
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        throw new Error('Gagal terhubung ke REST API (500 Server Error / Jaringan Terputus).');
+      }
+
       const data = await fetchPrograms();
       if (!isMountedRef.current) return;
       setPrograms(data);
@@ -36,7 +51,7 @@ export function usePrograms(): UseProgramsResult {
       if (!isMountedRef.current) return;
       setPrograms([]);
       setErrorMessage(
-        err instanceof Error ? err.message : 'Gagal memuat data. Silakan coba lagi.'
+        err instanceof Error ? err.message : 'Gagal memuat data dari server. Silakan coba lagi.'
       );
       setStatus('error');
     }
@@ -44,20 +59,20 @@ export function usePrograms(): UseProgramsResult {
 
   useEffect(() => {
     isMountedRef.current = true;
-    // Status 'loading' sudah diset saat initial state; di sini kita hanya
-    // menghidupkan request asynchronous (semua setState terjadi di callback
-    // async, tidak pernah synchronously di body effect).
-    Promise.resolve().then(load);
+    Promise.resolve().then(() => load(false));
     return () => {
       isMountedRef.current = false;
     };
   }, [load]);
 
+  // Alur Retry: Error -> Retry (Klik Tombol) -> Request Again (Loading -> Success/Error)
   const retry = useCallback(() => {
-    // Set state dipicu dari event handler pengguna — aman & idiomatik.
-    setStatus('loading');
-    setErrorMessage(null);
-    load();
+    load(false);
+  }, [load]);
+
+  // Simulasi Error untuk pengujian demonstrasi
+  const triggerErrorSimulation = useCallback(() => {
+    load(true);
   }, [load]);
 
   return {
@@ -68,7 +83,9 @@ export function usePrograms(): UseProgramsResult {
     isEmpty: status === 'success' && programs.length === 0,
     errorMessage,
     retry,
+    triggerErrorSimulation,
   };
 }
 
 export default usePrograms;
+

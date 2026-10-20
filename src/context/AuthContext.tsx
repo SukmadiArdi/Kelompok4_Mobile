@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 import { User, AuthResponse } from '../types';
-import { authService, DEFAULT_DEMO_USER } from '../services/authService';
+import { authService, DEFAULT_DEMO_USER, generateMockJwt } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -17,7 +19,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(DEFAULT_DEMO_USER); // Default to demo user for seamless test experience
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Restore session on mount
@@ -25,17 +28,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
     const restoreSession = async () => {
       try {
+        const token = await SecureStore.getItemAsync('access_token').catch(() => null);
         const savedUser = await authService.getCurrentUser();
         if (isMounted) {
-          if (savedUser) {
+          if (token && savedUser) {
             setUser(savedUser);
+            setIsAuthenticated(true);
+          } else if (savedUser) {
+            // Sinkronisasi access_token jika akun telah tersimpan
+            const mockToken = generateMockJwt(savedUser.id, savedUser.email);
+            await SecureStore.setItemAsync('access_token', mockToken).catch(() => {});
+            setUser(savedUser);
+            setIsAuthenticated(true);
           } else {
-            // Keep default demo user logged in initially so examiners immediately have rich experience
+            // Default demo user untuk initial test
             setUser(DEFAULT_DEMO_USER);
+            setIsAuthenticated(true);
           }
         }
       } catch (err) {
         console.warn('Error restoring auth session:', err);
+        if (isMounted) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -43,91 +59,143 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    restoreSession();
+    void restoreSession();
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<AuthResponse> => {
+  /**
+   * Login (Task 01)
+   * Menyimpan access_token ke SecureStore dan memperbarui isAuthenticated menjadi true
+   */
+  const login = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
       const res = await authService.login(email, password);
       if (res.success && res.user) {
+        if (res.access_token) {
+          await SecureStore.setItemAsync('access_token', res.access_token).catch(() => {});
+        }
         setUser(res.user);
+        setIsAuthenticated(true);
       }
       return res;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string,
-    phone?: string
-  ): Promise<AuthResponse> => {
-    setIsLoading(true);
-    try {
-      const res = await authService.register(name, email, password, phone);
-      if (res.success && res.user) {
-        setUser(res.user);
+  /**
+   * Register (Task 01)
+   */
+  const register = useCallback(
+    async (
+      name: string,
+      email: string,
+      password: string,
+      phone?: string
+    ): Promise<AuthResponse> => {
+      setIsLoading(true);
+      try {
+        const res = await authService.register(name, email, password, phone);
+        if (res.success && res.user) {
+          if (res.access_token) {
+            await SecureStore.setItemAsync('access_token', res.access_token).catch(() => {});
+          }
+          setUser(res.user);
+          setIsAuthenticated(true);
+        }
+        return res;
+      } finally {
+        setIsLoading(false);
       }
-      return res;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    []
+  );
 
-  const loginDemo = async (): Promise<void> => {
+  /**
+   * 1-Click Demo Login
+   */
+  const loginDemo = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
       const demoUser = await authService.loginDemo();
       setUser(demoUser);
+      setIsAuthenticated(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async (): Promise<void> => {
+  /**
+   * Logout (Task 03)
+   * 1. Menghapus access_token dari storage: await SecureStore.deleteItemAsync("access_token")
+   * 2. Mereset state isAuthenticated menjadi false
+   * 3. Mengarahkan navigasi kembali ke halaman Login (router.replace("/login"))
+   */
+  const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
+      await SecureStore.deleteItemAsync('access_token').catch((err) => {
+        console.warn('Gagal menghapus access_token:', err);
+      });
       await authService.logout();
       setUser(null);
+      setIsAuthenticated(false);
+      router.replace('/login' as any);
+    } catch (err) {
+      console.error('Logout error:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateProfile = async (updates: Partial<User>): Promise<AuthResponse> => {
-    if (!user) {
-      return { success: false, message: 'Tidak ada sesi pengguna aktif.' };
-    }
-    const res = await authService.updateProfile(user.id, updates);
-    if (res.success && res.user) {
-      setUser(res.user);
-    }
-    return res;
-  };
+  const updateProfile = useCallback(
+    async (updates: Partial<User>): Promise<AuthResponse> => {
+      if (!user) {
+        return { success: false, message: 'Tidak ada sesi pengguna aktif.' };
+      }
+      const res = await authService.updateProfile(user.id, updates);
+      if (res.success && res.user) {
+        setUser(res.user);
+      }
+      return res;
+    },
+    [user]
+  );
 
-  const resetPassword = async (email: string): Promise<AuthResponse> => {
+  const resetPassword = useCallback(async (email: string): Promise<AuthResponse> => {
     return authService.resetPassword(email);
-  };
+  }, []);
+
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      register,
+      loginDemo,
+      logout,
+      updateProfile,
+      resetPassword,
+    }),
+    [
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      register,
+      loginDemo,
+      logout,
+      updateProfile,
+      resetPassword,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        register,
-        loginDemo,
-        logout,
-        updateProfile,
-        resetPassword,
-      }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

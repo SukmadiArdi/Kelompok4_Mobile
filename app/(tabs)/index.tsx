@@ -51,6 +51,7 @@ export default function HomeScreen() {
     isEmpty: isProgramsEmpty,
     errorMessage: programsError,
     retry: retryPrograms,
+    triggerErrorSimulation,
   } = usePrograms();
 
   const [search] = useState('');
@@ -242,23 +243,35 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Task 03: Program Prioritas (PresidenKu REST API Module) */}
+        {/* Task 02: Program Budaya & Ekowisata (Alur Loading, Error & Retry) */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <View>
+            <View style={{ flex: 1, marginRight: 8 }}>
               <View style={styles.taskBadge}>
                 <Ionicons name="cloud-done-outline" size={12} color={Colors.primary} />
-                <Text style={styles.taskBadgeText}>Task 03: Display API Data</Text>
+                <Text style={styles.taskBadgeText}>Task 02: Loading, Error & Retry</Text>
               </View>
-              <Text style={styles.sectionTitle}>Program Prioritas</Text>
+              <Text style={styles.sectionTitle}>Program Budaya & Ekowisata</Text>
               <Text style={styles.sectionSubtitle}>
-                Data program strategis PresidenKu via REST API
+                Request → Loading → Error → Retry → Request Again
               </Text>
             </View>
-            <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
-              <Ionicons name="refresh" size={12} color={Colors.primary} />
-              <Text style={styles.seeAllText}>Refresh</Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+              <Pressable
+                onPress={triggerErrorSimulation}
+                style={[
+                  styles.refreshPill,
+                  { backgroundColor: '#FEE2E2', borderColor: '#FECACA' },
+                ]}
+                hitSlop={8}>
+                <Ionicons name="bug-outline" size={12} color="#DC2626" />
+                <Text style={[styles.seeAllText, { color: '#DC2626' }]}>Tes Error</Text>
+              </Pressable>
+              <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
+                <Ionicons name="refresh" size={12} color={Colors.primary} />
+                <Text style={styles.seeAllText}>Refresh</Text>
+              </Pressable>
+            </View>
           </View>
 
           <ProgramList

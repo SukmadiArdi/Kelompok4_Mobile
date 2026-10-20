@@ -20,7 +20,7 @@ import { Colors } from '@/src/constants/Theme';
 import { useApp } from '@/src/context/AppContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { Header } from '@/src/components/common/Header';
-import { getFirebaseStatus } from '@/src/services/firebaseConfig';
+import { getSupabaseStatus } from '@/src/services/supabaseClient';
 import { GemCard } from '@/src/components/map/GemCard';
 import { StorageManagerView } from '@/src/components/profile/StorageManagerView';
 
@@ -28,7 +28,7 @@ export default function ProfileScreen() {
   const { bookings, gems, savedGemIds } = useApp();
   const { user, isAuthenticated, logout, loginDemo, updateProfile } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'storage' | 'firebase'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'storage' | 'cloud'>('bookings');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -36,7 +36,7 @@ export default function ProfileScreen() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const savedGems = gems.filter((g) => savedGemIds.includes(g.id));
-  const firebaseStatus = getFirebaseStatus();
+  const supabaseStatus = getSupabaseStatus();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -165,7 +165,7 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statCol}>
-                <Text style={styles.statVal}>{user.provider === 'firebase' ? 'Cloud' : 'Lokal'}</Text>
+                <Text style={styles.statVal}>{user.provider === 'supabase' || user.provider === 'firebase' ? 'Cloud' : 'Lokal'}</Text>
                 <Text style={styles.statLbl}>Sesi Auth</Text>
               </View>
             </View>
@@ -259,17 +259,17 @@ export default function ProfileScreen() {
           </Pressable>
 
           <Pressable
-            onPress={() => setActiveTab('firebase')}
+            onPress={() => setActiveTab('cloud')}
             style={[
               styles.switchBtn,
-              activeTab === 'firebase' && styles.switchBtnActive,
+              activeTab === 'cloud' && styles.switchBtnActive,
             ]}>
             <Text
               style={[
                 styles.switchText,
-                activeTab === 'firebase' && styles.switchTextActive,
+                activeTab === 'cloud' && styles.switchTextActive,
               ]}>
-              Status Auth & Cloud
+              Status Cloud & Auth
             </Text>
           </Pressable>
         </View>
@@ -358,22 +358,26 @@ export default function ProfileScreen() {
         {/* Tab 3: Storage Persistence Manager */}
         {activeTab === 'storage' && <StorageManagerView />}
 
-        {/* Tab 4: Auth & Firebase Integration Status */}
-        {activeTab === 'firebase' && (
+        {/* Tab 4: Auth & Supabase Integration Status */}
+        {activeTab === 'cloud' && (
           <View style={styles.sectionBody}>
             <View style={styles.firebaseCard}>
               <View style={styles.firebaseHeader}>
-                <Ionicons name="logo-firebase" size={32} color="#FFA000" />
+                <Ionicons name="cloud-done" size={32} color="#3ECF8E" />
                 <View style={styles.firebaseTitleCol}>
-                  <Text style={styles.firebaseTitle}>Sistem Otentikasi & Firebase</Text>
-                  <Text style={styles.firebaseStatusPill}>
-                    {firebaseStatus.status}
+                  <Text style={styles.firebaseTitle}>Sistem Otentikasi & Supabase</Text>
+                  <Text
+                    style={[
+                      styles.firebaseStatusPill,
+                      { color: supabaseStatus.isLive ? '#059669' : '#D97706' },
+                    ]}>
+                    {supabaseStatus.status}
                   </Text>
                 </View>
               </View>
 
               <Text style={styles.firebaseDesc}>
-                LokalTrip mendukung otentikasi ganda: cloud sync via Firebase Authentication & Firestore, serta persistensi sesi lokal via AsyncStorage saat offline.
+                LokalTrip mendukung sinkronisasi cloud via Supabase (PostgreSQL & Supabase Auth) serta persistensi sesi lokal via AsyncStorage saat offline.
               </Text>
 
               {/* Current Auth Session Info */}
@@ -403,20 +407,20 @@ export default function ProfileScreen() {
               <View style={styles.configInfoBox}>
                 <Text style={styles.configInfoTitle}>Konfigurasi Lingkungan (.env):</Text>
                 <Text style={styles.configRow}>
-                  • Project ID: <Text style={styles.codeText}>{firebaseStatus.projectId || 'demo-lokaltrip'}</Text>
+                  • Supabase URL: <Text style={styles.codeText}>{supabaseStatus.projectUrl || 'EXPO_PUBLIC_SUPABASE_URL'}</Text>
                 </Text>
                 <Text style={styles.configRow}>
-                  • Auth Domain: <Text style={styles.codeText}>EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN</Text>
+                  • Supabase Anon Key: <Text style={styles.codeText}>EXPO_PUBLIC_SUPABASE_ANON_KEY</Text>
                 </Text>
                 <Text style={styles.configRow}>
-                  • Penyimpanan Sesi: <Text style={styles.codeText}>AsyncStorage & SecureStore Compatible</Text>
+                  • Penyimpanan Sesi: <Text style={styles.codeText}>AsyncStorage (Session Auto Refresh)</Text>
                 </Text>
               </View>
 
               <View style={styles.firebaseTipBox}>
                 <Feather name="info" size={16} color={Colors.ocean} />
                 <Text style={styles.firebaseTipText}>
-                  Saat Anda menambahkan Firebase API Key di file .env, aplikasi akan otomatis beralih ke sinkronisasi Firebase Cloud Auth tanpa perlu mengubah kode aplikasi.
+                  Saat Anda menambahkan URL & Anon Key Supabase di file .env, aplikasi akan otomatis beralih ke sinkronisasi Supabase Cloud Auth tanpa perlu mengubah kode aplikasi.
                 </Text>
               </View>
             </View>

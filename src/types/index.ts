@@ -147,11 +147,13 @@ export interface User {
   badge?: string;
   role?: 'traveler' | 'artisan' | 'guide';
   createdAt: string;
-  provider: 'local' | 'firebase';
+  provider: 'local' | 'supabase' | 'firebase';
 }
 
 export interface AuthResponse {
   success: boolean;
   user?: User;
   message?: string;
+  access_token?: string;
+  token?: string;
 }
