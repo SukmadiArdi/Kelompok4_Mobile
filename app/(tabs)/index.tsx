@@ -25,8 +25,6 @@ import {
   EmptyView,
   ApiStatusBar,
 } from '@/src/components/common/ApiStateView';
-import { usePrograms } from '@/src/hooks/usePrograms';
-import { ProgramList } from '@/src/components/programs/ProgramList';
 import { Experience } from '@/src/types';
 import { externalStyles } from '@/src/constants/styles';
 
@@ -52,23 +50,11 @@ export default function HomeScreen() {
     refreshApiData,
   } = useApp();
 
-  const {
-    programs,
-    isLoading: isProgramsLoading,
-    isError: isProgramsError,
-    isEmpty: isProgramsEmpty,
-    errorMessage: programsError,
-    retry: retryPrograms,
-  } = usePrograms();
-
   const [search, setSearch] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
 
   const handleRefresh = async () => {
-    await Promise.all([
-      refreshApiData(),
-      Promise.resolve(retryPrograms()),
-    ]);
+    await refreshApiData();
   };
 
   const quickStats: QuickStatItem[] = [
@@ -130,7 +116,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading || isProgramsLoading}
+            refreshing={isLoading}
             onRefresh={handleRefresh}
             colors={[Colors.primary]}
             tintColor={Colors.primary}
@@ -264,35 +250,6 @@ export default function HomeScreen() {
               </View>
             </Pressable>
           </View>
-        </View>
-
-        {/* Task 03: Program Prioritas (PresidenKu REST API Module) */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <View style={styles.taskBadge}>
-                <Ionicons name="cloud-done-outline" size={12} color={Colors.primary} />
-                <Text style={styles.taskBadgeText}>Task 03: Display API Data</Text>
-              </View>
-              <Text style={styles.sectionTitle}>Program Prioritas</Text>
-              <Text style={styles.sectionSubtitle}>
-                Data program strategis PresidenKu via REST API
-              </Text>
-            </View>
-            <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
-              <Ionicons name="refresh" size={12} color={Colors.primary} />
-              <Text style={styles.seeAllText}>Refresh</Text>
-            </Pressable>
-          </View>
-
-          <ProgramList
-            programs={programs}
-            isLoading={isProgramsLoading}
-            isError={isProgramsError}
-            isEmpty={isProgramsEmpty}
-            errorMessage={programsError}
-            onRetry={retryPrograms}
-          />
         </View>
 
         {/* Section 1: Booking Experience Highlights */}
@@ -613,32 +570,5 @@ const styles = StyleSheet.create({
   },
   searchWrapper: {
     marginBottom: 10,
-  },
-  taskBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-    marginBottom: 4,
-  },
-  taskBadgeText: {
-    color: Colors.primary,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  refreshPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.surfaceSubtle,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
 });
