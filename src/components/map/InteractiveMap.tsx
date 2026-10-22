@@ -31,24 +31,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 }) => {
   const mapLeafletRef = useRef<MapLeafletHandle | null>(null);
 
-  const [activeRegion, setActiveRegion] = useState<string>('Semua');
   const [mapEngine, setMapEngine] = useState<'osm' | 'schematic'>('osm');
   const [tileLayer, setTileLayer] = useState<'streets' | 'satellite'>('streets');
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-
-  const regions = [
-    'Semua',
-    'Sumatera',
-    'Jawa',
-    'Bali & Lombok',
-    'Nusa Tenggara',
-    'Sulawesi',
-  ];
-
-  const filteredGems =
-    activeRegion === 'Semua'
-      ? gems
-      : gems.filter((g) => g.region === activeRegion);
 
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
@@ -81,18 +66,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     };
   };
 
-  const handlePan = (dx: number, dy: number) => {
-    mapLeafletRef.current?.panBy(dx, dy);
-  };
-
-  const handleZoom = (type: 'in' | 'out') => {
-    if (type === 'in') {
-      mapLeafletRef.current?.zoomIn();
-    } else {
-      mapLeafletRef.current?.zoomOut();
-    }
-  };
-
   const handleResetCenter = () => {
     mapLeafletRef.current?.resetView();
   };
@@ -101,32 +74,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Top Controls: Region Filters & Map Engine Switcher */}
+      {/* Top Map Engine Switcher & Expand Toggle */}
       <View style={styles.topControlRow}>
-        <View style={styles.regionsContainer}>
-          {regions.map((reg) => {
-            const isActive = activeRegion === reg;
-            return (
-              <Pressable
-                key={reg}
-                onPress={() => setActiveRegion(reg)}
-                style={[
-                  styles.regionPill,
-                  isActive && styles.regionPillActive,
-                ]}>
-                <Text
-                  style={[
-                    styles.regionText,
-                    isActive && styles.regionTextActive,
-                  ]}>
-                  {reg}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Engine Switcher (OSM vs Schematic) & Expand Toggle */}
         <View style={styles.engineBar}>
           <Pressable
             onPress={() => setMapEngine('osm')}
@@ -199,109 +148,71 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         onResponderRelease={onTouchEnd}>
         {mapEngine === 'osm' ? (
           <View style={styles.osmContainer}>
-            {/* Top-Right: Tile Layer Switcher */}
-            <View style={styles.layerSwitcher}>
-              <Pressable
-                onPress={() => setTileLayer('streets')}
-                style={[
-                  styles.layerBtn,
-                  tileLayer === 'streets' && styles.layerBtnActive,
-                ]}>
-                <Ionicons
-                  name="map"
-                  size={12}
-                  color={tileLayer === 'streets' ? '#FFF' : Colors.text}
-                />
-                <Text
-                  style={[
-                    styles.layerBtnText,
-                    tileLayer === 'streets' && styles.layerBtnTextActive,
-                  ]}>
-                  Jalan
+            {/* Top Floating Overlay: Count Badge, Recenter Button, & Layer Switcher */}
+            <View style={styles.mapTopOverlay}>
+              <View style={styles.spotCountBadge}>
+                <Ionicons name="location" size={13} color={Colors.primary} />
+                <Text style={styles.spotCountText}>
+                  {gems.length} Spot Terlihat
                 </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setTileLayer('satellite')}
-                style={[
-                  styles.layerBtn,
-                  tileLayer === 'satellite' && styles.layerBtnActive,
-                ]}>
-                <Ionicons
-                  name="globe-outline"
-                  size={12}
-                  color={tileLayer === 'satellite' ? '#FFF' : Colors.text}
-                />
-                <Text
-                  style={[
-                    styles.layerBtnText,
-                    tileLayer === 'satellite' && styles.layerBtnTextActive,
-                  ]}>
-                  Satelit
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Floating Navigation Controls (D-Pad Pan + Zoom) */}
-            <View style={styles.navControlsOverlay}>
-              {/* D-Pad Pan */}
-              <View style={styles.dpadBox}>
-                <Pressable
-                  onPress={() => handlePan(0, -120)}
-                  style={styles.dpadBtn}
-                  hitSlop={6}>
-                  <Feather name="chevron-up" size={16} color={Colors.text} />
-                </Pressable>
-
-                <View style={styles.dpadMiddleRow}>
-                  <Pressable
-                    onPress={() => handlePan(-120, 0)}
-                    style={styles.dpadBtn}
-                    hitSlop={6}>
-                    <Feather name="chevron-left" size={16} color={Colors.text} />
-                  </Pressable>
-                  <Pressable
-                    onPress={handleResetCenter}
-                    style={[styles.dpadBtn, styles.dpadCenterBtn]}
-                    hitSlop={6}>
-                    <Ionicons name="locate" size={13} color={Colors.primary} />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handlePan(120, 0)}
-                    style={styles.dpadBtn}
-                    hitSlop={6}>
-                    <Feather name="chevron-right" size={16} color={Colors.text} />
-                  </Pressable>
-                </View>
-
-                <Pressable
-                  onPress={() => handlePan(0, 120)}
-                  style={styles.dpadBtn}
-                  hitSlop={6}>
-                  <Feather name="chevron-down" size={16} color={Colors.text} />
-                </Pressable>
               </View>
 
-              {/* Quick Zoom Buttons */}
-              <View style={styles.zoomBox}>
+              <View style={styles.rightFloatingActions}>
                 <Pressable
-                  onPress={() => handleZoom('in')}
-                  style={styles.zoomBtn}
-                  hitSlop={6}>
-                  <Feather name="plus" size={14} color={Colors.text} />
+                  onPress={handleResetCenter}
+                  style={styles.recenterBtn}
+                  hitSlop={6}
+                  accessibilityLabel="Pusatkan Peta">
+                  <Ionicons name="locate" size={13} color={Colors.primary} />
+                  <Text style={styles.recenterBtnText}>Pusatkan</Text>
                 </Pressable>
-                <View style={styles.zoomDivider} />
-                <Pressable
-                  onPress={() => handleZoom('out')}
-                  style={styles.zoomBtn}
-                  hitSlop={6}>
-                  <Feather name="minus" size={14} color={Colors.text} />
-                </Pressable>
+
+                <View style={styles.layerSwitcher}>
+                  <Pressable
+                    onPress={() => setTileLayer('streets')}
+                    style={[
+                      styles.layerBtn,
+                      tileLayer === 'streets' && styles.layerBtnActive,
+                    ]}>
+                    <Ionicons
+                      name="map"
+                      size={11}
+                      color={tileLayer === 'streets' ? '#FFF' : Colors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.layerBtnText,
+                        tileLayer === 'streets' && styles.layerBtnTextActive,
+                      ]}>
+                      Jalan
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setTileLayer('satellite')}
+                    style={[
+                      styles.layerBtn,
+                      tileLayer === 'satellite' && styles.layerBtnActive,
+                    ]}>
+                    <Ionicons
+                      name="globe-outline"
+                      size={11}
+                      color={tileLayer === 'satellite' ? '#FFF' : Colors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.layerBtnText,
+                        tileLayer === 'satellite' && styles.layerBtnTextActive,
+                      ]}>
+                      Satelit
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
 
             <MapLeaflet
               ref={mapLeafletRef}
-              gems={filteredGems}
+              gems={gems}
               selectedGem={selectedGem}
               onSelectGem={onSelectGem}
               mapType={tileLayer}
@@ -338,7 +249,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </View>
 
             {/* Schematic Markers */}
-            {filteredGems.map((gem, index) => {
+            {gems.map((gem, index) => {
               const isSelected = selectedGem?.id === gem.id;
               const pinColor = getDifficultyColor(gem.difficulty);
               const coords = getSchematicCoords(gem, index);
@@ -512,40 +423,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   topControlRow: {
-    marginBottom: 10,
-    gap: 8,
-  },
-  regionsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  regionPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  regionPillActive: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
-  regionText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  regionTextActive: {
-    color: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   engineBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
     gap: 8,
-    marginTop: 2,
   },
   engineBtn: {
     flexDirection: 'row',
@@ -588,17 +474,75 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'relative',
   },
-  layerSwitcher: {
+  mapTopOverlay: {
     position: 'absolute',
     top: 10,
+    left: 10,
     right: 10,
     zIndex: 99,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  spotCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  spotCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  rightFloatingActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  recenterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  recenterBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  layerSwitcher: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 8,
     padding: 2,
     borderWidth: 1,
     borderColor: Colors.border,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   layerBtn: {
     flexDirection: 'row',
@@ -618,61 +562,6 @@ const styles = StyleSheet.create({
   },
   layerBtnTextActive: {
     color: '#FFF',
-  },
-
-  // On-screen Navigation Controls (D-Pad Pan & Zoom)
-  navControlsOverlay: {
-    position: 'absolute',
-    left: 10,
-    top: 10,
-    zIndex: 99,
-    gap: 8,
-  },
-  dpadBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    borderRadius: 12,
-    padding: 4,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    elevation: 3,
-  },
-  dpadMiddleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  dpadBtn: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    backgroundColor: 'rgba(241, 245, 249, 0.8)',
-  },
-  dpadCenterBtn: {
-    backgroundColor: '#FFF',
-  },
-  zoomBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    borderRadius: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    elevation: 3,
-    width: 32,
-    alignItems: 'center',
-  },
-  zoomBtn: {
-    width: 32,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  zoomDivider: {
-    width: '80%',
-    height: 1,
-    backgroundColor: Colors.border,
   },
 
   // Schematic Map
