@@ -8,8 +8,6 @@ import {
   GemReview,
 } from '../types';
 import {
-  MOCK_EXPERIENCES,
-  MOCK_HIDDEN_GEMS,
   MOCK_ARTISANS,
   INITIAL_BOOKINGS,
 } from '../data/mockData';
@@ -188,6 +186,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     void loadStoredAppData();
+  }, []);
+
+  // 2. Initial Data Load & Refresh from REST API (Task 02)
+  const refreshApiData = useCallback(async () => {
+    setIsLoading(true);
+    setApiError(null);
+    try {
+      const result = await fetchAllAppDataApi();
+      setExperiences(result.experiences);
+      setGems(result.gems);
+      setProducts(result.products);
+      setIsLiveFromApi(result.isLiveFromApi);
+    } catch (err: any) {
+      console.warn('Error fetching dynamic data from REST API:', err);
+      setApiError(err?.message || 'Gagal memuat data dari REST API');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+    void (async () => {
+      try {
+        const result = await fetchAllAppDataApi();
+        if (isCancelled) return;
+        setExperiences(result.experiences);
+        setGems(result.gems);
+        setProducts(result.products);
+        setIsLiveFromApi(result.isLiveFromApi);
+      } catch (err: any) {
+        if (isCancelled) return;
+        console.warn('Error fetching dynamic data from REST API:', err);
+        setApiError(err?.message || 'Gagal memuat data dari REST API');
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   // Sync snapshot helper
@@ -450,6 +492,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       experiences,
       gems,
       products,
+      // Dynamic REST API Data & Status (Task 02)
+      isLoading,
+      apiError,
+      isLiveFromApi,
+      refreshApiData,
+      setExperiences,
+      setGems,
+      setProducts,
       cart,
       bookings,
       savedGemIds,
@@ -484,6 +534,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       experiences,
       gems,
       products,
+      isLoading,
+      apiError,
+      isLiveFromApi,
+      refreshApiData,
+      setExperiences,
+      setGems,
+      setProducts,
       cart,
       bookings,
       savedGemIds,

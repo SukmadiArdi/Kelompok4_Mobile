@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -63,7 +64,13 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
 
-  
+  const handleRefresh = async () => {
+    await Promise.all([
+      refreshApiData(),
+      Promise.resolve(retryPrograms()),
+    ]);
+  };
+
   const quickStats: QuickStatItem[] = [
     { id: 'stat-exp', label: 'Pengalaman', count: experiences.length, icon: 'compass', color: Colors.primary },
     { id: 'stat-gem', label: 'Hidden Gems', count: gems.length, icon: 'map', color: Colors.secondary },
@@ -153,6 +160,27 @@ export default function HomeScreen() {
             style={styles.heroImage}
           />
         </View>
+
+        {/* REST API Status Banner */}
+        <ApiStatusBar isLive={isLiveFromApi} onRefresh={handleRefresh} />
+
+        {/* Search Bar */}
+        <View style={styles.searchWrapper}>
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Cari kelas batik, air terjun rahasia, tenun..."
+          />
+        </View>
+
+        {/* API Error Feedback Banner if initial load failed */}
+        {apiError && experiences.length === 0 && gems.length === 0 && products.length === 0 && (
+          <ErrorView
+            title="Gagal Sinkronisasi REST API"
+            message={apiError}
+            onRetry={handleRefresh}
+          />
+        )}
 
         {/* Quick Stats Pill Carousel */}
         <ScrollView

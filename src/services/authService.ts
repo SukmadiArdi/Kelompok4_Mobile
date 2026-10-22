@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 import { User, AuthResponse } from '../types';
 import { firebaseConfig, isFirebaseConfigured } from './firebaseConfig';
 import { API_BASE_URL } from './apiConfig';
-import { tokenStorage } from '../utils/tokenStorage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 /**

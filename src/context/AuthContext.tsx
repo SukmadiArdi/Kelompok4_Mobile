@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { User, AuthResponse } from '../types';
-import { authService, DEFAULT_DEMO_USER, generateMockJwt } from '../services/authService';
+import { authService, generateMockJwt } from '../services/authService';
 import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
