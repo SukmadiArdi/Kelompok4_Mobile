@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,27 @@ export default function ExperienceDetailScreen() {
   const { experiences } = useApp();
   const [showBookingModal, setShowBookingModal] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(() => {
+      if (isMounted) {
+      }
+    }, 50);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [id]);
+
+  // Navigasi kembali dengan canGoBack
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/experiences');
+    }
+  };
+
   const experience = experiences.find((e) => e.id === id) || experiences[0];
 
   const formatPrice = (price: number) => {
@@ -42,8 +63,9 @@ export default function ExperienceDetailScreen() {
           
           {/* Top Bar Floating Actions */}
           <View style={styles.topActionRow}>
+            {/* Tombol kembali */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={handleBack}
               style={styles.iconCircle}
               hitSlop={8}>
               <Feather name="arrow-left" size={20} color={Colors.text} />

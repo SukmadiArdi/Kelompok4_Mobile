@@ -54,7 +54,29 @@ export default function ModalScreen() {
         </View>
       </View>
 
-      <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+      <Pressable
+        onPress={() => router.push('/docs' as any)}
+        style={styles.docsBtn}>
+        <Ionicons name="book-outline" size={16} color="#FFF" style={{ marginRight: 6 }} />
+        <Text style={styles.docsBtnText}>Buka Dokumentasi (Codelab-2)</Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push('/sensor' as any)}
+        style={[styles.docsBtn, { backgroundColor: '#0F62FE', marginTop: 10 }]}>
+        <Ionicons name="hardware-chip-outline" size={16} color="#FFF" style={{ marginRight: 6 }} />
+        <Text style={styles.docsBtnText}>Uji Sensor Accelerometer (Task 02)</Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.dismiss();
+          }
+        }}
+        style={styles.closeBtn}>
         <Text style={styles.closeBtnText}>Tutup</Text>
       </Pressable>
     </ScrollView>
@@ -126,11 +148,29 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 16,
   },
+  docsBtn: {
+    backgroundColor: '#222222',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    width: '100%',
+  },
+  docsBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
   closeBtn: {
     backgroundColor: Colors.primary,
     paddingHorizontal: 28,
     paddingVertical: 12,
     borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
   },
   closeBtnText: {
     color: '#FFF',

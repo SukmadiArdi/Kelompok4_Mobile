@@ -1,5 +1,5 @@
 /**
- * Task 02 - Konfigurasi REST API PresidenKu
+ * Task 02 - Konfigurasi REST API Program & Inisiatif LokalTrip
  *
  * Endpoint TIDAK di-hardcode sembarangan. URL base API diambil dari environment
  * variable `EXPO_PUBLIC_API_BASE_URL` (diekspos oleh Expo/Metro saat build).

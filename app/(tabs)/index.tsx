@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,17 +14,11 @@ import { router } from 'expo-router';
 import { Colors } from '@/src/constants/Theme';
 import { useApp } from '@/src/context/AppContext';
 import { Header } from '@/src/components/common/Header';
-import { SearchBar } from '@/src/components/common/SearchBar';
 import { ExperienceCard } from '@/src/components/experiences/ExperienceCard';
 import { GemCard } from '@/src/components/map/GemCard';
 import { ProductCard } from '@/src/components/store/ProductCard';
 import { BookingModal } from '@/src/components/experiences/BookingModal';
-import {
-  LoadingView,
-  ErrorView,
-  EmptyView,
-  ApiStatusBar,
-} from '@/src/components/common/ApiStateView';
+import { LoadingView, EmptyView } from '@/src/components/common/ApiStateView';
 import { usePrograms } from '@/src/hooks/usePrograms';
 import { ProgramList } from '@/src/components/programs/ProgramList';
 import { Experience } from '@/src/types';
@@ -46,8 +41,6 @@ export default function HomeScreen() {
     gems,
     products,
     isLoading,
-    apiError,
-    isLiveFromApi,
     refreshApiData,
   } = useApp();
 
@@ -55,13 +48,26 @@ export default function HomeScreen() {
     programs,
     isLoading: isProgramsLoading,
     isError: isProgramsError,
+    isOffline: isProgramsOffline,
     isEmpty: isProgramsEmpty,
     errorMessage: programsError,
     retry: retryPrograms,
+    triggerOfflineSimulation,
   } = usePrograms();
 
-  const [search, setSearch] = useState('');
+  const [search] = useState('');
   const [selectedExpForBooking, setSelectedExpForBooking] = useState<Experience | null>(null);
+
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([
+        refreshApiData(),
+        retryPrograms(),
+      ]);
+    } catch (e) {
+      console.warn('Error refreshing home data:', e);
+    }
+  };
 
   
   const quickStats: QuickStatItem[] = [
@@ -238,29 +244,43 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Task 03: Program Prioritas (PresidenKu REST API Module) */}
+        {/* Task 03: Handle Offline & Retry (Alur Implementasi Offline) */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <View>
+            <View style={{ flex: 1, marginRight: 8 }}>
               <View style={styles.taskBadge}>
-                <Ionicons name="cloud-done-outline" size={12} color={Colors.primary} />
-                <Text style={styles.taskBadgeText}>Task 03: Display API Data</Text>
+                <Ionicons name="cloud-offline-outline" size={12} color={Colors.primary} />
+                <Text style={styles.taskBadgeText}>Task 03: Handle Offline & Retry</Text>
               </View>
-              <Text style={styles.sectionTitle}>Program Prioritas</Text>
+              <Text style={styles.sectionTitle}>Program Budaya & Ekowisata</Text>
               <Text style={styles.sectionSubtitle}>
-                Data program strategis PresidenKu via REST API
+                Request → No Internet → Offline State → User Feedback → Retry
               </Text>
             </View>
-            <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
-              <Ionicons name="refresh" size={12} color={Colors.primary} />
-              <Text style={styles.seeAllText}>Refresh</Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+              {/* Tombol Demo Pengujian: Simulasi Internet Dimatikan */}
+              <Pressable
+                onPress={triggerOfflineSimulation}
+                style={[
+                  styles.refreshPill,
+                  { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
+                ]}
+                hitSlop={8}>
+                <Ionicons name="cloud-offline" size={12} color="#D97706" />
+                <Text style={[styles.seeAllText, { color: '#D97706' }]}>Tes Offline</Text>
+              </Pressable>
+              <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
+                <Ionicons name="refresh" size={12} color={Colors.primary} />
+                <Text style={styles.seeAllText}>Refresh</Text>
+              </Pressable>
+            </View>
           </View>
 
           <ProgramList
             programs={programs}
             isLoading={isProgramsLoading}
             isError={isProgramsError}
+            isOffline={isProgramsOffline}
             isEmpty={isProgramsEmpty}
             errorMessage={programsError}
             onRetry={retryPrograms}

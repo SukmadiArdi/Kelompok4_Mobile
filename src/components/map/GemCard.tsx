@@ -14,6 +14,11 @@ interface GemCardProps {
   onViewOnMap?: (gem: HiddenGem) => void;
 }
 
+const FALLBACK_GEM_IMAGE =
+  'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80';
+const FALLBACK_CONTRIBUTOR_AVATAR =
+  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80';
+
 export const GemCard: React.FC<GemCardProps> = ({
   gem,
   horizontal = false,
@@ -68,9 +73,10 @@ export const GemCard: React.FC<GemCardProps> = ({
         ]}>
         <View style={styles.horizontalImageContainer}>
           <Image
-            source={{ uri: gem.image }}
+            source={{ uri: displayImage }}
             style={styles.horizontalImage}
             resizeMode="cover"
+            onError={() => setImageError(true)}
           />
           <View
             style={[
@@ -116,9 +122,10 @@ export const GemCard: React.FC<GemCardProps> = ({
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: gem.image }}
+          source={{ uri: displayImage }}
           style={styles.image}
           resizeMode="cover"
+          onError={() => setImageError(true)}
         />
         
         {/* Badges on image */}
@@ -196,7 +203,7 @@ export const GemCard: React.FC<GemCardProps> = ({
           <Pressable
             onPress={(e) => {
               e.stopPropagation();
-              openDirections(gem.mapCoords.lat, gem.mapCoords.lng, gem.name);
+              openDirections(safeLat, safeLng, gemName);
             }}
             style={styles.cardActionGpsBtn}>
             <Ionicons name="navigate-outline" size={13} color={Colors.primary} />
@@ -205,15 +212,17 @@ export const GemCard: React.FC<GemCardProps> = ({
         </View>
 
         <View style={styles.footerRow}>
-          <View style={styles.contributorBox}>
-            <Image
-              source={{ uri: gem.contributor.avatar }}
-              style={styles.contributorAvatar}
-              resizeMode="cover"
-            />
-            <View>
-              <Text style={styles.contributorName}>{gem.contributor.name}</Text>
-              <Text style={styles.contributorDate}>{gem.contributor.badge}</Text>
+          {gem.contributor && (
+            <View style={styles.contributorBox}>
+              <Image
+                source={{ uri: contributorAvatar }}
+                style={styles.contributorAvatar}
+                resizeMode="cover"
+              />
+              <View>
+                <Text style={styles.contributorName}>{contributorName}</Text>
+                <Text style={styles.contributorDate}>{contributorBadge}</Text>
+              </View>
             </View>
           )}
 

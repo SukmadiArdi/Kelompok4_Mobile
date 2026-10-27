@@ -1,5 +1,11 @@
 /**
  * RELIABLE API INTEGRATION (Task 01) & CONNECT TO REST API (Task 02)
+ * REST API Service untuk data Program & Inisiatif Budaya LokalTrip.
+ *
+ * Tanggung jawab:
+ * - Task 01 (Teman): Menangani status 2xx, 4xx, 5xx, network error, dan timeout (handleApiResponse & handleFetchError).
+ * - Task 02 (Saya): Alur Loading, Error & Retry (Loading indicator, Error message, Retry button).
+ * - Mengonversi JSON response menjadi Data Model (ProgramModel) — UI tidak melakukan parsing JSON secara langsung.
  * REST API Service untuk data Program PresidenKu.
  *
  * Tanggung jawab (Task 01):
@@ -43,6 +49,9 @@ export function isNetworkError(error: unknown): boolean {
     return (
       name === 'aborterror' ||
       (name === 'typeerror' && (msg.includes('network') || msg.includes('fetch'))) ||
+      msg.includes('failed to fetch') ||
+      msg.includes('network request failed') ||
+      msg.includes('connection refused') ||
       msg.includes('network request failed') ||
       msg.includes('network error') ||
       msg.includes('failed to fetch') ||
@@ -95,6 +104,7 @@ export function handleFetchError(error: unknown): never {
  * Memvalidasi HTTP status code pada response fetch REST API (Task 01):
  * - Status 2xx: return data JSON
  * - Status 4xx (Client Error, misal 400, 401, 404): Lempar error informatif dengan status code
+ * - Status 5xx (Server Error, misal 500, 503): Lempar error khusus gangguan server
  * - Status 5xx (Server Error, misal 500, 503): Lempar error khusus
  */
 export async function handleApiResponse<T = unknown>(response: Response): Promise<T> {
@@ -230,6 +240,7 @@ export async function httpGetJson(url: string): Promise<unknown> {
     }
 
     // Log Request Headers untuk verifikasi pengujian terminal (Task 02)
+    console.log('Request Headers:', headers);
     console.log("Request Headers:", headers);
 
     response = await fetch(url, {
@@ -246,32 +257,65 @@ export async function httpGetJson(url: string): Promise<unknown> {
   return await handleApiResponse(response);
 }
 
-// Mock Data Program Prioritas PresidenKu sesuai modul Task 03
+// Mock Data Program & Inisiatif Budaya LokalTrip sesuai modul Task 03
 const MOCK_PROGRAMS_RAW = [
   {
     id: 1,
-    name: 'Program Pendidikan',
-    description: 'Peningkatan kualitas pendidikan di Indonesia.',
-    image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=300&auto=format&fit=crop&q=80',
+    name: 'Revitalisasi Desa Wisata Adat',
+    description: 'Pendampingan desa adat untuk pengembangan ekowisata berkelanjutan dan pelestarian kearifan lokal.',
+    image: 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=500&auto=format&fit=crop&q=80',
     status: 'active',
   },
   {
     id: 2,
-    name: 'Program Lingkungan',
-    description: 'Lingkungan yang lebih baik untuk masa depan.',
-    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=300&auto=format&fit=crop&q=80',
+    name: 'Pemberdayaan Pengrajin Kriya & Batik',
+    description: 'Dukungan pelatihan canting tulis, tenun ikat tradisional, serta digitalisasi etalase karya maestro pengrajin nusantara.',
+    image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500&auto=format&fit=crop&q=80',
     status: 'active',
   },
   {
     id: 3,
-    name: 'Program Kesehatan',
-    description: 'Masyarakat sehat dan sejahtera.',
-    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=300&auto=format&fit=crop&q=80',
-    status: 'active',
+    name: 'Konservasi Hidden Gems Nusantara',
+    description: 'Pemeliharaan ekosistem alam, proteksi spot tersembunyi, dan edukasi jejak nol sampah bagi penjelajah.',
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&auto=format&fit=crop&q=80',
+    status: 'ongoing',
+  },
+  {
+    id: 4,
+    name: 'Sertifikasi Pemandu Wisata Budaya',
+    description: 'Peningkatan kompetensi storytelling sejarah dan sertifikasi keamanan ramah wisatawan untuk pemandu lokal.',
+    image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop&q=80',
+    status: 'completed',
   },
 ];
 
 /**
+ * Memeriksa konektivitas internet aktif ke gateway (Task 03 - Handle Offline).
+ * Menggunakan probe HEAD request dengan timeout 2.5 detik.
+ */
+export async function checkInternetConnection(): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch('https://clients3.google.com/generate_204', {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return res.status >= 200 && res.status < 400;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Ambil daftar program dari REST API (Task 01, Task 02 & Task 03).
+ * Menerima beberapa bentuk response umum: array langsung, `{ data: [...] }`,
+ * atau `{ results: [...] }` — semuanya dipetakan lewat ProgramModel.
+ *
+ * Menangani alur:
+ * Request > No Internet > Offline State > User Feedback > Retry
  * Ambil daftar program dari REST API (Task 01 & Task 02).
  * Menerima beberapa bentuk response umum: array langsung, `{ data: [...] }`,
  * atau `{ results: [...] }` — semuanya dipetakan lewat ProgramModel.
@@ -286,6 +330,16 @@ export async function fetchPrograms(
     typeof fallbackOrOptions === 'boolean'
       ? fallbackOrOptions
       : Boolean(fallbackOrOptions?.fallbackOnError);
+
+  // 1. Verifikasi konektivitas internet aktif (Task 03 - Handle Offline)
+  const isOnline = await checkInternetConnection();
+  if (!isOnline) {
+    throw new ApiError(
+      'Koneksi internet terputus. Periksa jaringan Wi-Fi atau data seluler Anda.',
+      undefined,
+      true
+    );
+  }
 
   if (isApiConfigured()) {
     try {
@@ -307,10 +361,19 @@ export async function fetchPrograms(
     }
   }
 
+  // Simulasi latensi jaringan (300ms) saat internet online
   // Simulasi latensi jaringan (300ms) jika REST API belum dikonfigurasi di .env
   await new Promise((resolve) => setTimeout(resolve, 300));
   return ProgramModel.fromList(MOCK_PROGRAMS_RAW);
 }
 
+export default {
+  fetchPrograms,
+  httpGetJson,
+  isNetworkError,
+  handleFetchError,
+  handleApiResponse,
+  checkInternetConnection,
+};
 export default { fetchPrograms, httpGetJson, isNetworkError, handleFetchError, handleApiResponse };
 

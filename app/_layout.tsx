@@ -125,6 +125,27 @@ function RootLayoutNav() {
             title: 'Tentang LokalTrip',
           }}
         />
+        <Stack.Screen
+          name="docs/index"
+          options={{
+            headerShown: true,
+            title: 'Dokumentasi Modul 2',
+          }}
+        />
+        <Stack.Screen
+          name="docs/[...slug]"
+          options={{
+            headerShown: true,
+            title: 'Detail Materi',
+          }}
+        />
+        <Stack.Screen
+          name="sensor"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

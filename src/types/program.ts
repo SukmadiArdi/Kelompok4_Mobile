@@ -1,7 +1,7 @@
 /**
- * Task 02 - Connect PresidenKu to REST API
+ * Task 02 - Connect LokalTrip to REST API
  *
- * Data Model untuk "Program Prioritas" Presiden.
+ * Data Model untuk "Program & Inisiatif Budaya" LokalTrip.
  * Field yang dibutuhkan aplikasi saja (id, name, description, image, status) —
  * field lain dari response API diabaikan saat parsing.
  */

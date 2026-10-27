@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { User, AuthResponse } from '../types';
 import { authService, DEFAULT_DEMO_USER, generateMockJwt } from '../services/authService';
-import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +28,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
     const restoreSession = async () => {
       try {
+        const token = await SecureStore.getItemAsync('access_token').catch(() => null);
+        const savedUser = await authService.getCurrentUser();
+        if (isMounted) {
+          if (token && savedUser) {
+            setUser(savedUser);
+            setIsAuthenticated(true);
+          } else if (savedUser) {
+            // Sinkronisasi access_token jika akun telah tersimpan
+            const mockToken = generateMockJwt(savedUser.id, savedUser.email);
+            await SecureStore.setItemAsync('access_token', mockToken).catch(() => {});
+            setUser(savedUser);
+            setIsAuthenticated(true);
+          } else {
+            // Default demo user untuk initial test
+            setUser(DEFAULT_DEMO_USER);
+            setIsAuthenticated(true);
         // Cek sesi aktif Supabase atau fallback SecureStore
         let token: string | null = null;
         try {
@@ -71,13 +86,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    restoreSession();
+    void restoreSession();
     return () => {
       isMounted = false;
     };
   }, []);
 
   /**
+   * Login (Task 01)
+   * Menyimpan access_token ke SecureStore dan memperbarui isAuthenticated menjadi true
+   */
+  const login = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
    * Login (Task 01 - Supabase & Token-Based Authentication)
    * Menyimpan access_token ke SecureStore, memperbarui isAuthenticated, dan log token
    */
@@ -97,11 +116,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   /**
    * Register (Task 01)
    */
+  const register = useCallback(
+    async (
+      name: string,
+      email: string,
+      password: string,
+      phone?: string
+    ): Promise<AuthResponse> => {
+      setIsLoading(true);
+      try {
+        const res = await authService.register(name, email, password, phone);
+        if (res.success && res.user) {
+          if (res.access_token) {
+            await SecureStore.setItemAsync('access_token', res.access_token).catch(() => {});
+          }
+          setUser(res.user);
+          setIsAuthenticated(true);
+        }
+        return res;
+      } finally {
+        setIsLoading(false);
   const register = async (
     name: string,
     email: string,
@@ -119,15 +158,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(res.user);
         setIsAuthenticated(true);
       }
-      return res;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    []
+  );
 
   /**
    * 1-Click Demo Login
    */
+  const loginDemo = useCallback(async (): Promise<void> => {
   const loginDemo = async (): Promise<void> => {
     setIsLoading(true);
     try {
@@ -137,9 +175,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   /**
+   * Logout (Task 03)
+   * 1. Menghapus access_token dari storage: await SecureStore.deleteItemAsync("access_token")
+   * 2. Mereset state isAuthenticated menjadi false
+   * 3. Mengarahkan navigasi kembali ke halaman Login (router.replace("/login"))
+   */
+  const logout = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    try {
    * Logout (Task 03 - Supabase Session Management & Logout)
    * 1. Panggil await supabase.auth.signOut()
    * 2. Menghapus access_token dari storage: await SecureStore.deleteItemAsync("access_token")
@@ -166,24 +212,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateProfile = async (updates: Partial<User>): Promise<AuthResponse> => {
-    if (!user) {
-      return { success: false, message: 'Tidak ada sesi pengguna aktif.' };
-    }
-    const res = await authService.updateProfile(user.id, updates);
-    if (res.success && res.user) {
-      setUser(res.user);
-    }
-    return res;
-  };
+  const updateProfile = useCallback(
+    async (updates: Partial<User>): Promise<AuthResponse> => {
+      if (!user) {
+        return { success: false, message: 'Tidak ada sesi pengguna aktif.' };
+      }
+      const res = await authService.updateProfile(user.id, updates);
+      if (res.success && res.user) {
+        setUser(res.user);
+      }
+      return res;
+    },
+    [user]
+  );
 
-  const resetPassword = async (email: string): Promise<AuthResponse> => {
+  const resetPassword = useCallback(async (email: string): Promise<AuthResponse> => {
     return authService.resetPassword(email);
-  };
+  }, []);
+
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      register,
+      loginDemo,
+      logout,
+      updateProfile,
+      resetPassword,
+    }),
+    [
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      register,
+      loginDemo,
+      logout,
+      updateProfile,
+      resetPassword,
+    ]
+  );
 
   return (
+    <AuthContext.Provider value={contextValue}>
     <AuthContext.Provider
       value={{
         user,

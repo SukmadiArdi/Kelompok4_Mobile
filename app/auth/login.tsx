@@ -15,7 +15,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius } from '@/src/constants/Theme';
 import { useAuth } from '@/src/context/AuthContext';
-import { getFirebaseStatus } from '@/src/services/firebaseConfig';
+import { getSupabaseStatus } from '@/src/services/supabaseClient';
 
 export default function LoginScreen() {
   const { login, loginDemo, isLoading } = useAuth();
@@ -26,7 +26,7 @@ export default function LoginScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const firebaseStatus = getFirebaseStatus();
+  const supabaseStatus = getSupabaseStatus();
 
   const handleLogin = async () => {
     setErrorMessage('');
@@ -92,12 +92,12 @@ export default function LoginScreen() {
           </TouchableOpacity>
           <View style={styles.providerBadge}>
             <Ionicons
-              name={firebaseStatus.isLive ? 'cloud-done' : 'shield-checkmark'}
+              name={supabaseStatus.isLive ? 'cloud-done' : 'shield-checkmark'}
               size={14}
-              color={firebaseStatus.isLive ? Colors.ocean : Colors.secondary}
+              color={supabaseStatus.isLive ? Colors.ocean : Colors.secondary}
             />
             <Text style={styles.providerBadgeText}>
-              {firebaseStatus.isLive ? 'Firebase Auth' : 'Mode Demo & Lokal'}
+              {supabaseStatus.isLive ? 'Supabase Auth' : 'Mode Demo & Lokal'}
             </Text>
           </View>
         </View>
