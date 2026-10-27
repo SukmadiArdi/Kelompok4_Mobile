@@ -11,7 +11,6 @@ export default function PageBaruScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Halaman Baru</Text>
         <Text style={styles.subtitle}>
-          Komponen halaman baru berhasil dimuat tanpa error path alias.
         </Text>
       </View>
     </SafeAreaView>
