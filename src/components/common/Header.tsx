@@ -37,7 +37,9 @@ export const Header: React.FC<HeaderProps> = ({
             <Feather name="arrow-left" size={22} color={Colors.text} />
           </Pressable>
         ) : (
-          <View style={styles.brandBox}>
+          <Pressable
+            onPress={() => router.push('/modal')}
+            style={({ pressed }) => [styles.brandBox, pressed && styles.buttonPressed]}>
             <View style={styles.logoBadge}>
               <Ionicons name="compass" size={20} color={Colors.primary} />
             </View>
@@ -50,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <Text style={styles.locationText}>Nusantara, Indonesia</Text>
               </View>
             </View>
-          </View>
+          </Pressable>
         )}
 
         {title && showBack && (

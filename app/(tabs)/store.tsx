@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -34,6 +34,7 @@ export default function StoreScreen() {
     isLiveFromApi,
     refreshApiData,
   } = useApp();
+  // State pencarian dan kategori
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
 
@@ -45,16 +46,26 @@ export default function StoreScreen() {
     'Ukiran Kayu',
   ];
 
-  const filteredProducts = (products || []).filter((p) => {
-    if (!p) return false;
-    const matchesCategory =
-      selectedCategory === 'Semua' || p.category === selectedCategory;
-    const matchesSearch =
-      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.artisan?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.artisan?.village || '').toLowerCase().includes(search.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Hook useEffect untuk inisialisasi data produk saat layar aktif
+  useEffect(() => {
+    if (!products || products.length === 0) {
+      refreshApiData();
+    }
+  }, [products, refreshApiData]);
+
+  // Hook useMemo untuk menyaring daftar produk secara efisien
+  const filteredProducts = useMemo(() => {
+    return (products || []).filter((p) => {
+      if (!p) return false;
+      const matchesCategory =
+        selectedCategory === 'Semua' || p.category === selectedCategory;
+      const matchesSearch =
+        (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+        (p.artisan?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+        (p.artisan?.village || '').toLowerCase().includes(search.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [search, selectedCategory, products]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {

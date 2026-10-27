@@ -1,5 +1,5 @@
 /**
- * Konfigurasi REST API Backend Aplikasi
+ * Konfigurasi REST API Backend Aplikasi LokalTrip
  *
  * URL base API diambil dari environment variable `EXPO_PUBLIC_API_BASE_URL`.
  */

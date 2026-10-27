@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useApp } from '@/src/context/AppContext';
 import { RatingStars } from '@/src/components/common/RatingStars';
 
 export default function ProductDetailScreen() {
+  // Ambil parameter dinamis id
   const { id } = useLocalSearchParams();
   const {
     products,
@@ -28,8 +29,32 @@ export default function ProductDetailScreen() {
   const product = products.find((p) => p.id === id) || products[0];
   const isFavorite = favoriteProductIds.includes(product.id);
 
+  // Inisialisasi state jumlah
   const [quantity, setQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
+
+  // Hook useEffect untuk efek samping saat halaman produk dimuat
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        // Layar produk siap
+      }
+    }, 50);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [id]);
+
+  // Navigasi kembali dengan canGoBack
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/store');
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -47,6 +72,7 @@ export default function ProductDetailScreen() {
 
   const handleBuyNow = () => {
     addToCart(product, quantity);
+    // Navigasi ke keranjang belanja
     router.push('/cart');
   };
 
@@ -61,8 +87,9 @@ export default function ProductDetailScreen() {
 
           {/* Top Actions */}
           <View style={styles.topActionRow}>
+            {/* Tombol kembali */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={handleBack}
               style={styles.iconCircle}
               hitSlop={8}>
               <Feather name="arrow-left" size={20} color={Colors.text} />

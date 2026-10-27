@@ -66,7 +66,7 @@ export const tokenStorage = {
    * Method alias untuk kepatuhan spesifikasi Task 01:
    * SecureStore.getItemAsync("access_token")
    */
-  async getItemAsync(key?: string): Promise<string | null> {
+  async getItemAsync(_key?: string): Promise<string | null> {
     return tokenStorage.getToken();
   },
 
@@ -74,7 +74,7 @@ export const tokenStorage = {
    * Method alias untuk kepatuhan spesifikasi Task 01:
    * SecureStore.deleteItemAsync("access_token")
    */
-  async deleteItemAsync(key?: string): Promise<void> {
+  async deleteItemAsync(_key?: string): Promise<void> {
     return tokenStorage.deleteToken();
   },
 };

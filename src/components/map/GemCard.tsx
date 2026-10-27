@@ -73,9 +73,10 @@ export const GemCard: React.FC<GemCardProps> = ({
         ]}>
         <View style={styles.horizontalImageContainer}>
           <Image
-            source={{ uri: gem.image }}
+            source={{ uri: displayImage }}
             style={styles.horizontalImage}
             resizeMode="cover"
+            onError={() => setImageError(true)}
           />
           <View
             style={[

@@ -3,6 +3,8 @@ node_modules/
 
 # Expo & Builds
 .expo/
+.expo
+.expo/*
 dist/
 web-build/
 
@@ -13,9 +15,9 @@ web-build/
 # Environment Variables
 .env
 .env.*
-.env*.local
 !.env.example
-docs/
+/docs/
+!app/docs/
 
 # OS / Editor
 .DS_Store

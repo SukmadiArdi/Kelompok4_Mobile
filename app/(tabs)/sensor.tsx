@@ -15,10 +15,13 @@ import { Accelerometer } from 'expo-sensors';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/Theme';
 import { Header } from '@/src/components/common/Header';
+import { AccelerometerDisplay } from '@/components/AccelerometerDisplay';
 
 // =========================================================================
-// [MODUL PRAKTIKUM - TASK 03: SENSOR INTERACTION - SHAKE DETECTION & VIBRATION]
-// Mendeteksi guncangan perangkat dengan threshold dan memicu efek getaran (Vibration)
+// [MODUL PRAKTIKUM - SENSOR ACCELEROMETER: TASK 01, 02 & 03 COMBINED]
+// - Task 01: Connect App to Sensor & Basic Listener
+// - Task 02: Display Sensor Data Real-Time UI & Line Chart History
+// - Task 03: Shake Detection & Vibration Interaction
 // =========================================================================
 
 type SensorSubscription = {
@@ -34,6 +37,8 @@ interface SensorCoordinates {
 export default function SensorScreen() {
   // 1. State data koordinat sensor
   const [sensorData, setSensorData] = useState<SensorCoordinates>({ x: 0, y: 0, z: 0 });
+  const [history, setHistory] = useState<SensorCoordinates[]>([]);
+  const [showAdvancedDisplay, setShowAdvancedDisplay] = useState<boolean>(true);
 
   // 2. State status guncangan (shaking)
   const [isShaking, setIsShaking] = useState<boolean>(false);
@@ -134,6 +139,12 @@ export default function SensorScreen() {
               setIsShaking(false);
             }
           }
+
+          // Simpan riwayat data (maksimal 15 data terakhir untuk grafik Task 02)
+          setHistory((prev) => {
+            const next = [...prev, { x, y, z }];
+            return next.length > 15 ? next.slice(-15) : next;
+          });
         });
 
         setIsListening(true);
@@ -170,6 +181,10 @@ export default function SensorScreen() {
     const simY = 1.15;
     const simZ = 0.85;
     setSensorData({ x: simX, y: simY, z: simZ });
+    setHistory((prev) => {
+      const next = [...prev, { x: simX, y: simY, z: simZ }];
+      return next.length > 15 ? next.slice(-15) : next;
+    });
 
     console.log(
       `Accelerometer: x=${simX.toFixed(2)}, y=${simY.toFixed(2)}, z=${simZ.toFixed(2)} <- Gerakan terdeteksi (Simulasi)`
@@ -438,6 +453,30 @@ export default function SensorScreen() {
             Uji Coba: Simulasi Goyang Perangkat
           </Text>
         </TouchableOpacity>
+
+        {/* Visualisasi Grafik & Indikator Lanjutan (Integrasi Task 02) */}
+        <View style={styles.task02Section}>
+          <TouchableOpacity
+            style={styles.task02ToggleHeader}
+            activeOpacity={0.7}
+            onPress={() => setShowAdvancedDisplay((prev) => !prev)}>
+            <View style={styles.task02ToggleLeft}>
+              <Ionicons name="analytics" size={18} color={Colors.primary} />
+              <Text style={styles.task02Title}>Grafik & Visualisasi Sensor (Task 02)</Text>
+            </View>
+            <Feather
+              name={showAdvancedDisplay ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={Colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          {showAdvancedDisplay && (
+            <View style={styles.task02Content}>
+              <AccelerometerDisplay sensorData={sensorData} history={history} />
+            </View>
+          )}
+        </View>
 
         {/* Ringkasan Teknis Modul Task 03 */}
         <View style={styles.techDetailsCard}>
@@ -887,5 +926,41 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.text,
     fontWeight: '600',
+  },
+  task02Section: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 18,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  task02ToggleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: Colors.surfaceSubtle,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  task02ToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  task02Title: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  task02Content: {
+    paddingVertical: 8,
   },
 });
