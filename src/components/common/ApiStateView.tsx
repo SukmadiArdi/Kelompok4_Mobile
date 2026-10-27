@@ -51,6 +51,38 @@ export const ErrorView: React.FC<ErrorViewProps> = ({
   </View>
 );
 
+interface OfflineViewProps {
+  title?: string;
+  message?: string;
+  onRetry?: () => void;
+}
+
+export const OfflineView: React.FC<OfflineViewProps> = ({
+  title = 'Tidak Ada Koneksi Internet',
+  message = 'Perangkat Anda sedang offline. Silakan periksa koneksi Wi-Fi atau data seluler Anda lalu coba lagi.',
+  onRetry,
+}) => (
+  <View style={styles.cardContainer}>
+    <View style={[styles.errorIconBox, { backgroundColor: '#FEF3C7' }]}>
+      <Ionicons name="cloud-offline-outline" size={28} color="#D97706" />
+    </View>
+    <Text style={styles.errorTitle}>{title}</Text>
+    <Text style={styles.errorText}>{message}</Text>
+    {onRetry && (
+      <Pressable
+        onPress={onRetry}
+        style={({ pressed }) => [
+          styles.retryBtn,
+          { backgroundColor: '#D97706' },
+          pressed && styles.btnPressed,
+        ]}>
+        <Ionicons name="refresh" size={15} color="#FFF" />
+        <Text style={styles.retryBtnText}>Coba Lagi (Request Ulang)</Text>
+      </Pressable>
+    )}
+  </View>
+);
+
 interface EmptyViewProps {
   title?: string;
   subtitle?: string;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,27 @@ export default function GemDetailScreen() {
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
   const [reviewerName, setReviewerName] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(() => {
+      if (isMounted) {
+      }
+    }, 50);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [id]);
+
+  // Navigasi kembali dengan canGoBack
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/map');
+    }
+  };
 
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
@@ -72,8 +93,9 @@ export default function GemDetailScreen() {
 
           {/* Top Actions */}
           <View style={styles.topActionRow}>
+            {/* Tombol kembali */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={handleBack}
               style={styles.iconCircle}
               hitSlop={8}>
               <Feather name="arrow-left" size={20} color={Colors.text} />

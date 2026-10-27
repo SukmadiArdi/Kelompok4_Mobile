@@ -269,12 +269,32 @@ const MOCK_PROGRAMS_RAW = [
 ];
 
 /**
- * Ambil daftar program dari REST API (Task 01 & Task 02).
+ * Memeriksa konektivitas internet aktif ke gateway (Task 03 - Handle Offline).
+ * Menggunakan probe HEAD request dengan timeout 2.5 detik.
+ */
+export async function checkInternetConnection(): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch('https://clients3.google.com/generate_204', {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return res.status >= 200 && res.status < 400;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Ambil daftar program dari REST API (Task 01, Task 02 & Task 03).
  * Menerima beberapa bentuk response umum: array langsung, `{ data: [...] }`,
  * atau `{ results: [...] }` — semuanya dipetakan lewat ProgramModel.
  *
- * Melempar ApiError jika response gagal (4xx, 5xx, atau Network Error),
- * kecuali jika parameter fallbackOnError diatur ke true.
+ * Menangani alur:
+ * Request > No Internet > Offline State > User Feedback > Retry
  */
 export async function fetchPrograms(
   fallbackOrOptions: boolean | { fallbackOnError?: boolean } = false
@@ -283,6 +303,16 @@ export async function fetchPrograms(
     typeof fallbackOrOptions === 'boolean'
       ? fallbackOrOptions
       : Boolean(fallbackOrOptions?.fallbackOnError);
+
+  // 1. Verifikasi konektivitas internet aktif (Task 03 - Handle Offline)
+  const isOnline = await checkInternetConnection();
+  if (!isOnline) {
+    throw new ApiError(
+      'Koneksi internet terputus. Periksa jaringan Wi-Fi atau data seluler Anda.',
+      undefined,
+      true
+    );
+  }
 
   if (isApiConfigured()) {
     try {
@@ -304,9 +334,16 @@ export async function fetchPrograms(
     }
   }
 
-  // Simulasi latensi jaringan (300ms) jika REST API belum dikonfigurasi di .env
+  // Simulasi latensi jaringan (300ms) saat internet online
   await new Promise((resolve) => setTimeout(resolve, 300));
   return ProgramModel.fromList(MOCK_PROGRAMS_RAW);
 }
 
-export default { fetchPrograms, httpGetJson, isNetworkError, handleFetchError, handleApiResponse };
+export default {
+  fetchPrograms,
+  httpGetJson,
+  isNetworkError,
+  handleFetchError,
+  handleApiResponse,
+  checkInternetConnection,
+};

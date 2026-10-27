@@ -16,6 +16,7 @@ interface ProgramListProps {
   programs: Program[];
   isLoading: boolean;
   isError: boolean;
+  isOffline?: boolean;
   isEmpty: boolean;
   errorMessage: string | null;
   onRetry: () => void;
@@ -92,6 +93,7 @@ export const ProgramList: React.FC<ProgramListProps> = ({
   programs,
   isLoading,
   isError,
+  isOffline,
   isEmpty,
   errorMessage,
   onRetry,
@@ -107,18 +109,50 @@ export const ProgramList: React.FC<ProgramListProps> = ({
     );
   }
 
-  // 2. ERROR STATE — Error Message & Retry Button (Request Ulang)
+  // 2. OFFLINE STATE (Task 03) — User Feedback saat No Internet
+  // Alur: Request > No Internet > Offline State > User Feedback > Retry
+  if (isOffline) {
+    return (
+      <View style={[styles.stateContainer, styles.offlineCard]}>
+        <View style={[styles.stateIconCircle, { backgroundColor: '#FEF3C7' }]}>
+          <Ionicons name="cloud-offline" size={28} color="#D97706" />
+        </View>
+        <View style={styles.offlinePill}>
+          <Ionicons name="warning-outline" size={12} color="#D97706" />
+          <Text style={styles.offlinePillText}>Status: Offline (Tidak Ada Internet)</Text>
+        </View>
+        <Text style={styles.stateTitle}>Tidak Ada Koneksi Internet</Text>
+        <Text style={[styles.stateText, { color: Colors.textSecondary }]}>
+          {errorMessage ||
+            'Perangkat Anda sedang tidak terhubung ke internet. Silakan aktifkan koneksi Wi-Fi atau data seluler, lalu tekan tombol di bawah.'}
+        </Text>
+        {/* RETRY BUTTON — Memulai alur Retry -> Request Again */}
+        <Pressable
+          onPress={onRetry}
+          style={({ pressed }) => [
+            styles.retryButton,
+            { backgroundColor: '#D97706' },
+            pressed && styles.retryPressed,
+          ]}>
+          <Ionicons name="refresh" size={16} color="#FFF" />
+          <Text style={styles.retryText}>Coba Lagi (Request Ulang)</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  // 3. ERROR STATE — Error Message untuk Server Error / 4xx / 5xx
   if (isError) {
     return (
       <View style={styles.stateContainer}>
         <View style={[styles.stateIconCircle, { backgroundColor: Colors.dangerLight }]}>
-          <Ionicons name="cloud-offline-outline" size={26} color={Colors.danger} />
+          <Ionicons name="alert-circle-outline" size={26} color={Colors.danger} />
         </View>
         <Text style={styles.stateTitle}>Gagal Memuat Data</Text>
         <Text style={[styles.stateText, { color: Colors.danger }]}>
           {errorMessage ?? 'Gagal memuat data dari REST API. Silakan coba lagi.'}
         </Text>
-        {/* 3. RETRY BUTTON — Memulai alur Retry -> Request Again */}
+        {/* RETRY BUTTON — Memulai alur Retry -> Request Again */}
         <Pressable
           onPress={onRetry}
           style={({ pressed }) => [styles.retryButton, pressed && styles.retryPressed]}>
@@ -259,6 +293,25 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: Typography.sizes.sm,
     fontWeight: Typography.weights.bold,
+  },
+  offlineCard: {
+    borderColor: '#FDE68A',
+    backgroundColor: '#FFFDF5',
+  },
+  offlinePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.full,
+    marginBottom: 4,
+  },
+  offlinePillText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    color: '#D97706',
   },
 });
 

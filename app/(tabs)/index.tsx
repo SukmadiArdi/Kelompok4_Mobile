@@ -48,10 +48,11 @@ export default function HomeScreen() {
     programs,
     isLoading: isProgramsLoading,
     isError: isProgramsError,
+    isOffline: isProgramsOffline,
     isEmpty: isProgramsEmpty,
     errorMessage: programsError,
     retry: retryPrograms,
-    triggerErrorSimulation,
+    triggerOfflineSimulation,
   } = usePrograms();
 
   const [search] = useState('');
@@ -243,29 +244,30 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Task 02: Program Budaya & Ekowisata (Alur Loading, Error & Retry) */}
+        {/* Task 03: Handle Offline & Retry (Alur Implementasi Offline) */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <View style={{ flex: 1, marginRight: 8 }}>
               <View style={styles.taskBadge}>
-                <Ionicons name="cloud-done-outline" size={12} color={Colors.primary} />
-                <Text style={styles.taskBadgeText}>Task 02: Loading, Error & Retry</Text>
+                <Ionicons name="cloud-offline-outline" size={12} color={Colors.primary} />
+                <Text style={styles.taskBadgeText}>Task 03: Handle Offline & Retry</Text>
               </View>
               <Text style={styles.sectionTitle}>Program Budaya & Ekowisata</Text>
               <Text style={styles.sectionSubtitle}>
-                Request → Loading → Error → Retry → Request Again
+                Request → No Internet → Offline State → User Feedback → Retry
               </Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+              {/* Tombol Demo Pengujian: Simulasi Internet Dimatikan */}
               <Pressable
-                onPress={triggerErrorSimulation}
+                onPress={triggerOfflineSimulation}
                 style={[
                   styles.refreshPill,
-                  { backgroundColor: '#FEE2E2', borderColor: '#FECACA' },
+                  { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
                 ]}
                 hitSlop={8}>
-                <Ionicons name="bug-outline" size={12} color="#DC2626" />
-                <Text style={[styles.seeAllText, { color: '#DC2626' }]}>Tes Error</Text>
+                <Ionicons name="cloud-offline" size={12} color="#D97706" />
+                <Text style={[styles.seeAllText, { color: '#D97706' }]}>Tes Offline</Text>
               </Pressable>
               <Pressable onPress={retryPrograms} style={styles.refreshPill} hitSlop={8}>
                 <Ionicons name="refresh" size={12} color={Colors.primary} />
@@ -278,6 +280,7 @@ export default function HomeScreen() {
             programs={programs}
             isLoading={isProgramsLoading}
             isError={isProgramsError}
+            isOffline={isProgramsOffline}
             isEmpty={isProgramsEmpty}
             errorMessage={programsError}
             onRetry={retryPrograms}
