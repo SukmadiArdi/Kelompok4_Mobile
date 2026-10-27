@@ -22,7 +22,7 @@ import { HiddenGem, GemCategory, GemDifficulty } from '@/src/types';
 
 export default function MapScreen() {
   const { gems, addHiddenGem, isLoading, refreshApiData } = useApp();
-  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollRef = useRef<any>(null);
 
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [scrollEnabled, setScrollEnabled] = useState(true);
