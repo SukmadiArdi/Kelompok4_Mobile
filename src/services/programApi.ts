@@ -6,6 +6,16 @@
  * - Task 01 (Teman): Menangani status 2xx, 4xx, 5xx, network error, dan timeout (handleApiResponse & handleFetchError).
  * - Task 02 (Saya): Alur Loading, Error & Retry (Loading indicator, Error message, Retry button).
  * - Mengonversi JSON response menjadi Data Model (ProgramModel) — UI tidak melakukan parsing JSON secara langsung.
+ * REST API Service untuk data Program PresidenKu.
+ *
+ * Tanggung jawab (Task 01):
+ * - Melakukan HTTP GET ke REST API (fetch bawaan React Native).
+ * - Periksa response.ok dan status code.
+ * - Tangani status 2xx: return data JSON.
+ * - Tangani status 4xx (Client Error, misal 400, 401, 404): Lempar error informatif dengan status code.
+ * - Tangani status 5xx (Server Error, misal 500, 503): Lempar error khusus gangguan server.
+ * - Tangani kegagalan koneksi / Network Error pada catch block fetch (offline / timeout / connection refused).
+ * - Mengonversi JSON response menjadi Data Model (ProgramModel).
  */
 
 import * as SecureStore from 'expo-secure-store';
@@ -42,6 +52,15 @@ export function isNetworkError(error: unknown): boolean {
       msg.includes('failed to fetch') ||
       msg.includes('network request failed') ||
       msg.includes('connection refused') ||
+      msg.includes('network request failed') ||
+      msg.includes('network error') ||
+      msg.includes('failed to fetch') ||
+      msg.includes('koneksi') ||
+      msg.includes('connection') ||
+      msg.includes('connect') ||
+      msg.includes('econnrefused') ||
+      msg.includes('enotfound') ||
+      msg.includes('internet') ||
       msg.includes('offline') ||
       msg.includes('timed out') ||
       msg.includes('timeout')
@@ -86,6 +105,7 @@ export function handleFetchError(error: unknown): never {
  * - Status 2xx: return data JSON
  * - Status 4xx (Client Error, misal 400, 401, 404): Lempar error informatif dengan status code
  * - Status 5xx (Server Error, misal 500, 503): Lempar error khusus gangguan server
+ * - Status 5xx (Server Error, misal 500, 503): Lempar error khusus
  */
 export async function handleApiResponse<T = unknown>(response: Response): Promise<T> {
   // 1. Status 2xx: return data JSON
@@ -221,6 +241,7 @@ export async function httpGetJson(url: string): Promise<unknown> {
 
     // Log Request Headers untuk verifikasi pengujian terminal (Task 02)
     console.log('Request Headers:', headers);
+    console.log("Request Headers:", headers);
 
     response = await fetch(url, {
       method: 'GET',
@@ -295,6 +316,12 @@ export async function checkInternetConnection(): Promise<boolean> {
  *
  * Menangani alur:
  * Request > No Internet > Offline State > User Feedback > Retry
+ * Ambil daftar program dari REST API (Task 01 & Task 02).
+ * Menerima beberapa bentuk response umum: array langsung, `{ data: [...] }`,
+ * atau `{ results: [...] }` — semuanya dipetakan lewat ProgramModel.
+ *
+ * Melempar ApiError jika response gagal (4xx, 5xx, atau Network Error),
+ * kecuali jika parameter fallbackOnError diatur ke true.
  */
 export async function fetchPrograms(
   fallbackOrOptions: boolean | { fallbackOnError?: boolean } = false
@@ -335,6 +362,7 @@ export async function fetchPrograms(
   }
 
   // Simulasi latensi jaringan (300ms) saat internet online
+  // Simulasi latensi jaringan (300ms) jika REST API belum dikonfigurasi di .env
   await new Promise((resolve) => setTimeout(resolve, 300));
   return ProgramModel.fromList(MOCK_PROGRAMS_RAW);
 }
@@ -347,3 +375,5 @@ export default {
   handleApiResponse,
   checkInternetConnection,
 };
+export default { fetchPrograms, httpGetJson, isNetworkError, handleFetchError, handleApiResponse };
+

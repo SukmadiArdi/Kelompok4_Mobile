@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { User, AuthResponse } from '../types';
@@ -44,6 +44,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Default demo user untuk initial test
             setUser(DEFAULT_DEMO_USER);
             setIsAuthenticated(true);
+        // Cek sesi aktif Supabase atau fallback SecureStore
+        let token: string | null = null;
+        try {
+          const { data } = await supabase.auth.getSession();
+          token = data.session?.access_token || null;
+        } catch {
+          // Abaikan jika offline / dev
+        }
+
+        if (!token) {
+          token = await SecureStore.getItemAsync('access_token').catch(() => null);
+        }
+
+        const savedUser = await authService.getCurrentUser();
+        if (isMounted) {
+          if (token && savedUser) {
+            setUser(savedUser);
+            setIsAuthenticated(true);
+          } else if (savedUser) {
+            // Sinkronisasi access_token jika akun telah tersimpan
+            const mockToken = generateMockJwt(savedUser.id, savedUser.email);
+            await SecureStore.setItemAsync('access_token', mockToken).catch(() => {});
+            setUser(savedUser);
+            setIsAuthenticated(true);
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
           }
         }
       } catch (err) {
@@ -70,11 +97,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Menyimpan access_token ke SecureStore dan memperbarui isAuthenticated menjadi true
    */
   const login = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
+   * Login (Task 01 - Supabase & Token-Based Authentication)
+   * Menyimpan access_token ke SecureStore, memperbarui isAuthenticated, dan log token
+   */
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
       const res = await authService.login(email, password);
       if (res.success && res.user) {
         if (res.access_token) {
+          console.log("Supabase JWT Token:", res.access_token);
           await SecureStore.setItemAsync('access_token', res.access_token).catch(() => {});
         }
         setUser(res.user);
@@ -109,6 +141,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return res;
       } finally {
         setIsLoading(false);
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    phone?: string
+  ): Promise<AuthResponse> => {
+    setIsLoading(true);
+    try {
+      const res = await authService.register(name, email, password, phone);
+      if (res.success && res.user) {
+        if (res.access_token) {
+          console.log("Supabase JWT Token:", res.access_token);
+          await SecureStore.setItemAsync('access_token', res.access_token).catch(() => {});
+        }
+        setUser(res.user);
+        setIsAuthenticated(true);
       }
     },
     []
@@ -118,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * 1-Click Demo Login
    */
   const loginDemo = useCallback(async (): Promise<void> => {
+  const loginDemo = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const demoUser = await authService.loginDemo();
@@ -137,12 +186,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
+   * Logout (Task 03 - Supabase Session Management & Logout)
+   * 1. Panggil await supabase.auth.signOut()
+   * 2. Menghapus access_token dari storage: await SecureStore.deleteItemAsync("access_token")
+   * 3. Mereset state isAuthenticated menjadi false
+   * 4. Log console.log("Status token setelah logout:", null)
+   * 5. Mengarahkan navigasi kembali ke halaman Login (router.replace("/login"))
+   */
+  const logout = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signOut().catch((err) => {
+        console.warn('Supabase signOut error:', err);
+      });
       await SecureStore.deleteItemAsync('access_token').catch((err) => {
         console.warn('Gagal menghapus access_token:', err);
       });
       await authService.logout();
       setUser(null);
       setIsAuthenticated(false);
+      console.log("Status token setelah logout:", null);
       router.replace('/login' as any);
     } catch (err) {
       console.error('Logout error:', err);
@@ -196,6 +259,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        register,
+        loginDemo,
+        logout,
+        updateProfile,
+        resetPassword,
+      }}>
       {children}
     </AuthContext.Provider>
   );

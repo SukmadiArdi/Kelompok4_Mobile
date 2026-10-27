@@ -67,6 +67,7 @@ export const tokenStorage = {
    * SecureStore.getItemAsync("access_token")
    */
   async getItemAsync(_key?: string): Promise<string | null> {
+  async getItemAsync(key?: string): Promise<string | null> {
     return tokenStorage.getToken();
   },
 
@@ -75,6 +76,7 @@ export const tokenStorage = {
    * SecureStore.deleteItemAsync("access_token")
    */
   async deleteItemAsync(_key?: string): Promise<void> {
+  async deleteItemAsync(key?: string): Promise<void> {
     return tokenStorage.deleteToken();
   },
 };
