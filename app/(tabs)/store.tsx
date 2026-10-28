@@ -30,8 +30,9 @@ export default function StoreScreen() {
     cartCount,
     cartSubtotal,
     isLoading,
+    isSyncing,
+    isOnline,
     apiError,
-    isLiveFromApi,
     refreshApiData,
   } = useApp();
   // State pencarian dan kategori
@@ -104,7 +105,11 @@ export default function StoreScreen() {
         </View>
 
         {/* Status Indikator REST API */}
-        <ApiStatusBar isLive={isLiveFromApi} onRefresh={refreshApiData} />
+        <ApiStatusBar
+          isLive={isOnline}
+          isSyncing={isSyncing}
+          onRefresh={refreshApiData}
+        />
 
         {/* Search */}
         <SearchBar

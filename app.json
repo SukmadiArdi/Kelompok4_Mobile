@@ -40,11 +40,18 @@
         {
           "motionPermission": "Izinkan aplikasi mengakses sensor gerakan (Accelerometer) untuk fitur interaktif."
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Izinkan aplikasi mengakses galeri foto untuk mengunggah foto profil dan bukti kunjungan.",
+          "cameraPermission": "Izinkan aplikasi mengakses kamera untuk mengambil foto profil dan bukti kunjungan langsung."
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
     }
   }
 }
-

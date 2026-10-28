@@ -14,6 +14,7 @@ interface AuthContextType {
   loginDemo: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<AuthResponse>;
+  updateAvatar: (avatarUri: string) => Promise<AuthResponse>;
   resetPassword: (email: string) => Promise<AuthResponse>;
 }
 
@@ -179,6 +180,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return res;
   };
 
+  const updateAvatar = async (avatarUri: string): Promise<AuthResponse> => {
+    return updateProfile({ avatar: avatarUri });
+  };
+
   const resetPassword = async (email: string): Promise<AuthResponse> => {
     return authService.resetPassword(email);
   };
@@ -194,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginDemo,
         logout,
         updateProfile,
+        updateAvatar,
         resetPassword,
       }}>
       {children}

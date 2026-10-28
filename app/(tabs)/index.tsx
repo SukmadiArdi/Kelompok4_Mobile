@@ -45,8 +45,9 @@ export default function HomeScreen() {
     gems,
     products,
     isLoading,
+    isSyncing,
+    isOnline,
     apiError,
-    isLiveFromApi,
     refreshApiData,
   } = useApp();
 
@@ -148,7 +149,11 @@ export default function HomeScreen() {
         </View>
 
         {/* REST API Status Banner */}
-        <ApiStatusBar isLive={isLiveFromApi} onRefresh={handleRefresh} />
+        <ApiStatusBar
+          isLive={isOnline}
+          isSyncing={isSyncing}
+          onRefresh={handleRefresh}
+        />
 
         {/* Search Bar */}
         <View style={styles.searchWrapper}>

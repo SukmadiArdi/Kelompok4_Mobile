@@ -113,28 +113,55 @@ export const EmptyView: React.FC<EmptyViewProps> = ({
 
 interface ApiStatusBarProps {
   isLive: boolean;
+  isSyncing?: boolean;
   onRefresh?: () => void;
+  syncMessage?: string;
+  onlineText?: string;
+  offlineText?: string;
 }
 
-export const ApiStatusBar: React.FC<ApiStatusBarProps> = ({ isLive, onRefresh }) => (
-  <View style={[styles.statusBarContainer, isLive ? styles.statusLive : styles.statusMock]}>
-    <View style={styles.statusDotRow}>
-      <View style={[styles.dot, isLive ? styles.dotLive : styles.dotMock]} />
-      <Text style={[styles.statusText, isLive ? styles.textLive : styles.textMock]}>
-        {isLive ? 'REST API Terhubung (Live Data)' : 'Mode Offline / Fallback Data Model'}
-      </Text>
+export const ApiStatusBar: React.FC<ApiStatusBarProps> = ({
+  isLive,
+  isSyncing = false,
+  onRefresh,
+  syncMessage = 'Menyinkronkan data dengan server...',
+  onlineText = 'Terhubung • Data Tersinkronisasi',
+  offlineText = 'Mode Offline / Fallback Data Model',
+}) => {
+  if (isSyncing) {
+    return (
+      <View style={[styles.statusBarContainer, styles.statusSyncing]}>
+        <View style={styles.statusDotRow}>
+          <ActivityIndicator size="small" color="#2563EB" style={styles.syncSpinner} />
+          <Text style={[styles.statusText, styles.textSyncing]}>{syncMessage}</Text>
+        </View>
+        <View style={styles.syncBtn}>
+          <Ionicons name="cloud-upload-outline" size={14} color="#2563EB" />
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.statusBarContainer, isLive ? styles.statusLive : styles.statusMock]}>
+      <View style={styles.statusDotRow}>
+        <View style={[styles.dot, isLive ? styles.dotLive : styles.dotMock]} />
+        <Text style={[styles.statusText, isLive ? styles.textLive : styles.textMock]}>
+          {isLive ? onlineText : offlineText}
+        </Text>
+      </View>
+      {onRefresh && (
+        <Pressable onPress={onRefresh} hitSlop={8} style={styles.syncBtn}>
+          <Ionicons
+            name="sync-outline"
+            size={14}
+            color={isLive ? '#047857' : '#D97706'}
+          />
+        </Pressable>
+      )}
     </View>
-    {onRefresh && (
-      <Pressable onPress={onRefresh} hitSlop={6} style={styles.syncBtn}>
-        <Ionicons
-          name="sync-outline"
-          size={13}
-          color={isLive ? '#047857' : Colors.accent}
-        />
-      </Pressable>
-    )}
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   loadingContainer: {
@@ -250,6 +277,17 @@ const styles = StyleSheet.create({
   statusMock: {
     backgroundColor: '#FFFBEB',
     borderColor: '#FDE68A',
+  },
+  statusSyncing: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  syncSpinner: {
+    marginRight: 4,
+    transform: [{ scale: 0.8 }],
+  },
+  textSyncing: {
+    color: '#1D4ED8',
   },
   statusDotRow: {
     flexDirection: 'row',

@@ -8,6 +8,7 @@ import {
   Pressable,
   Modal,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -24,6 +25,7 @@ export default function CartScreen() {
     clearCart,
     cartSubtotal,
     cartCount,
+    isOnline,
   } = useApp();
 
   const [appliedPromo] = useState(true);
@@ -43,6 +45,13 @@ export default function CartScreen() {
   };
 
   const handleCheckout = () => {
+    if (!isOnline) {
+      Alert.alert(
+        'Perangkat Offline',
+        'Koneksi internet diperlukan untuk memproses checkout pesanan. Silakan hubungkan kembali internet Anda.'
+      );
+      return;
+    }
     setShowSuccessModal(true);
   };
 
@@ -236,10 +245,18 @@ export default function CartScreen() {
             onPress={handleCheckout}
             style={({ pressed }) => [
               styles.checkoutBtn,
+              !isOnline && styles.checkoutBtnDisabled,
               pressed && styles.btnPressed,
             ]}>
-            <Text style={styles.checkoutBtnText}>Checkout Sekarang</Text>
-            <Feather name="arrow-right" size={16} color="#FFF" />
+            <Ionicons
+              name={isOnline ? 'cart-outline' : 'cloud-offline-outline'}
+              size={16}
+              color="#FFF"
+            />
+            <Text style={styles.checkoutBtnText}>
+              {isOnline ? 'Checkout Sekarang' : 'Offline - Butuh Koneksi Internet'}
+            </Text>
+            {isOnline && <Feather name="arrow-right" size={16} color="#FFF" />}
           </Pressable>
         </View>
       )}
@@ -623,6 +640,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 13,
     borderRadius: 14,
+  },
+  checkoutBtnDisabled: {
+    backgroundColor: '#9CA3AF',
   },
   btnPressed: {
     opacity: 0.85,

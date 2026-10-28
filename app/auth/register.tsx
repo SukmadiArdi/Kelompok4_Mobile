@@ -9,15 +9,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius } from '@/src/constants/Theme';
 import { useAuth } from '@/src/context/AuthContext';
+import { useApp } from '@/src/context/AppContext';
 
 export default function RegisterScreen() {
   const { register, isLoading } = useAuth();
+  const { isOnline } = useApp();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,6 +34,15 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     setErrorMessage('');
+
+    if (!isOnline) {
+      Alert.alert(
+        'Perangkat Offline',
+        'Koneksi internet diperlukan untuk memproses registrasi akun baru. Silakan hubungkan kembali internet Anda.'
+      );
+      setErrorMessage('Koneksi internet diperlukan untuk mendaftar akun.');
+      return;
+    }
 
     if (!name.trim()) {
       setErrorMessage('Nama lengkap wajib diisi.');
@@ -226,7 +238,11 @@ export default function RegisterScreen() {
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={[styles.submitBtn, (submitting || isLoading) && styles.btnDisabled]}
+              style={[
+                styles.submitBtn,
+                !isOnline && styles.submitBtnOffline,
+                (submitting || isLoading) && styles.btnDisabled,
+              ]}
               onPress={handleRegister}
               disabled={submitting || isLoading}
               activeOpacity={0.85}>
@@ -234,8 +250,15 @@ export default function RegisterScreen() {
                 <ActivityIndicator color={Colors.surface} size="small" />
               ) : (
                 <>
-                  <Text style={styles.submitBtnText}>Daftar Sekarang</Text>
-                  <Ionicons name="arrow-forward" size={18} color={Colors.surface} />
+                  <Ionicons
+                    name={isOnline ? 'person-add-outline' : 'cloud-offline-outline'}
+                    size={18}
+                    color={Colors.surface}
+                  />
+                  <Text style={styles.submitBtnText}>
+                    {isOnline ? 'Daftar Sekarang' : 'Offline - Butuh Koneksi Internet'}
+                  </Text>
+                  {isOnline && <Ionicons name="arrow-forward" size={18} color={Colors.surface} />}
                 </>
               )}
             </TouchableOpacity>
@@ -392,6 +415,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
+  },
+  submitBtnOffline: {
+    backgroundColor: '#9CA3AF',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   btnDisabled: {
     opacity: 0.65,

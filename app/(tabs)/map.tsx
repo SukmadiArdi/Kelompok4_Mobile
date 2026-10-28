@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -21,8 +22,8 @@ import { GemCard } from '@/src/components/map/GemCard';
 import { HiddenGem, GemCategory, GemDifficulty } from '@/src/types';
 
 export default function MapScreen() {
-  const { gems, addHiddenGem, isLoading, refreshApiData } = useApp();
-  const scrollRef = useRef<ScrollView | null>(null);
+  const { gems, addHiddenGem, isLoading, isOnline, refreshApiData } = useApp();
+  const scrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
 
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -178,6 +179,14 @@ export default function MapScreen() {
   };
 
   const handleContributeSubmit = () => {
+    if (!isOnline) {
+      Alert.alert(
+        'Perangkat Offline',
+        'Koneksi internet diperlukan untuk memproses kontribusi Hidden Gem baru. Silakan hubungkan kembali internet Anda.'
+      );
+      return;
+    }
+
     if (!newSpotName.trim()) {
       return;
     }
@@ -648,10 +657,20 @@ export default function MapScreen() {
 
                   <Pressable
                     onPress={handleContributeSubmit}
-                    style={styles.submitContributeBtn}>
-                    <Text style={styles.submitContributeText}>
-                      Semayamkan di Peta
-                    </Text>
+                    style={[
+                      styles.submitContributeBtn,
+                      !isOnline && styles.submitContributeBtnDisabled,
+                    ]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons
+                        name={isOnline ? 'earth' : 'cloud-offline-outline'}
+                        size={16}
+                        color="#FFF"
+                      />
+                      <Text style={styles.submitContributeText}>
+                        {isOnline ? 'Semayamkan di Peta' : 'Offline - Butuh Koneksi Internet'}
+                      </Text>
+                    </View>
                   </Pressable>
                 </View>
               </ScrollView>
@@ -1109,6 +1128,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
+  },
+  submitContributeBtnDisabled: {
+    backgroundColor: '#9CA3AF',
   },
   submitContributeText: {
     color: '#FFF',

@@ -9,18 +9,26 @@ import {
   Platform,
   Modal,
   TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/Theme';
 import { useApp } from '@/src/context/AppContext';
+import { useAuth } from '@/src/context/AuthContext';
 import { RatingStars } from '@/src/components/common/RatingStars';
 import { openDirections, formatCoordinatesDMS } from '@/src/utils/mapUtils';
+import { imagePickerService } from '@/src/services/imagePickerService';
+import { hybridStorageService } from '@/src/services/hybridStorageService';
+import { ImageSourcePickerModal } from '@/src/components/common/ImageSourcePickerModal';
 
 export default function GemDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { gems, savedGemIds, toggleBookmarkGem, addGemReview } = useApp();
+  const { gems, savedGemIds, toggleBookmarkGem, addGemReview, isOnline } = useApp();
+  const { user } = useAuth();
 
   const gem = gems.find((g) => g.id === id) || gems[0];
   const isBookmarked = savedGemIds.includes(gem.id);
@@ -30,6 +38,10 @@ export default function GemDetailScreen() {
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
   const [reviewerName, setReviewerName] = useState('');
+  const [reviewPhoto, setReviewPhoto] = useState<{ uri: string; base64?: string } | null>(null);
+  const [isPhotoPickerOpen, setIsPhotoPickerOpen] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,16 +79,93 @@ export default function GemDetailScreen() {
 
   const diffColor = getDifficultyColor(gem.difficulty);
 
-  const handleSubmitReview = () => {
-    if (!newComment.trim()) return;
-    addGemReview(gem.id, {
-      user: reviewerName.trim() || 'Penjelajah LokalTrip',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
-      rating: newRating,
-      comment: newComment,
+  const handleOpenReviewModal = () => {
+    if (user && !reviewerName) {
+      setReviewerName(user.name);
+    }
+    setShowReviewModal(true);
+  };
+
+  const handlePickReviewPhotoCamera = async () => {
+    const res = await imagePickerService.takePhotoFromCamera({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      includeBase64: true,
     });
-    setNewComment('');
-    setShowReviewModal(false);
+    if (!res.canceled && res.uri) {
+      setReviewPhoto({ uri: res.uri, base64: res.base64 });
+    }
+  };
+
+  const handlePickReviewPhotoGallery = async () => {
+    const res = await imagePickerService.pickImageFromGallery({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      includeBase64: true,
+    });
+    if (!res.canceled && res.uri) {
+      setReviewPhoto({ uri: res.uri, base64: res.base64 });
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!isOnline) {
+      Alert.alert(
+        'Perangkat Offline',
+        'Koneksi internet diperlukan untuk memproses pengiriman ulasan & foto. Silakan hubungkan kembali internet Anda.'
+      );
+      return;
+    }
+
+    if (!newComment.trim()) {
+      Alert.alert('Peringatan', 'Komentar ulasan wajib diisi.');
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    let uploadedPhotos: string[] = [];
+
+    try {
+      if (reviewPhoto) {
+        const uploadRes = await hybridStorageService.uploadImage({
+          uri: reviewPhoto.uri,
+          base64: reviewPhoto.base64,
+          folder: 'reviews',
+          fileName: `visit_${gem.id}_${Date.now()}.jpg`,
+        });
+        if (uploadRes.success && uploadRes.url) {
+          uploadedPhotos.push(uploadRes.url);
+        }
+      }
+
+      addGemReview(gem.id, {
+        user: reviewerName.trim() || user?.name || 'Penjelajah LokalTrip',
+        avatar:
+          user?.avatar ||
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+        rating: newRating,
+        comment: newComment.trim(),
+        photos: uploadedPhotos.length > 0 ? uploadedPhotos : undefined,
+      });
+
+      setNewComment('');
+      setReviewPhoto(null);
+      setShowReviewModal(false);
+
+      if (uploadedPhotos.length > 0) {
+        Alert.alert(
+          'Ulasan & Foto Berhasil Dikirim',
+          'Bukti kunjungan Anda berhasil diverifikasi dan tersimpan di penyimpanan!'
+        );
+      }
+    } catch (err: any) {
+      console.error('Error saat submit review:', err);
+      Alert.alert('Gagal', 'Terjadi kesalahan saat memposting ulasan.');
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   return (
@@ -258,7 +347,7 @@ export default function GemDetailScreen() {
               Ulasan Pengguna ({gem.reviews.length})
             </Text>
             <Pressable
-              onPress={() => setShowReviewModal(true)}
+              onPress={handleOpenReviewModal}
               style={styles.addReviewBtn}>
               <Feather name="edit-3" size={13} color={Colors.primary} />
               <Text style={styles.addReviewBtnText}>Tulis Ulasan</Text>
@@ -277,6 +366,30 @@ export default function GemDetailScreen() {
                   <RatingStars rating={rev.rating} size={11} showText={false} />
                 </View>
                 <Text style={styles.reviewComment}>{rev.comment}</Text>
+
+                {/* Proof of Visit Photos */}
+                {rev.photos && rev.photos.length > 0 && (
+                  <View style={styles.reviewPhotosContainer}>
+                    <View style={styles.verifiedProofBadge}>
+                      <Ionicons name="camera-reverse" size={12} color="#059669" />
+                      <Text style={styles.verifiedProofBadgeText}>Bukti Kunjungan Terverifikasi</Text>
+                    </View>
+                    <View style={styles.reviewPhotosRow}>
+                      {rev.photos.map((photoUrl, photoIdx) => (
+                        <TouchableOpacity
+                          key={photoIdx}
+                          onPress={() => setPreviewPhotoUrl(photoUrl)}
+                          activeOpacity={0.8}
+                          style={styles.reviewPhotoThumbWrapper}>
+                          <Image source={{ uri: photoUrl }} style={styles.reviewPhotoThumb} />
+                          <View style={styles.zoomIconBadge}>
+                            <Ionicons name="scan-outline" size={11} color="#FFF" />
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
               </View>
             ))
           ) : (
@@ -337,9 +450,105 @@ export default function GemDetailScreen() {
               onChangeText={setNewComment}
             />
 
-            <Pressable onPress={handleSubmitReview} style={styles.submitReviewBtn}>
-              <Text style={styles.submitReviewText}>Kirim Ulasan</Text>
+            {/* Proof of Visit Attachment */}
+            <Text style={styles.inputLabel}>Bukti Kunjungan / Foto Spot (Opsional)</Text>
+            {reviewPhoto ? (
+              <View style={styles.photoPreviewCard}>
+                <Image source={{ uri: reviewPhoto.uri }} style={styles.photoPreviewImage} />
+                <View style={styles.photoPreviewMeta}>
+                  <View style={styles.photoReadyBadge}>
+                    <Ionicons name="checkmark-circle" size={14} color="#059669" />
+                    <Text style={styles.photoReadyText}>Foto Kunjungan Terlampir</Text>
+                  </View>
+                  <Text style={styles.photoNoticeText}>
+                    Tersimpan via Hybrid Supabase / Local Storage
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.removePhotoBtn}
+                  onPress={() => setReviewPhoto(null)}
+                  disabled={isSubmittingReview}
+                  hitSlop={8}>
+                  <Ionicons name="trash-outline" size={16} color={Colors.danger} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.addPhotoCardBtn}
+                onPress={() => setIsPhotoPickerOpen(true)}
+                disabled={isSubmittingReview}
+                activeOpacity={0.75}>
+                <View style={styles.addPhotoIconCircle}>
+                  <Ionicons name="camera-outline" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.addPhotoTextCol}>
+                  <Text style={styles.addPhotoBtnTitle}>Ambil / Unggah Foto Kunjungan</Text>
+                  <Text style={styles.addPhotoBtnSub}>Jepret langsung via kamera atau ambil dari galeri</Text>
+                </View>
+                <Feather name="plus" size={18} color={Colors.primary} />
+              </TouchableOpacity>
+            )}
+
+            <Pressable
+              onPress={handleSubmitReview}
+              style={[
+                styles.submitReviewBtn,
+                !isOnline && styles.submitReviewBtnDisabled,
+                isSubmittingReview && { opacity: 0.7 },
+              ]}
+              disabled={isSubmittingReview}>
+              {isSubmittingReview ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons
+                    name={isOnline ? 'send-outline' : 'cloud-offline-outline'}
+                    size={16}
+                    color="#FFF"
+                  />
+                  <Text style={styles.submitReviewText}>
+                    {isOnline ? 'Kirim Ulasan' : 'Offline - Butuh Koneksi Internet'}
+                  </Text>
+                </View>
+              )}
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Review Image Source Picker Modal */}
+      <ImageSourcePickerModal
+        visible={isPhotoPickerOpen}
+        onClose={() => setIsPhotoPickerOpen(false)}
+        onSelectCamera={handlePickReviewPhotoCamera}
+        onSelectGallery={handlePickReviewPhotoGallery}
+        title="Unggah Bukti Kunjungan"
+        subtitle="Ambil foto pemandangan di lokasi via kamera atau pilih foto dari galeri"
+      />
+
+      {/* Fullscreen Photo Zoom Modal */}
+      <Modal
+        visible={!!previewPhotoUrl}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setPreviewPhotoUrl(null)}>
+        <View style={styles.fullscreenBackdrop}>
+          <TouchableOpacity
+            style={styles.closeFullscreenBtn}
+            onPress={() => setPreviewPhotoUrl(null)}
+            hitSlop={10}>
+            <Feather name="x" size={24} color="#FFF" />
+          </TouchableOpacity>
+          {previewPhotoUrl && (
+            <Image
+              source={{ uri: previewPhotoUrl }}
+              style={styles.fullscreenImage}
+              resizeMode="contain"
+            />
+          )}
+          <View style={styles.fullscreenBottomBar}>
+            <Ionicons name="shield-checkmark" size={16} color="#34D399" />
+            <Text style={styles.fullscreenBottomText}>Bukti Kunjungan Terverifikasi Komunitas</Text>
           </View>
         </View>
       </Modal>
@@ -766,9 +975,178 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
+  submitReviewBtnDisabled: {
+    backgroundColor: '#9CA3AF',
+  },
   submitReviewText: {
     color: '#FFF',
     fontSize: 14,
     fontWeight: '700',
+  },
+
+  // Proof of Visit styles
+  reviewPhotosContainer: {
+    marginTop: 10,
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  verifiedProofBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 8,
+  },
+  verifiedProofBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  reviewPhotosRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  reviewPhotoThumbWrapper: {
+    width: 72,
+    height: 72,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  reviewPhotoThumb: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  zoomIconBadge: {
+    position: 'absolute',
+    bottom: 3,
+    right: 3,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 4,
+    padding: 2,
+  },
+
+  // Modal Attachment styles
+  photoPreviewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 16,
+    gap: 12,
+  },
+  photoPreviewImage: {
+    width: 54,
+    height: 54,
+    borderRadius: 8,
+    resizeMode: 'cover',
+  },
+  photoPreviewMeta: {
+    flex: 1,
+  },
+  photoReadyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  photoReadyText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  photoNoticeText: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+  },
+  removePhotoBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addPhotoCardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1.5,
+    borderColor: Colors.primaryLight,
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+    gap: 10,
+  },
+  addPhotoIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addPhotoTextCol: {
+    flex: 1,
+  },
+  addPhotoBtnTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  addPhotoBtnSub: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginTop: 1,
+  },
+
+  // Fullscreen Preview styles
+  fullscreenBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeFullscreenBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 25,
+    right: 20,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullscreenImage: {
+    width: '90%',
+    height: '70%',
+  },
+  fullscreenBottomBar: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 40 : 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  fullscreenBottomText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

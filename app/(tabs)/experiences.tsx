@@ -24,7 +24,14 @@ import {
 import { Experience } from '@/src/types';
 
 export default function ExperiencesScreen() {
-  const { experiences, isLoading, apiError, isLiveFromApi, refreshApiData } = useApp();
+  const {
+    experiences,
+    isLoading,
+    isSyncing,
+    isOnline,
+    apiError,
+    refreshApiData,
+  } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [bookingExperience, setBookingExperience] = useState<Experience | null>(null);
@@ -77,7 +84,11 @@ export default function ExperiencesScreen() {
         </View>
 
         {/* Status Indikator REST API */}
-        <ApiStatusBar isLive={isLiveFromApi} onRefresh={refreshApiData} />
+        <ApiStatusBar
+          isLive={isOnline}
+          isSyncing={isSyncing}
+          onRefresh={refreshApiData}
+        />
 
         {/* Search */}
         <SearchBar

@@ -23,9 +23,12 @@ import { Header } from '@/src/components/common/Header';
 import { getSupabaseStatus } from '@/src/services/supabaseClient';
 import { GemCard } from '@/src/components/map/GemCard';
 import { StorageManagerView } from '@/src/components/profile/StorageManagerView';
+import { imagePickerService, ImagePickerResult } from '@/src/services/imagePickerService';
+import { hybridStorageService } from '@/src/services/hybridStorageService';
+import { ImageSourcePickerModal } from '@/src/components/common/ImageSourcePickerModal';
 
 export default function ProfileScreen() {
-  const { bookings, gems, savedGemIds } = useApp();
+  const { bookings, gems, savedGemIds, isOnline } = useApp();
   const { user, isAuthenticated, logout, loginDemo, updateProfile } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'storage' | 'cloud'>('bookings');
@@ -34,6 +37,64 @@ export default function ProfileScreen() {
   const [editPhone, setEditPhone] = useState('');
   const [editBio, setEditBio] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isPhotoPickerOpen, setIsPhotoPickerOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const handleUploadAvatar = async (pickerResult: ImagePickerResult) => {
+    if (pickerResult.canceled || !pickerResult.uri) return;
+    setIsUploadingAvatar(true);
+    try {
+      const uploadRes = await hybridStorageService.uploadImage({
+        uri: pickerResult.uri,
+        base64: pickerResult.base64,
+        folder: 'avatars',
+        fileName: `avatar_${user?.id || 'demo'}_${Date.now()}.jpg`,
+      });
+
+      if (uploadRes.success && uploadRes.url) {
+        await updateProfile({ avatar: uploadRes.url });
+
+        if (isOnline && uploadRes.provider === 'supabase') {
+          Alert.alert(
+            'Profil Diperbarui ke Server ☁️',
+            'Foto profil berhasil diunggah ke Supabase Cloud Storage dan profil berhasil diperbarui ke Server.'
+          );
+        } else {
+          Alert.alert(
+            'Mode Offline 📱',
+            'Mode Offline: Perubahan profil & foto disimpan secara lokal di perangkat dan akan disinkronkan saat online.'
+          );
+        }
+      } else {
+        Alert.alert('Gagal', 'Gagal memproses unggahan foto profil.');
+      }
+    } catch (err: any) {
+      console.error('Error saat update avatar:', err);
+      Alert.alert('Gagal', 'Terjadi kesalahan sistem saat memperbarui foto.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handlePickAvatarFromCamera = async () => {
+    const res = await imagePickerService.takePhotoFromCamera({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+      includeBase64: true,
+    });
+    await handleUploadAvatar(res);
+  };
+
+  const handlePickAvatarFromGallery = async () => {
+    const res = await imagePickerService.pickImageFromGallery({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+      includeBase64: true,
+    });
+    await handleUploadAvatar(res);
+  };
 
   const savedGems = gems.filter((g) => savedGemIds.includes(g.id));
   const supabaseStatus = getSupabaseStatus();
@@ -69,7 +130,14 @@ export default function ProfileScreen() {
       });
       if (res.success) {
         setIsEditModalOpen(false);
-        Alert.alert('Berhasil', 'Profil Anda berhasil diperbarui.');
+        if (isOnline) {
+          Alert.alert('Berhasil', 'Profil berhasil diperbarui ke Server.');
+        } else {
+          Alert.alert(
+            'Mode Offline 📱',
+            'Mode Offline: Perubahan profil & foto disimpan secara lokal di perangkat dan akan disinkronkan saat online.'
+          );
+        }
       } else {
         Alert.alert('Gagal', res.message || 'Gagal menyimpan perubahan.');
       }
@@ -109,14 +177,30 @@ export default function ProfileScreen() {
         {isAuthenticated && user ? (
           <>
             <View style={styles.userCard}>
-              <Image
-                source={{
-                  uri:
-                    user.avatar ||
-                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
-                }}
-                style={styles.userAvatar}
-              />
+              <View style={styles.avatarWrapper}>
+                <Image
+                  source={{
+                    uri:
+                      user.avatar ||
+                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+                  }}
+                  style={styles.userAvatar}
+                />
+                {isUploadingAvatar && (
+                  <View style={styles.avatarLoadingOverlay}>
+                    <ActivityIndicator size="small" color="#FFF" />
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={styles.avatarCameraBadge}
+                  onPress={() => setIsPhotoPickerOpen(true)}
+                  disabled={isUploadingAvatar}
+                  activeOpacity={0.8}
+                  hitSlop={6}
+                  accessibilityLabel="Ganti Foto Profil">
+                  <Ionicons name="camera" size={13} color="#FFF" />
+                </TouchableOpacity>
+              </View>
               <View style={styles.userInfo}>
                 <View style={styles.userNameRow}>
                   <Text style={styles.userName}>{user.name}</Text>
@@ -446,6 +530,35 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.modalBody}>
+              {/* Quick Change Avatar in Modal */}
+              <View style={styles.modalAvatarRow}>
+                <View style={styles.avatarWrapper}>
+                  <Image
+                    source={{
+                      uri:
+                        user?.avatar ||
+                        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+                    }}
+                    style={styles.modalAvatarThumb}
+                  />
+                  {isUploadingAvatar && (
+                    <View style={styles.avatarLoadingOverlay}>
+                      <ActivityIndicator size="small" color="#FFF" />
+                    </View>
+                  )}
+                </View>
+                <TouchableOpacity
+                  style={styles.modalChangeAvatarBtn}
+                  onPress={() => setIsPhotoPickerOpen(true)}
+                  disabled={isUploadingAvatar}
+                  activeOpacity={0.8}>
+                  <Ionicons name="camera-outline" size={16} color={Colors.primary} />
+                  <Text style={styles.modalChangeAvatarBtnText}>
+                    {isUploadingAvatar ? 'Mengunggah...' : 'Ganti Foto Profil'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.modalInputGroup}>
                 <Text style={styles.modalLabel}>Nama Lengkap</Text>
                 <TextInput
@@ -502,6 +615,15 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+      {/* Photo Source Selector Modal (Camera vs Gallery) */}
+      <ImageSourcePickerModal
+        visible={isPhotoPickerOpen}
+        onClose={() => setIsPhotoPickerOpen(false)}
+        onSelectCamera={handlePickAvatarFromCamera}
+        onSelectGallery={handlePickAvatarFromGallery}
+        title="Ubah Foto Profil"
+        subtitle="Ambil foto langsung dengan kamera atau pilih dari galeri perangkat Anda"
+      />
     </SafeAreaView>
   );
 }
@@ -1040,5 +1162,69 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: Colors.surface,
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  avatarCameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: Colors.primary,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  avatarLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalAvatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: Colors.surfaceSubtle,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 14,
+  },
+  modalAvatarThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: Colors.primaryLight,
+  },
+  modalChangeAvatarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primaryLight,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  modalChangeAvatarBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primary,
   },
 });

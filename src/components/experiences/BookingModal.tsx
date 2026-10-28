@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Experience } from '../../types';
@@ -27,7 +28,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { createBooking } = useApp();
+  const { createBooking, isOnline } = useApp();
   const { user, isAuthenticated } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState<string>('Besok, 24 Okt');
@@ -58,6 +59,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   const handleConfirm = () => {
+    if (!isOnline) {
+      Alert.alert(
+        'Perangkat Offline',
+        'Koneksi internet diperlukan untuk memproses booking pengalaman. Silakan hubungkan kembali internet Anda.'
+      );
+      return;
+    }
+
     const booking = createBooking(
       experience,
       selectedDate,
@@ -309,10 +318,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   onPress={handleConfirm}
                   style={({ pressed }) => [
                     styles.confirmBtn,
+                    !isOnline && styles.confirmBtnDisabled,
                     pressed && styles.btnPressed,
                   ]}>
-                  <Text style={styles.confirmBtnText}>Konfirmasi</Text>
-                  <Feather name="arrow-right" size={16} color="#FFF" />
+                  <Ionicons
+                    name={isOnline ? 'calendar-outline' : 'cloud-offline-outline'}
+                    size={16}
+                    color="#FFF"
+                  />
+                  <Text style={styles.confirmBtnText}>
+                    {isOnline ? 'Konfirmasi' : 'Offline - Butuh Koneksi Internet'}
+                  </Text>
+                  {isOnline && <Feather name="arrow-right" size={16} color="#FFF" />}
                 </Pressable>
               </View>
             </ScrollView>
@@ -590,6 +607,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderRadius: 14,
+  },
+  confirmBtnDisabled: {
+    backgroundColor: '#9CA3AF',
   },
   btnPressed: {
     opacity: 0.85,
