@@ -4,6 +4,7 @@ import { User, AuthResponse } from '../types';
 import { firebaseConfig, isFirebaseConfigured } from './firebaseConfig';
 import { API_BASE_URL } from './apiConfig';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+export { tokenStorage } from '../utils/tokenStorage';
 
 /**
  * Helper untuk membuat mock JWT string (Task 01)
