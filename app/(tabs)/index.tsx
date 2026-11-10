@@ -284,6 +284,34 @@ export default function HomeScreen() {
           </View>
         </Pressable>
 
+        {/* Task Week 8/9: Todo List Async Quick Link */}
+        <Pressable
+          onPress={() => router.push('/(tabs)/todos' as any)}
+          style={({ pressed }) => [
+            styles.sensorBanner,
+            { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', marginTop: -10 },
+            pressed && styles.cardPressed,
+          ]}>
+          <View style={styles.sensorBannerLeft}>
+            <View style={[styles.sensorIconBadge, { backgroundColor: '#DBEAFE' }]}>
+              <Ionicons name="checkbox" size={22} color="#1D4ED8" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.sensorTagRow}>
+                <Text style={[styles.sensorTagText, { color: '#1D4ED8' }]}>WEEK 8/9</Text>
+                <Text style={[styles.sensorSubTag, { backgroundColor: '#1D4ED8', color: '#FFF' }]}>ASYNC API</Text>
+              </View>
+              <Text style={styles.sensorBannerTitle}>Todo List App</Text>
+              <Text style={styles.sensorBannerDesc}>
+                Pengambilan data API, Loading Tri-State & Refresh.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.sensorBannerRight}>
+            <Feather name="chevron-right" size={20} color="#1D4ED8" />
+          </View>
+        </Pressable>
+
         {/* Section 1: Booking Experience Highlights */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
