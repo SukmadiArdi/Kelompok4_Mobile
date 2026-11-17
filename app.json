@@ -36,12 +36,6 @@
       ],
       "expo-secure-store",
       [
-        "expo-sensors",
-        {
-          "motionPermission": "Izinkan aplikasi mengakses sensor gerakan (Accelerometer) untuk fitur interaktif."
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "Izinkan aplikasi mengakses galeri foto untuk mengunggah foto profil dan bukti kunjungan.",

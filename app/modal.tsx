@@ -62,13 +62,6 @@ export default function ModalScreen() {
       </Pressable>
 
       <Pressable
-        onPress={() => router.push('/sensor' as any)}
-        style={[styles.docsBtn, { backgroundColor: '#0F62FE', marginTop: 10 }]}>
-        <Ionicons name="hardware-chip-outline" size={16} color="#FFF" style={{ marginRight: 6 }} />
-        <Text style={styles.docsBtnText}>Uji Sensor Accelerometer (Task 02)</Text>
-      </Pressable>
-
-      <Pressable
         onPress={() => {
           if (router.canGoBack()) {
             router.back();

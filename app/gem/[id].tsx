@@ -20,6 +20,7 @@ import { Colors } from '@/src/constants/Theme';
 import { useApp } from '@/src/context/AppContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { RatingStars } from '@/src/components/common/RatingStars';
+import { DestinationWeatherCard } from '@/src/components/weather/DestinationWeatherCard';
 import { openDirections, formatCoordinatesDMS } from '@/src/utils/mapUtils';
 import { imagePickerService } from '@/src/services/imagePickerService';
 import { hybridStorageService } from '@/src/services/hybridStorageService';
@@ -279,6 +280,14 @@ export default function GemDetailScreen() {
               <Text style={styles.bestTimeDesc}>{gem.bestTime}</Text>
             </View>
           </View>
+
+          {/* Live Weather from External API (Open-Meteo) */}
+          <DestinationWeatherCard
+            latitude={gem.mapCoords.lat}
+            longitude={gem.mapCoords.lng}
+            destinationName={gem.city || gem.name}
+            compact={true}
+          />
 
           {/* Location & GPS Navigation Card */}
           <View style={styles.locationMapCard}>

@@ -25,6 +25,8 @@ import {
   EmptyView,
   ApiStatusBar,
 } from '@/src/components/common/ApiStateView';
+import { DestinationWeatherCard } from '@/src/components/weather/DestinationWeatherCard';
+import { NUSANTARA_WEATHER_DESTINATIONS } from '@/src/services/weatherService';
 import { Experience } from '@/src/types';
 import { externalStyles } from '@/src/constants/styles';
 
@@ -257,30 +259,34 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Task 01: Sensor Accelerometer Quick Link */}
+        {/* Live Weather Widget (Modul 3: External API + Interface + Promise/Async) */}
+        <DestinationWeatherCard destinations={NUSANTARA_WEATHER_DESTINATIONS} />
+
+        {/* Task Week 8/9: Todo List Async Quick Link */}
         <Pressable
-          onPress={() => router.push('/(tabs)/sensor' as any)}
+          onPress={() => router.push('/(tabs)/todos' as any)}
           style={({ pressed }) => [
             styles.sensorBanner,
+            { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', marginTop: -10 },
             pressed && styles.cardPressed,
           ]}>
           <View style={styles.sensorBannerLeft}>
-            <View style={styles.sensorIconBadge}>
-              <Ionicons name="hardware-chip" size={22} color={Colors.ocean} />
+            <View style={[styles.sensorIconBadge, { backgroundColor: '#DBEAFE' }]}>
+              <Ionicons name="checkbox" size={22} color="#1D4ED8" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.sensorTagRow}>
-                <Text style={styles.sensorTagText}>TASK 01</Text>
-                <Text style={styles.sensorSubTag}>REAL-TIME</Text>
+                <Text style={[styles.sensorTagText, { color: '#1D4ED8' }]}>WEEK 8/9</Text>
+                <Text style={[styles.sensorSubTag, { backgroundColor: '#1D4ED8', color: '#FFF' }]}>ASYNC API</Text>
               </View>
-              <Text style={styles.sensorBannerTitle}>Sensor Accelerometer</Text>
+              <Text style={styles.sensorBannerTitle}>Todo List App</Text>
               <Text style={styles.sensorBannerDesc}>
-                Uji pembacaan gerak 3 sumbu (X, Y, Z) secara langsung.
+                Pengambilan data API, Loading Tri-State & Refresh.
               </Text>
             </View>
           </View>
           <View style={styles.sensorBannerRight}>
-            <Feather name="chevron-right" size={20} color={Colors.ocean} />
+            <Feather name="chevron-right" size={20} color="#1D4ED8" />
           </View>
         </Pressable>
 
