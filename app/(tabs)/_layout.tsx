@@ -141,6 +141,13 @@ export default function TabLayout() {
         }}
       />
 
+      <Tabs.Screen
+        name="HLM"
+        options={{
+          href: null,
+        }}
+      />
+
     </Tabs>
     
   );

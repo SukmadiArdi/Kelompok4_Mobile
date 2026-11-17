@@ -20,6 +20,7 @@ import { CategoryPills } from '@/src/components/common/CategoryPills';
 import { InteractiveMap } from '@/src/components/map/InteractiveMap';
 import { LokaltripMapView } from '@/components/LokaltripMapView';
 import { GemCard } from '@/src/components/map/GemCard';
+import { LocationInfoCard } from '@/components/LocationInfoCard';
 import { HiddenGem, GemCategory, GemDifficulty } from '@/src/types';
 
 export default function MapScreen() {
@@ -356,6 +357,9 @@ export default function MapScreen() {
             Temukan lokasi rahasia nusantara dengan review, koordinat GPS akurat, dan rute navigasi Google Maps.
           </Text>
         </View>
+
+        {/* GPS Geocoding Info Card (Branch: feat/gps-geocoding) */}
+        <LocationInfoCard />
 
         {/* Search Bar with Filter Button and Active Badge */}
         <SearchBar
