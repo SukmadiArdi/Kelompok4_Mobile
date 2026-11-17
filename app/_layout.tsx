@@ -15,7 +15,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  anchor: '(tabs)',
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -137,13 +137,6 @@ function RootLayoutNav() {
           options={{
             headerShown: true,
             title: 'Detail Materi',
-          }}
-        />
-        <Stack.Screen
-          name="sensor"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right',
           }}
         />
       </Stack>

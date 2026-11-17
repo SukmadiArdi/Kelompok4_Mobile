@@ -36,10 +36,6 @@ export default function DocsPage() {
         title="Learn Catch-All Route"
         onPress={() => router.push('/docs/expo/router/catch-all' as any)}
       />
-      <PageButton
-        title="Sensor Accelerometer (Task 02)"
-        onPress={() => router.push('/sensor' as any)}
-      />
       {/* Navigasi router.back */}
       <PageButton
         title="Back"

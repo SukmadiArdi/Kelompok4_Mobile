@@ -34,13 +34,7 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store",
-      [
-        "expo-sensors",
-        {
-          "motionPermission": "Izinkan aplikasi mengakses sensor gerakan (Accelerometer) untuk fitur interaktif."
-        }
-      ]
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

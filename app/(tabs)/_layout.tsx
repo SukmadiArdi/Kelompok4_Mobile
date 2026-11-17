@@ -45,14 +45,6 @@ const renderProfileIcon = ({ color, focused }: { color: any; focused: boolean })
   />
 );
 
-const renderSensorIcon = ({ color, focused }: { color: any; focused: boolean }) => (
-  <Ionicons
-    name={focused ? 'hardware-chip' : 'hardware-chip-outline'}
-    size={22}
-    color={typeof color === 'string' ? color : undefined}
-  />
-);
-
 export default function TabLayout() {
   return (
     <Tabs
@@ -108,14 +100,6 @@ export default function TabLayout() {
         options={{
           title: 'Artisan Store',
           tabBarIcon: renderStoreIcon,
-        }}
-      />
-
-      <Tabs.Screen
-        name="sensor"
-        options={{
-          title: 'Sensor',
-          tabBarIcon: renderSensorIcon,
         }}
       />
 

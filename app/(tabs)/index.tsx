@@ -25,6 +25,8 @@ import {
   EmptyView,
   ApiStatusBar,
 } from '@/src/components/common/ApiStateView';
+import { DestinationWeatherCard } from '@/src/components/weather/DestinationWeatherCard';
+import { NUSANTARA_WEATHER_DESTINATIONS } from '@/src/services/weatherService';
 import { Experience } from '@/src/types';
 import { externalStyles } from '@/src/constants/styles';
 
@@ -252,32 +254,8 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Task 01: Sensor Accelerometer Quick Link */}
-        <Pressable
-          onPress={() => router.push('/(tabs)/sensor' as any)}
-          style={({ pressed }) => [
-            styles.sensorBanner,
-            pressed && styles.cardPressed,
-          ]}>
-          <View style={styles.sensorBannerLeft}>
-            <View style={styles.sensorIconBadge}>
-              <Ionicons name="hardware-chip" size={22} color={Colors.ocean} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={styles.sensorTagRow}>
-                <Text style={styles.sensorTagText}>TASK 01</Text>
-                <Text style={styles.sensorSubTag}>REAL-TIME</Text>
-              </View>
-              <Text style={styles.sensorBannerTitle}>Sensor Accelerometer</Text>
-              <Text style={styles.sensorBannerDesc}>
-                Uji pembacaan gerak 3 sumbu (X, Y, Z) secara langsung.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.sensorBannerRight}>
-            <Feather name="chevron-right" size={20} color={Colors.ocean} />
-          </View>
-        </Pressable>
+        {/* Live Weather Widget (Modul 3: External API + Interface + Promise/Async) */}
+        <DestinationWeatherCard destinations={NUSANTARA_WEATHER_DESTINATIONS} />
 
         {/* Section 1: Booking Experience Highlights */}
         <View style={styles.sectionContainer}>
@@ -597,71 +575,5 @@ const styles = StyleSheet.create({
   },
   searchWrapper: {
     marginBottom: 10,
-  },
-  sensorBanner: {
-    marginHorizontal: 20,
-    marginTop: 6,
-    marginBottom: 20,
-    backgroundColor: '#F0F9FF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  sensorBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  sensorIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#E0F2FE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sensorTagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  sensorTagText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#0284C7',
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  sensorSubTag: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#0369A1',
-    letterSpacing: 0.5,
-  },
-  sensorBannerTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  sensorBannerDesc: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  sensorBannerRight: {
-    paddingLeft: 8,
   },
 });
