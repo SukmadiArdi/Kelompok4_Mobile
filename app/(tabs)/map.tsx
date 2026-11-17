@@ -21,10 +21,12 @@ import { InteractiveMap } from '@/src/components/map/InteractiveMap';
 import { LokaltripMapView } from '@/components/LokaltripMapView';
 import { GemCard } from '@/src/components/map/GemCard';
 import { LocationInfoCard } from '@/components/LocationInfoCard';
+import { useLokaltripLocation } from '@/hooks/useLokaltripLocation';
 import { HiddenGem, GemCategory, GemDifficulty } from '@/src/types';
 
 export default function MapScreen() {
   const { gems, addHiddenGem, isLoading, isOnline, refreshApiData } = useApp();
+  const { location: gpsCoords } = useLokaltripLocation();
   const scrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
 
   const [viewMode, setViewMode] = useState<'map' | 'geofence' | 'list'>('map');
@@ -453,8 +455,8 @@ export default function MapScreen() {
         {viewMode === 'geofence' && (
           <View style={styles.geofenceContainer}>
             <LokaltripMapView
-              userLatitude={null} // Siap disambungkan ke props GPS setelah merge dengan hooks/useLokaltripLocation.ts
-              userLongitude={null}
+              userLatitude={gpsCoords?.latitude ?? null}
+              userLongitude={gpsCoords?.longitude ?? null}
               onEnterGeofence={(zone) => {
                 console.log('[Geofence] Pengguna MASUK ke area wisata:', zone.name);
               }}
