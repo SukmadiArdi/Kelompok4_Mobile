@@ -18,6 +18,7 @@ import { Header } from '@/src/components/common/Header';
 import { SearchBar } from '@/src/components/common/SearchBar';
 import { CategoryPills } from '@/src/components/common/CategoryPills';
 import { InteractiveMap } from '@/src/components/map/InteractiveMap';
+import { LokaltripMapView } from '@/components/LokaltripMapView';
 import { GemCard } from '@/src/components/map/GemCard';
 import { HiddenGem, GemCategory, GemDifficulty } from '@/src/types';
 
@@ -25,7 +26,7 @@ export default function MapScreen() {
   const { gems, addHiddenGem, isLoading, isOnline, refreshApiData } = useApp();
   const scrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
 
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [viewMode, setViewMode] = useState<'map' | 'geofence' | 'list'>('map');
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
@@ -310,6 +311,26 @@ export default function MapScreen() {
               </Pressable>
 
               <Pressable
+                onPress={() => setViewMode('geofence')}
+                style={[
+                  styles.toggleBtn,
+                  viewMode === 'geofence' && styles.toggleBtnActive,
+                ]}>
+                <Ionicons
+                  name="navigate"
+                  size={14}
+                  color={viewMode === 'geofence' ? '#FFF' : Colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.toggleText,
+                    viewMode === 'geofence' && styles.toggleTextActive,
+                  ]}>
+                  Geofence
+                </Text>
+              </Pressable>
+
+              <Pressable
                 onPress={() => setViewMode('list')}
                 style={[
                   styles.toggleBtn,
@@ -424,12 +445,30 @@ export default function MapScreen() {
           />
         )}
 
+        {/* Geofence Map View Mode (Task 02 & Task 03B) */}
+        {viewMode === 'geofence' && (
+          <View style={styles.geofenceContainer}>
+            <LokaltripMapView
+              userLatitude={null} // Siap disambungkan ke props GPS setelah merge dengan hooks/useLokaltripLocation.ts
+              userLongitude={null}
+              onEnterGeofence={(zone) => {
+                console.log('[Geofence] Pengguna MASUK ke area wisata:', zone.name);
+              }}
+              onExitGeofence={(zone) => {
+                console.log('[Geofence] Pengguna KELUAR dari area wisata:', zone.name);
+              }}
+            />
+          </View>
+        )}
+
         {/* List View Mode or Bottom Cards */}
         <View style={styles.listSection}>
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionTitle}>
-                {viewMode === 'map'
+                {viewMode === 'geofence'
+                  ? 'Area Geofence Wisata (Radius 500m)'
+                  : viewMode === 'map'
                   ? 'Daftar Destinasi Terpilih'
                   : 'Semua Hidden Gems'}
               </Text>
@@ -1447,5 +1486,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: '#FFF',
+  },
+  geofenceContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });
