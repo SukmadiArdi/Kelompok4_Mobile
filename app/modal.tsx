@@ -52,7 +52,24 @@ export default function ModalScreen() {
             </Text>
           </View>
         </View>
+
+        <View style={styles.featureItem}>
+          <Ionicons name="checkbox" size={20} color="#1D4ED8" />
+          <View style={styles.featureTextCol}>
+            <Text style={styles.featureTitle}>4. Todo List Async (Week 8/9)</Text>
+            <Text style={styles.featureDesc}>
+              Simulasi CRUD tugas asinkron dengan REST API JSONPlaceholder (GET, POST, PATCH, DELETE).
+            </Text>
+          </View>
+        </View>
       </View>
+
+      <Pressable
+        onPress={() => router.push('/(tabs)/todos' as any)}
+        style={styles.todoBtn}>
+        <Ionicons name="checkbox-outline" size={18} color="#FFF" style={{ marginRight: 8 }} />
+        <Text style={styles.todoBtnText}>Buka Todo List Async (Week 8/9)</Text>
+      </Pressable>
 
       <Pressable
         onPress={() => router.push('/docs' as any)}
@@ -140,6 +157,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     lineHeight: 16,
+  },
+  todoBtn: {
+    backgroundColor: '#1D4ED8',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    borderRadius: 12,
+    marginBottom: 10,
+    width: '100%',
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  todoBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
   docsBtn: {
     backgroundColor: '#222222',

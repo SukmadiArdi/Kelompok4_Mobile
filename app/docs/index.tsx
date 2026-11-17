@@ -36,6 +36,17 @@ export default function DocsPage() {
         title="Learn Catch-All Route"
         onPress={() => router.push('/docs/expo/router/catch-all' as any)}
       />
+
+      <View style={[pageStyles.card, { marginTop: 8 }]}>
+        <Text style={pageStyles.cardTitle}>Tugas Praktik Week 8/9</Text>
+        <Text>Aplikasi Todo List Asynchronous (GET, POST, PATCH, DELETE API).</Text>
+      </View>
+
+      <PageButton
+        title="Buka Todo List Async (Week 8/9)"
+        onPress={() => router.push('/(tabs)/todos' as any)}
+      />
+
       {/* Navigasi router.back */}
       <PageButton
         title="Back"

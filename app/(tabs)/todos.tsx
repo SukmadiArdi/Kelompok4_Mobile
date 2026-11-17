@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 // =========================================================================
 // [MODUL WEEK 8/9 - DEFINISI TIPE DATA TODO]
@@ -262,6 +263,17 @@ export default function TodoListScreen() {
       {/* HEADER BAR: Biru tua dengan judul di kiri & tombol reload di kanan   */}
       {/* =================================================================== */}
       <View style={styles.header}>
+        {router.canGoBack() && (
+          <TouchableOpacity
+            style={styles.backButton}
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            accessibilityLabel="Kembali"
+          >
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
+
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Todo List App</Text>
           <Text style={styles.headerSubtitle}>Week 8/9 — Async Data</Text>
@@ -380,6 +392,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#BFDBFE',
     marginTop: 2,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
   },
   reloadButton: {
     width: 40,
