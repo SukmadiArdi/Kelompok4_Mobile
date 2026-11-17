@@ -117,6 +117,8 @@ export default function TabLayout() {
           tabBarIcon: renderTodoIcon,
         }}
       />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',
