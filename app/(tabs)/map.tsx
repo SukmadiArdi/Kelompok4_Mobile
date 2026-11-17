@@ -24,18 +24,67 @@ import { LocationInfoCard } from '@/components/LocationInfoCard';
 import { useLokaltripLocation } from '@/hooks/useLokaltripLocation';
 import { HiddenGem, GemCategory, GemDifficulty } from '@/src/types';
 
+export type GemSortOption = 'popular' | 'rating' | 'name';
+export type MapViewMode = 'map' | 'geofence' | 'list';
+
+const REGION_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  Sumatera: { lat: 0.5, lng: 101.5 },
+  'Bali & Lombok': { lat: -8.5, lng: 115.5 },
+  'Nusa Tenggara': { lat: -9.6, lng: 120.0 },
+  Sulawesi: { lat: -3.2, lng: 120.0 },
+  Jawa: { lat: -7.5, lng: 110.5 },
+};
+
+function getDefaultRegionCoordinates(region: string): { lat: number; lng: number } {
+  return REGION_COORDINATES[region] ?? { lat: -7.5, lng: 110.5 };
+}
+
+function matchesGemQuery(gem: HiddenGem, query: string): boolean {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  const searchFields = [gem.name, gem.location, gem.city, gem.province, gem.category];
+  return searchFields.some((field) => (field || '').toLowerCase().includes(q));
+}
+
+function filterGems(
+  gems: HiddenGem[],
+  category: string,
+  region: string,
+  difficulty: string,
+  search: string
+): HiddenGem[] {
+  const q = search.trim();
+  return gems.filter((gem) => {
+    if (category !== 'Semua' && gem.category !== category) return false;
+    if (region !== 'Semua' && gem.region !== region) return false;
+    if (difficulty !== 'Semua' && gem.difficulty !== difficulty) return false;
+    return matchesGemQuery(gem, q);
+  });
+}
+
+function sortGems(gems: HiddenGem[], sortBy: GemSortOption): HiddenGem[] {
+  const list = [...gems];
+  if (sortBy === 'rating') {
+    return list.sort((a, b) => b.rating - a.rating);
+  }
+  if (sortBy === 'name') {
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return list.sort((a, b) => (b.reviewsCount + b.likesCount) - (a.reviewsCount + a.likesCount));
+}
+
 export default function MapScreen() {
   const { gems, addHiddenGem, isLoading, isOnline, refreshApiData } = useApp();
   const { location: gpsCoords } = useLokaltripLocation();
-  const scrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView> | null>(null);
 
-  const [viewMode, setViewMode] = useState<'map' | 'geofence' | 'list'>('map');
+  const [viewMode, setViewMode] = useState<MapViewMode>('map');
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [selectedRegion, setSelectedRegion] = useState<string>('Semua');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('Semua');
-  const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'name'>('popular');
+  const [sortBy, setSortBy] = useState<GemSortOption>('popular');
   const [selectedGemId, setSelectedGemId] = useState<string | null>(gems[0]?.id || null);
 
   // Filter Modal state
@@ -43,7 +92,7 @@ export default function MapScreen() {
   const [tempCategory, setTempCategory] = useState('Semua');
   const [tempRegion, setTempRegion] = useState('Semua');
   const [tempDifficulty, setTempDifficulty] = useState('Semua');
-  const [tempSort, setTempSort] = useState<'popular' | 'rating' | 'name'>('popular');
+  const [tempSort, setTempSort] = useState<GemSortOption>('popular');
 
   // Form states for contribution
   const [showContributeModal, setShowContributeModal] = useState(false);
@@ -82,69 +131,30 @@ export default function MapScreen() {
     { label: 'Menantang', value: 'Menantang', hint: 'Jalur curam / stamina prima', color: Colors.primary },
   ];
 
-  const sortOptions: { label: string; value: 'popular' | 'rating' | 'name'; icon: string }[] = [
+  const sortOptions: { label: string; value: GemSortOption; icon: string }[] = [
     { label: 'Paling Populer', value: 'popular', icon: 'flame' },
     { label: 'Rating Tertinggi', value: 'rating', icon: 'star' },
     { label: 'Nama (A - Z)', value: 'name', icon: 'text' },
   ];
 
   const filteredGems = useMemo(() => {
-    let list = gems.filter((gem) => {
-      const matchesCategory =
-        selectedCategory === 'Semua' || gem.category === selectedCategory;
-      const matchesRegion =
-        selectedRegion === 'Semua' || gem.region === selectedRegion;
-      const matchesDifficulty =
-        selectedDifficulty === 'Semua' || gem.difficulty === selectedDifficulty;
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        !q ||
-        gem.name.toLowerCase().includes(q) ||
-        gem.location.toLowerCase().includes(q) ||
-        gem.city.toLowerCase().includes(q) ||
-        gem.province.toLowerCase().includes(q) ||
-        gem.category.toLowerCase().includes(q);
-
-      return matchesCategory && matchesRegion && matchesDifficulty && matchesSearch;
-    });
-
-    if (sortBy === 'rating') {
-      list.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === 'popular') {
-      list.sort((a, b) => (b.reviewsCount + b.likesCount) - (a.reviewsCount + a.likesCount));
-    } else if (sortBy === 'name') {
-      list.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return list;
+    const list = filterGems(gems, selectedCategory, selectedRegion, selectedDifficulty, search);
+    return sortGems(list, sortBy);
   }, [gems, selectedCategory, selectedRegion, selectedDifficulty, search, sortBy]);
 
   // Hitung jumlah spot yang cocok untuk live preview di dalam modal
   const tempFilteredCount = useMemo(() => {
-    return gems.filter((gem) => {
-      const matchesCategory =
-        tempCategory === 'Semua' || gem.category === tempCategory;
-      const matchesRegion =
-        tempRegion === 'Semua' || gem.region === tempRegion;
-      const matchesDifficulty =
-        tempDifficulty === 'Semua' || gem.difficulty === tempDifficulty;
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        !q ||
-        gem.name.toLowerCase().includes(q) ||
-        gem.location.toLowerCase().includes(q) ||
-        gem.city.toLowerCase().includes(q) ||
-        gem.province.toLowerCase().includes(q) ||
-        gem.category.toLowerCase().includes(q);
-      return matchesCategory && matchesRegion && matchesDifficulty && matchesSearch;
-    }).length;
+    return filterGems(gems, tempCategory, tempRegion, tempDifficulty, search).length;
   }, [gems, tempCategory, tempRegion, tempDifficulty, search]);
 
-  const activeFiltersCount =
-    (selectedRegion !== 'Semua' ? 1 : 0) +
-    (selectedDifficulty !== 'Semua' ? 1 : 0) +
-    (sortBy !== 'popular' ? 1 : 0) +
-    (selectedCategory !== 'Semua' ? 1 : 0);
+  const activeFiltersCount = useMemo(() => {
+    return [
+      selectedRegion !== 'Semua',
+      selectedDifficulty !== 'Semua',
+      sortBy !== 'popular',
+      selectedCategory !== 'Semua',
+    ].filter(Boolean).length;
+  }, [selectedRegion, selectedDifficulty, sortBy, selectedCategory]);
 
   const handleOpenFilterModal = () => {
     setTempCategory(selectedCategory);
@@ -196,21 +206,7 @@ export default function MapScreen() {
     }
 
     // Default GPS Coordinates berdasarkan region
-    let defaultLat = -7.5;
-    let defaultLng = 110.5;
-    if (newSpotRegion === 'Sumatera') {
-      defaultLat = 0.5;
-      defaultLng = 101.5;
-    } else if (newSpotRegion === 'Bali & Lombok') {
-      defaultLat = -8.5;
-      defaultLng = 115.5;
-    } else if (newSpotRegion === 'Nusa Tenggara') {
-      defaultLat = -9.6;
-      defaultLng = 120.0;
-    } else if (newSpotRegion === 'Sulawesi') {
-      defaultLat = -3.2;
-      defaultLng = 120.0;
-    }
+    const defaultCoords = getDefaultRegionCoordinates(newSpotRegion);
 
     const createdGem = addHiddenGem({
       name: newSpotName.trim(),
@@ -230,8 +226,8 @@ export default function MapScreen() {
         'Jaga keasrian flora dan fauna sekitar.',
       ],
       mapCoords: {
-        lat: defaultLat,
-        lng: defaultLng,
+        lat: defaultCoords.lat,
+        lng: defaultCoords.lng,
         xPercent: 50,
         yPercent: 50,
       },
@@ -263,6 +259,16 @@ export default function MapScreen() {
       setViewMode('map');
       scrollRef.current?.scrollTo({ y: 0, animated: true });
     }, 1200);
+  };
+
+  const getSectionTitle = () => {
+    if (viewMode === 'geofence') {
+      return 'Area Geofence Wisata (Radius 500m)';
+    }
+    if (viewMode === 'map') {
+      return 'Daftar Destinasi Terpilih';
+    }
+    return 'Semua Hidden Gems';
   };
 
   return (
@@ -472,11 +478,7 @@ export default function MapScreen() {
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionTitle}>
-                {viewMode === 'geofence'
-                  ? 'Area Geofence Wisata (Radius 500m)'
-                  : viewMode === 'map'
-                  ? 'Daftar Destinasi Terpilih'
-                  : 'Semua Hidden Gems'}
+                {getSectionTitle()}
               </Text>
               <Text style={styles.sectionCount}>
                 Menampilkan {filteredGems.length} dari {gems.length} destinasi
