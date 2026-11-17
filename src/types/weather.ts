@@ -88,6 +88,12 @@ export interface WeatherServiceResponse<T> {
   message: string;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message: string;
+}
+
 /**
  * Interface titik koordinat destinasi wisata Nusantara untuk pengecekan cuaca.
  */
