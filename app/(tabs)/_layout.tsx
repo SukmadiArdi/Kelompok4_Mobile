@@ -45,6 +45,13 @@ const renderProfileIcon = ({ color, focused }: { color: any; focused: boolean })
   />
 );
 
+const renderTodoIcon = ({ color, focused }: { color: any; focused: boolean }) => (
+  <Ionicons
+    name={focused ? 'checkbox' : 'checkbox-outline'}
+    size={22}
+    color={typeof color === 'string' ? color : undefined}
+  />
+);
 export default function TabLayout() {
   return (
     <Tabs
@@ -104,6 +111,12 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="todos"
+        options={{
+          title: 'Todos',
+          tabBarIcon: renderTodoIcon,
+        }}
+      />
         name="profile"
         options={{
           title: 'Profil',

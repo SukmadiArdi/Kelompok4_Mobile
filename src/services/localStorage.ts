@@ -14,6 +14,7 @@ export const LOCAL_STORAGE_KEYS = {
   FAVORITE_PRODUCTS: '@lokaltrip_favorite_products_v1',
   BOOKINGS: '@lokaltrip_bookings_v1',
   USER_PREFERENCES: '@lokaltrip_user_preferences_v1',
+  CUSTOM_REVIEWS: '@lokaltrip_gem_reviews_v1',
 } as const;
 
 export type LocalStorageKey = typeof LOCAL_STORAGE_KEYS[keyof typeof LOCAL_STORAGE_KEYS];

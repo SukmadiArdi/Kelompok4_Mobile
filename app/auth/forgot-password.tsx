@@ -9,21 +9,37 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius } from '@/src/constants/Theme';
 import { useAuth } from '@/src/context/AuthContext';
+import { useApp } from '@/src/context/AppContext';
 
 export default function ForgotPasswordScreen() {
   const { resetPassword } = useAuth();
+  const { isOnline } = useApp();
   const [email, setEmail] = useState('');
   const [statusMessage, setStatusMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleReset = async () => {
     setStatusMessage(null);
+
+    if (!isOnline) {
+      Alert.alert(
+        'Perangkat Offline',
+        'Koneksi internet diperlukan untuk memproses pemulihan kata sandi. Silakan hubungkan kembali internet Anda.'
+      );
+      setStatusMessage({
+        text: 'Koneksi internet diperlukan untuk mengirim tautan pemulihan kata sandi.',
+        isError: true,
+      });
+      return;
+    }
+
     if (!email.trim() || !email.includes('@')) {
       setStatusMessage({ text: 'Masukkan alamat email yang valid.', isError: true });
       return;
@@ -111,14 +127,27 @@ export default function ForgotPasswordScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.submitBtn, submitting && styles.btnDisabled]}
+              style={[
+                styles.submitBtn,
+                !isOnline && styles.submitBtnOffline,
+                submitting && styles.btnDisabled,
+              ]}
               onPress={handleReset}
               disabled={submitting}
               activeOpacity={0.85}>
               {submitting ? (
                 <ActivityIndicator color={Colors.surface} size="small" />
               ) : (
-                <Text style={styles.submitBtnText}>Kirim Tautan Pemulihan</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons
+                    name={isOnline ? 'mail-outline' : 'cloud-offline-outline'}
+                    size={18}
+                    color={Colors.surface}
+                  />
+                  <Text style={styles.submitBtnText}>
+                    {isOnline ? 'Kirim Tautan Pemulihan' : 'Offline - Butuh Koneksi Internet'}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
           </View>
@@ -280,6 +309,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
+  },
+  submitBtnOffline: {
+    backgroundColor: '#9CA3AF',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   btnDisabled: {
     opacity: 0.65,

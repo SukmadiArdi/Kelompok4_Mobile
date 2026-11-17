@@ -161,3 +161,13 @@ export interface AuthResponse {
 export * from './users';
 
 export * from './weather';
+
+// =========================================================================
+// [MODUL WEEK 8/9 - TODO LIST ASYNC]
+// =========================================================================
+export interface Todo {
+  userId?: number;
+  id: number;
+  title: string;
+  completed: boolean;
+}

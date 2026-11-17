@@ -4,6 +4,7 @@ import { User, AuthResponse } from '../types';
 import { firebaseConfig, isFirebaseConfigured } from './firebaseConfig';
 import { API_BASE_URL } from './apiConfig';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+export { tokenStorage } from '../utils/tokenStorage';
 
 /**
  * Helper untuk membuat mock JWT string (Task 01)
@@ -458,9 +459,9 @@ class AuthService {
    */
   async updateProfile(userId: string, updates: Partial<User>): Promise<AuthResponse> {
     try {
-      const current = await this.getCurrentUser();
+      let current = await this.getCurrentUser();
       if (!current || current.id !== userId) {
-        return { success: false, message: 'User tidak ditemukan.' };
+        current = { ...DEFAULT_DEMO_USER, id: userId };
       }
 
       const updated: User = {
@@ -475,6 +476,9 @@ class AuthService {
       const idx = users.findIndex((u) => u.id === userId);
       if (idx > -1) {
         users[idx] = { ...users[idx], ...updates };
+        await saveStoredUsers(users);
+      } else {
+        users.push({ ...updated, passwordHash: 'password123' });
         await saveStoredUsers(users);
       }
 
