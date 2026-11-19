@@ -66,14 +66,14 @@ export default function ModalScreen() {
 
       <Pressable
         onPress={() => {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
+          if (router.canDismiss()) {
             router.dismiss();
+          } else if (router.canGoBack()) {
+            router.back();
           }
           setTimeout(() => {
             router.navigate('/(tabs)/todos' as any);
-          }, 100);
+          }, 80);
         }}
         style={({ pressed }) => [styles.todoBtn, pressed && { opacity: 0.85 }]}>
         <Ionicons name="checkbox-outline" size={18} color="#FFF" style={{ marginRight: 8 }} />
@@ -89,10 +89,10 @@ export default function ModalScreen() {
 
       <Pressable
         onPress={() => {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
+          if (router.canDismiss()) {
             router.dismiss();
+          } else if (router.canGoBack()) {
+            router.back();
           }
         }}
         style={styles.closeBtn}>
