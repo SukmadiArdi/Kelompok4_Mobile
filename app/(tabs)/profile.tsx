@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  Pressable,
   TouchableOpacity,
   Platform,
   Alert,
@@ -203,14 +202,22 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.userInfo}>
                 <View style={styles.userNameRow}>
-                  <Text style={styles.userName}>{user.name}</Text>
+                  <Text style={styles.userName} numberOfLines={1}>
+                    {user.name}
+                  </Text>
                   <MaterialCommunityIcons name="shield-check" size={16} color={Colors.primary} />
                 </View>
-                <Text style={styles.userEmail}>{user.email}</Text>
-                {user.phone ? <Text style={styles.userPhone}>{user.phone}</Text> : null}
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  {user.email}
+                </Text>
+                {user.phone ? (
+                  <Text style={styles.userPhone} numberOfLines={1}>
+                    {user.phone}
+                  </Text>
+                ) : null}
                 <View style={styles.badgePill}>
                   <Ionicons name="compass" size={12} color={Colors.secondary} />
-                  <Text style={styles.badgePillText}>
+                  <Text style={styles.badgePillText} numberOfLines={1}>
                     {user.badge || 'Penjelajah Budaya Nusantara'}
                   </Text>
                 </View>
@@ -270,16 +277,20 @@ export default function ProfileScreen() {
                 style={styles.loginPrimaryBtn}
                 onPress={() => router.push('/auth/login' as any)}
                 activeOpacity={0.85}>
-                <Feather name="log-in" size={16} color={Colors.surface} />
-                <Text style={styles.loginPrimaryBtnText}>Masuk Akun</Text>
+                <Feather name="log-in" size={15} color={Colors.surface} />
+                <Text style={styles.loginPrimaryBtnText} numberOfLines={1}>
+                  Masuk Akun
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.registerSecondaryBtn}
                 onPress={() => router.push('/auth/register' as any)}
                 activeOpacity={0.85}>
-                <Feather name="user-plus" size={16} color={Colors.primary} />
-                <Text style={styles.registerSecondaryBtnText}>Daftar Baru</Text>
+                <Feather name="user-plus" size={15} color={Colors.primary} />
+                <Text style={styles.registerSecondaryBtnText} numberOfLines={1}>
+                  Daftar Baru
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -295,68 +306,128 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Tab Switcher */}
-        <View style={styles.tabSwitcher}>
-          <Pressable
+        {/* Horizontal Scrollable Responsive Tab Switcher */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabScrollContent}
+          style={styles.tabScrollView}>
+          <TouchableOpacity
             onPress={() => setActiveTab('bookings')}
             style={[
-              styles.switchBtn,
-              activeTab === 'bookings' && styles.switchBtnActive,
-            ]}>
+              styles.tabPill,
+              activeTab === 'bookings' && styles.tabPillActive,
+            ]}
+            activeOpacity={0.75}>
+            <Ionicons
+              name="ticket-outline"
+              size={15}
+              color={activeTab === 'bookings' ? Colors.primary : Colors.textSecondary}
+            />
             <Text
               style={[
-                styles.switchText,
-                activeTab === 'bookings' && styles.switchTextActive,
+                styles.tabPillText,
+                activeTab === 'bookings' && styles.tabPillTextActive,
               ]}>
-              Riwayat Booking ({bookings.length})
+              Booking
             </Text>
-          </Pressable>
+            <View
+              style={[
+                styles.tabCountBadge,
+                activeTab === 'bookings' && styles.tabCountBadgeActive,
+              ]}>
+              <Text
+                style={[
+                  styles.tabCountText,
+                  activeTab === 'bookings' && styles.tabCountTextActive,
+                ]}>
+                {bookings.length}
+              </Text>
+            </View>
+          </TouchableOpacity>
 
-          <Pressable
+          <TouchableOpacity
             onPress={() => setActiveTab('saved')}
             style={[
-              styles.switchBtn,
-              activeTab === 'saved' && styles.switchBtnActive,
-            ]}>
+              styles.tabPill,
+              activeTab === 'saved' && styles.tabPillActive,
+            ]}
+            activeOpacity={0.75}>
+            <Ionicons
+              name="bookmark-outline"
+              size={15}
+              color={activeTab === 'saved' ? Colors.primary : Colors.textSecondary}
+            />
             <Text
               style={[
-                styles.switchText,
-                activeTab === 'saved' && styles.switchTextActive,
+                styles.tabPillText,
+                activeTab === 'saved' && styles.tabPillTextActive,
               ]}>
-              Tersimpan ({savedGems.length})
+              Tersimpan
             </Text>
-          </Pressable>
+            <View
+              style={[
+                styles.tabCountBadge,
+                activeTab === 'saved' && styles.tabCountBadgeActive,
+              ]}>
+              <Text
+                style={[
+                  styles.tabCountText,
+                  activeTab === 'saved' && styles.tabCountTextActive,
+                ]}>
+                {savedGems.length}
+              </Text>
+            </View>
+          </TouchableOpacity>
 
-          <Pressable
+          <TouchableOpacity
             onPress={() => setActiveTab('storage')}
             style={[
-              styles.switchBtn,
-              activeTab === 'storage' && styles.switchBtnActive,
-            ]}>
+              styles.tabPill,
+              activeTab === 'storage' && styles.tabPillActive,
+            ]}
+            activeOpacity={0.75}>
+            <Ionicons
+              name="server-outline"
+              size={15}
+              color={activeTab === 'storage' ? Colors.primary : Colors.textSecondary}
+            />
             <Text
               style={[
-                styles.switchText,
-                activeTab === 'storage' && styles.switchTextActive,
+                styles.tabPillText,
+                activeTab === 'storage' && styles.tabPillTextActive,
               ]}>
               Penyimpanan
             </Text>
-          </Pressable>
+          </TouchableOpacity>
 
-          <Pressable
+          <TouchableOpacity
             onPress={() => setActiveTab('cloud')}
             style={[
-              styles.switchBtn,
-              activeTab === 'cloud' && styles.switchBtnActive,
-            ]}>
+              styles.tabPill,
+              activeTab === 'cloud' && styles.tabPillActive,
+            ]}
+            activeOpacity={0.75}>
+            <Ionicons
+              name="cloud-done-outline"
+              size={15}
+              color={activeTab === 'cloud' ? Colors.primary : Colors.textSecondary}
+            />
             <Text
               style={[
-                styles.switchText,
-                activeTab === 'cloud' && styles.switchTextActive,
+                styles.tabPillText,
+                activeTab === 'cloud' && styles.tabPillTextActive,
               ]}>
               Status Cloud & Auth
             </Text>
-          </Pressable>
-        </View>
+            <View
+              style={[
+                styles.liveStatusDot,
+                { backgroundColor: supabaseStatus.isLive ? '#10B981' : '#F59E0B' },
+              ]}
+            />
+          </TouchableOpacity>
+        </ScrollView>
 
         {/* Tab 1: Bookings */}
         {activeTab === 'bookings' && (
@@ -524,94 +595,98 @@ export default function ProfileScreen() {
               <Text style={styles.modalTitle}>Edit Profil</Text>
               <TouchableOpacity
                 onPress={() => setIsEditModalOpen(false)}
-                style={styles.modalCloseBtn}>
+                style={styles.modalCloseBtn}
+                hitSlop={8}>
                 <Ionicons name="close" size={20} color={Colors.text} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
-              {/* Quick Change Avatar in Modal */}
-              <View style={styles.modalAvatarRow}>
-                <View style={styles.avatarWrapper}>
-                  <Image
-                    source={{
-                      uri:
-                        user?.avatar ||
-                        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
-                    }}
-                    style={styles.modalAvatarThumb}
-                  />
-                  {isUploadingAvatar && (
-                    <View style={styles.avatarLoadingOverlay}>
-                      <ActivityIndicator size="small" color="#FFF" />
-                    </View>
-                  )}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled">
+              <View style={styles.modalBody}>
+                {/* Quick Change Avatar in Modal */}
+                <View style={styles.modalAvatarRow}>
+                  <View style={styles.avatarWrapper}>
+                    <Image
+                      source={{
+                        uri:
+                          user?.avatar ||
+                          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
+                      }}
+                      style={styles.modalAvatarThumb}
+                    />
+                    {isUploadingAvatar && (
+                      <View style={styles.avatarLoadingOverlay}>
+                        <ActivityIndicator size="small" color="#FFF" />
+                      </View>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.modalChangeAvatarBtn}
+                    onPress={() => setIsPhotoPickerOpen(true)}
+                    disabled={isUploadingAvatar}
+                    activeOpacity={0.8}>
+                    <Ionicons name="camera-outline" size={16} color={Colors.primary} />
+                    <Text style={styles.modalChangeAvatarBtnText}>
+                      {isUploadingAvatar ? 'Mengunggah...' : 'Ganti Foto Profil'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
+
+                <View style={styles.modalInputGroup}>
+                  <Text style={styles.modalLabel}>Nama Lengkap</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={editName}
+                    onChangeText={setEditName}
+                    placeholder="Nama Lengkap"
+                  />
+                </View>
+
+                <View style={styles.modalInputGroup}>
+                  <Text style={styles.modalLabel}>Nomor Telepon / WhatsApp</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={editPhone}
+                    onChangeText={setEditPhone}
+                    placeholder="0812-xxxx-xxxx"
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={styles.modalInputGroup}>
+                  <Text style={styles.modalLabel}>Bio Singkat</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextArea]}
+                    value={editBio}
+                    onChangeText={setEditBio}
+                    placeholder="Ceritakan tentang kecintaanmu pada budaya lokal"
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={styles.modalChangeAvatarBtn}
-                  onPress={() => setIsPhotoPickerOpen(true)}
-                  disabled={isUploadingAvatar}
-                  activeOpacity={0.8}>
-                  <Ionicons name="camera-outline" size={16} color={Colors.primary} />
-                  <Text style={styles.modalChangeAvatarBtnText}>
-                    {isUploadingAvatar ? 'Mengunggah...' : 'Ganti Foto Profil'}
-                  </Text>
+                  style={styles.modalCancelBtn}
+                  onPress={() => setIsEditModalOpen(false)}>
+                  <Text style={styles.modalCancelBtnText}>Batal</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalSaveBtn, isSavingProfile && { opacity: 0.7 }]}
+                  onPress={handleSaveProfile}
+                  disabled={isSavingProfile}>
+                  {isSavingProfile ? (
+                    <ActivityIndicator size="small" color={Colors.surface} />
+                  ) : (
+                    <Text style={styles.modalSaveBtnText}>Simpan</Text>
+                  )}
                 </TouchableOpacity>
               </View>
-
-              <View style={styles.modalInputGroup}>
-                <Text style={styles.modalLabel}>Nama Lengkap</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={editName}
-                  onChangeText={setEditName}
-                  placeholder="Nama Lengkap"
-                />
-              </View>
-
-              <View style={styles.modalInputGroup}>
-                <Text style={styles.modalLabel}>Nomor Telepon / WhatsApp</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={editPhone}
-                  onChangeText={setEditPhone}
-                  placeholder="0812-xxxx-xxxx"
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-
-              <View style={styles.modalInputGroup}>
-                <Text style={styles.modalLabel}>Bio Singkat</Text>
-                <TextInput
-                  style={[styles.modalInput, styles.modalTextArea]}
-                  value={editBio}
-                  onChangeText={setEditBio}
-                  placeholder="Ceritakan tentang kecintaanmu pada budaya lokal"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelBtn}
-                onPress={() => setIsEditModalOpen(false)}>
-                <Text style={styles.modalCancelBtnText}>Batal</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.modalSaveBtn, isSavingProfile && { opacity: 0.7 }]}
-                onPress={handleSaveProfile}
-                disabled={isSavingProfile}>
-                {isSavingProfile ? (
-                  <ActivityIndicator size="small" color={Colors.surface} />
-                ) : (
-                  <Text style={styles.modalSaveBtnText}>Simpan</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -640,7 +715,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     backgroundColor: Colors.surface,
     borderRadius: 20,
-    padding: 18,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
@@ -654,14 +729,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   userAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
     borderWidth: 2,
     borderColor: Colors.primaryLight,
   },
   userInfo: {
     flex: 1,
+    minWidth: 0,
   },
   userNameRow: {
     flexDirection: 'row',
@@ -669,9 +745,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   userName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: Colors.text,
+    flexShrink: 1,
   },
   userEmail: {
     fontSize: 12,
@@ -707,7 +784,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   actionBtnSecondary: {
-    flex: 1,
+    flex: 1.4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -724,6 +801,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   actionBtnDanger: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -732,7 +810,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FECACA',
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 12,
   },
   actionBtnDangerText: {
@@ -855,36 +933,66 @@ const styles = StyleSheet.create({
     height: 28,
     backgroundColor: Colors.border,
   },
-  tabSwitcher: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    backgroundColor: Colors.surfaceSubtle,
-    borderRadius: 12,
-    padding: 4,
+  tabScrollView: {
     marginBottom: 16,
   },
-  switchBtn: {
-    flex: 1,
-    paddingVertical: 9,
+  tabScrollContent: {
+    paddingHorizontal: 20,
+    gap: 8,
     alignItems: 'center',
-    borderRadius: 9,
   },
-  switchBtnActive: {
-    backgroundColor: Colors.surface,
+  tabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 9,
+    paddingHorizontal: 13,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  tabPillActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CBD5E1',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
-  switchText: {
-    fontSize: 11,
+  tabPillText: {
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
   },
-  switchTextActive: {
+  tabPillTextActive: {
     color: Colors.primary,
-    fontWeight: '800',
+    fontWeight: '700',
+  },
+  tabCountBadge: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 2,
+  },
+  tabCountBadgeActive: {
+    backgroundColor: Colors.primaryLight,
+  },
+  tabCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  tabCountTextActive: {
+    color: Colors.primary,
+  },
+  liveStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginLeft: 2,
   },
   sectionBody: {
     marginHorizontal: 20,
@@ -1086,6 +1194,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
+    maxHeight: '85%',
     backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: 20,
