@@ -290,80 +290,86 @@ export default function MapScreen() {
         contentContainerStyle={styles.scrollContent}>
         {/* Title & Badge */}
         <View style={styles.titleSection}>
-          <View style={styles.badge}>
-            <Ionicons name="sparkles" size={12} color={Colors.secondary} />
-            <Text style={styles.badgeText}>Fitur 2: Eksplorasi Komunitas</Text>
-          </View>
-          <View style={styles.titleRow}>
-            <Text style={styles.pageTitle}>Hidden Gems Map</Text>
-
-            {/* View Mode Switcher */}
-            <View style={styles.toggleContainer}>
-              <Pressable
-                onPress={() => setViewMode('map')}
-                style={[
-                  styles.toggleBtn,
-                  viewMode === 'map' && styles.toggleBtnActive,
-                ]}>
-                <Ionicons
-                  name="map"
-                  size={14}
-                  color={viewMode === 'map' ? '#FFF' : Colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.toggleText,
-                    viewMode === 'map' && styles.toggleTextActive,
-                  ]}>
-                  Peta
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setViewMode('geofence')}
-                style={[
-                  styles.toggleBtn,
-                  viewMode === 'geofence' && styles.toggleBtnActive,
-                ]}>
-                <Ionicons
-                  name="navigate"
-                  size={14}
-                  color={viewMode === 'geofence' ? '#FFF' : Colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.toggleText,
-                    viewMode === 'geofence' && styles.toggleTextActive,
-                  ]}>
-                  Geofence
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setViewMode('list')}
-                style={[
-                  styles.toggleBtn,
-                  viewMode === 'list' && styles.toggleBtnActive,
-                ]}>
-                <Ionicons
-                  name="grid"
-                  size={14}
-                  color={viewMode === 'list' ? '#FFF' : Colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.toggleText,
-                    viewMode === 'list' && styles.toggleTextActive,
-                  ]}>
-                  Daftar
-                </Text>
-              </Pressable>
+          <View style={styles.headerTopRow}>
+            <View style={styles.badge}>
+              <Ionicons name="sparkles" size={12} color={Colors.secondary} />
+              <Text style={styles.badgeText}>Eksplorasi Komunitas</Text>
+            </View>
+            <View style={styles.spotCountPill}>
+              <Ionicons name="compass-outline" size={13} color={Colors.primary} />
+              <Text style={styles.spotCountPillText}>
+                {gems.length} Spot Terdaftar
+              </Text>
             </View>
           </View>
 
+          <Text style={styles.pageTitle}>Hidden Gems Map</Text>
           <Text style={styles.pageSubtitle}>
             Temukan lokasi rahasia nusantara dengan review, koordinat GPS akurat, dan rute navigasi Google Maps.
           </Text>
+
+          {/* Dedicated Full-Width Responsive Segmented Control */}
+          <View style={styles.segmentedControl}>
+            <Pressable
+              onPress={() => setViewMode('map')}
+              style={[
+                styles.segmentBtn,
+                viewMode === 'map' && styles.segmentBtnActive,
+              ]}>
+              <Ionicons
+                name="map"
+                size={14}
+                color={viewMode === 'map' ? Colors.primary : Colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.segmentText,
+                  viewMode === 'map' && styles.segmentTextActive,
+                ]}>
+                Peta
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setViewMode('geofence')}
+              style={[
+                styles.segmentBtn,
+                viewMode === 'geofence' && styles.segmentBtnActive,
+              ]}>
+              <Ionicons
+                name="navigate"
+                size={14}
+                color={viewMode === 'geofence' ? Colors.primary : Colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.segmentText,
+                  viewMode === 'geofence' && styles.segmentTextActive,
+                ]}>
+                Geofence
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setViewMode('list')}
+              style={[
+                styles.segmentBtn,
+                viewMode === 'list' && styles.segmentBtnActive,
+              ]}>
+              <Ionicons
+                name="grid"
+                size={14}
+                color={viewMode === 'list' ? Colors.primary : Colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.segmentText,
+                  viewMode === 'list' && styles.segmentTextActive,
+                ]}>
+                Daftar
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* GPS Geocoding Info Card (Branch: feat/gps-geocoding) */}
@@ -476,8 +482,8 @@ export default function MapScreen() {
         {/* List View Mode or Bottom Cards */}
         <View style={styles.listSection}>
           <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>
+            <View style={styles.sectionTitleWrapper}>
+              <Text style={styles.sectionTitle} numberOfLines={1}>
                 {getSectionTitle()}
               </Text>
               <Text style={styles.sectionCount}>
@@ -941,6 +947,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -949,18 +961,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
   },
   badgeText: {
     color: Colors.secondary,
     fontSize: 11,
     fontWeight: '700',
   },
-  titleRow: {
+  spotCountPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  spotCountPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1D4ED8',
   },
   pageTitle: {
     fontSize: 22,
@@ -968,38 +989,46 @@ const styles = StyleSheet.create({
     color: Colors.text,
     letterSpacing: -0.5,
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  toggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 9,
-  },
-  toggleBtnActive: {
-    backgroundColor: Colors.primary,
-  },
-  toggleText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  toggleTextActive: {
-    color: '#FFF',
-  },
   pageSubtitle: {
     fontSize: 13,
     color: Colors.textSecondary,
-    marginTop: 6,
+    marginTop: 4,
     lineHeight: 18,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    padding: 3,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  segmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 9,
+  },
+  segmentBtnActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: Colors.primary,
+    fontWeight: '700',
   },
   listSection: {
     marginTop: 8,
@@ -1010,6 +1039,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     marginBottom: 14,
+  },
+  sectionTitleWrapper: {
+    flex: 1,
+    marginRight: 10,
   },
   sectionTitle: {
     fontSize: 17,
@@ -1040,6 +1073,7 @@ const styles = StyleSheet.create({
   contributeCard: {
     marginHorizontal: 20,
     marginTop: 14,
+    marginBottom: 24,
     backgroundColor: Colors.secondary,
     borderRadius: 18,
     padding: 18,

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleProp,
   ViewStyle,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import MapView, { Marker, Circle, Region } from 'react-native-maps';
@@ -55,6 +56,13 @@ export const LokaltripMapView: React.FC<LokaltripMapViewProps> = ({
   style,
 }) => {
   const mapRef = useRef<MapView | null>(null);
+
+  // Responsivitas tinggi layar & toggle expand
+  const { height: screenHeight } = useWindowDimensions();
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const dynamicMapHeight = isExpanded
+    ? Math.min(screenHeight * 0.65, 540)
+    : Math.min(Math.max(screenHeight * 0.44, 320), 440);
 
   // State simulasi koordinat (untuk pengujian demo tanpa berpindah lokasi fisik)
   const [simulatedLat, setSimulatedLat] = useState<number | null>(null);
@@ -196,7 +204,7 @@ export const LokaltripMapView: React.FC<LokaltripMapViewProps> = ({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { height: dynamicMapHeight }, style]}>
       {/* =================================================================== */}
       {/* 1. MAPVIEW UTAMA DENGAN MARKER & GEOFENCE CIRCLE                    */}
       {/* =================================================================== */}
@@ -371,16 +379,31 @@ export const LokaltripMapView: React.FC<LokaltripMapViewProps> = ({
       )}
 
       {/* =================================================================== */}
-      {/* 4. TOMBOL PUSATKAN "LOKASI SAYA"                                    */}
+      {/* 4. FLOATING MAP CONTROLS (EXPAND/COLLAPSE & LOKASI SAYA)            */}
       {/* =================================================================== */}
-      <TouchableOpacity
-        style={styles.myLocationButton}
-        activeOpacity={0.8}
-        onPress={handleCenterToUser}
-        accessibilityLabel="Pusatkan kembali kamera ke pengguna"
-      >
-        <Ionicons name="locate" size={22} color="#1D4ED8" />
-      </TouchableOpacity>
+      <View style={styles.mapControlsColumn}>
+        <TouchableOpacity
+          style={styles.mapToolBtn}
+          activeOpacity={0.8}
+          onPress={() => setIsExpanded((prev) => !prev)}
+          accessibilityLabel={isExpanded ? 'Perkecil tampilan peta' : 'Perbesar tampilan peta'}
+        >
+          <Ionicons
+            name={isExpanded ? 'contract-outline' : 'expand-outline'}
+            size={18}
+            color="#1E293B"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.mapToolBtn}
+          activeOpacity={0.8}
+          onPress={handleCenterToUser}
+          accessibilityLabel="Pusatkan kembali kamera ke pengguna"
+        >
+          <Ionicons name="locate" size={20} color="#1D4ED8" />
+        </TouchableOpacity>
+      </View>
 
       {/* =================================================================== */}
       {/* 5. TOOLBAR KONTROL SIMULASI GEOFENCE (TASK 03B DEMO)                */}
@@ -456,7 +479,6 @@ export default LokaltripMapView;
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 480,
     borderRadius: 18,
     overflow: 'hidden',
     position: 'relative',
@@ -626,14 +648,18 @@ const styles = StyleSheet.create({
     color: '#475569',
     flex: 1,
   },
-  // Tombol Lokasi Saya
-  myLocationButton: {
+  // Floating Map Controls (Resize & Locate)
+  mapControlsColumn: {
     position: 'absolute',
     right: 14,
     bottom: 126,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    gap: 8,
+    zIndex: 10,
+  },
+  mapToolBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -644,7 +670,6 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    zIndex: 10,
   },
   // Toolbar Kontrol Simulasi
   simulationControlCard: {
