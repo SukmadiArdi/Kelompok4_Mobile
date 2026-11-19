@@ -67,7 +67,18 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   };
 
   const handleResetCenter = () => {
-    mapLeafletRef.current?.resetView();
+    if (selectedGem?.mapCoords) {
+      // Pusatkan ke destinasi terpilih yang sedang aktif dengan zoom optimal & popup
+      mapLeafletRef.current?.resetView({
+        lat: selectedGem.mapCoords.lat,
+        lng: selectedGem.mapCoords.lng,
+        id: selectedGem.id,
+        zoom: 10,
+      });
+    } else {
+      // Jika tidak ada destinasi spesifik, rentangkan peta mencakup semua marker
+      mapLeafletRef.current?.resetView();
+    }
   };
 
   const currentMapHeight = isExpanded ? 500 : 340;
@@ -160,10 +171,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               <View style={styles.rightFloatingActions}>
                 <Pressable
                   onPress={handleResetCenter}
-                  style={styles.recenterBtn}
-                  hitSlop={6}
-                  accessibilityLabel="Pusatkan Peta">
-                  <Ionicons name="locate" size={13} color={Colors.primary} />
+                  style={({ pressed }) => [
+                    styles.recenterBtn,
+                    pressed && styles.recenterBtnPressed,
+                  ]}
+                  hitSlop={8}
+                  accessibilityLabel="Pusatkan Peta ke Destinasi">
+                  <Ionicons name="locate" size={14} color={Colors.primary} />
                   <Text style={styles.recenterBtnText}>Pusatkan</Text>
                 </Pressable>
 
@@ -530,6 +544,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.primary,
+  },
+  recenterBtnPressed: {
+    backgroundColor: '#FEE2E2',
+    transform: [{ scale: 0.96 }],
   },
   layerSwitcher: {
     flexDirection: 'row',

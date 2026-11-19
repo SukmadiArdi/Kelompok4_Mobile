@@ -3,11 +3,20 @@ import { View, StyleSheet } from 'react-native';
 import { HiddenGem } from '../../types';
 import { generateLeafletHtml } from './leafletHtml';
 
+export interface ResetViewOptions {
+  lat?: number;
+  lng?: number;
+  zoom?: number;
+  id?: string;
+}
+
 export interface MapLeafletHandle {
   panBy: (x: number, y: number) => void;
   zoomIn: () => void;
   zoomOut: () => void;
-  resetView: () => void;
+  resetView: (options?: ResetViewOptions) => void;
+  centerToCoordinates: (lat: number, lng: number, zoom?: number) => void;
+  focusGem: (id: string) => void;
 }
 
 export interface MapLeafletProps {
@@ -30,18 +39,34 @@ export const MapLeaflet = forwardRef<MapLeafletHandle, MapLeafletProps>(
       zoom: selectedGem ? 8 : 5,
     });
 
+    const sendCommand = (type: string, payload?: Record<string, any>) => {
+      const msg = { type, ...(payload || {}) };
+      try {
+        iframeRef.current?.contentWindow?.postMessage(msg, '*');
+        (iframeRef.current?.contentWindow as any)?.handleIncomingMapMessage?.(msg);
+      } catch {
+        // Fallback or ignore
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       panBy: (x: number, y: number) => {
-        iframeRef.current?.contentWindow?.postMessage({ type: 'PAN_BY', x, y }, '*');
+        sendCommand('PAN_BY', { x, y });
       },
       zoomIn: () => {
-        iframeRef.current?.contentWindow?.postMessage({ type: 'ZOOM_IN' }, '*');
+        sendCommand('ZOOM_IN');
       },
       zoomOut: () => {
-        iframeRef.current?.contentWindow?.postMessage({ type: 'ZOOM_OUT' }, '*');
+        sendCommand('ZOOM_OUT');
       },
-      resetView: () => {
-        iframeRef.current?.contentWindow?.postMessage({ type: 'RESET_VIEW' }, '*');
+      resetView: (options?: ResetViewOptions) => {
+        sendCommand('RESET_VIEW', options);
+      },
+      centerToCoordinates: (lat: number, lng: number, zoom = 10) => {
+        sendCommand('CENTER_TO', { lat, lng, zoom });
+      },
+      focusGem: (id: string) => {
+        sendCommand('FOCUS_GEM', { id });
       },
     }));
 
@@ -64,10 +89,7 @@ export const MapLeaflet = forwardRef<MapLeafletHandle, MapLeafletProps>(
     // Saat selectedGem berganti dari luar, fokuskan peta di dalam iframe
     useEffect(() => {
       if (selectedGem && iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          { type: 'FOCUS_GEM', id: selectedGem.id },
-          '*'
-        );
+        sendCommand('FOCUS_GEM', { id: selectedGem.id });
       }
     }, [selectedGem]);
 

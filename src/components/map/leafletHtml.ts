@@ -270,25 +270,56 @@ export function generateLeafletHtml(config: LeafletMapConfig): string {
       }
     }
 
-    // Mendengarkan pesan dari React Native untuk aksi kontrol peta
-    window.addEventListener('message', (event) => {
-      let data = event.data;
+    function fitAllMarkers() {
+      var markerList = Object.values(markersMap);
+      if (markerList.length > 0) {
+        var group = L.featureGroup(markerList);
+        if (group.getBounds().isValid()) {
+          map.fitBounds(group.getBounds(), { padding: [30, 30], maxZoom: 11 });
+          return;
+        }
+      }
+      map.flyTo([-2.5, 118.0], 5, { duration: 1.0 });
+    }
+
+    // Fungsi terpadu penanganan pesan dari React Native / WebView / Iframe
+    function handleIncomingMapMessage(data) {
       if (typeof data === 'string') {
         try { data = JSON.parse(data); } catch (e) {}
       }
-      if (!data) return;
+      if (!data || typeof data !== 'object') return;
 
       if (data.type === 'FOCUS_GEM' && data.id) {
-        const gem = gemsData.find((g) => g.id === data.id);
+        var gem = gemsData.find(function(g) { return g.id === data.id; });
         if (gem) {
           updateActivePin(gem.id);
-          map.flyTo([gem.lat, gem.lng], 9, { duration: 1.2 });
+          map.flyTo([gem.lat, gem.lng], 10, { duration: 1.0 });
           if (markersMap[gem.id]) {
             markersMap[gem.id].openPopup();
           }
         }
-      } else if (data.type === 'RESET_VIEW') {
-        map.flyTo([-2.5, 118.0], 5, { duration: 1.0 });
+      } else if (data.type === 'RESET_VIEW' || data.type === 'CENTER_TO') {
+        // Prioritas 1: Koordinat spesifik yang dikirimkan (misal destinasi aktif)
+        if (data.lat && data.lng) {
+          map.flyTo([data.lat, data.lng], data.zoom || 10, { duration: 1.0 });
+          if (data.id && markersMap[data.id]) {
+            updateActivePin(data.id);
+            markersMap[data.id].openPopup();
+          }
+        } else if (initialSelectedId && markersMap[initialSelectedId]) {
+          // Prioritas 2: Destinasi awal terpilih
+          var selGem = gemsData.find(function(g) { return g.id === initialSelectedId; });
+          if (selGem) {
+            updateActivePin(selGem.id);
+            map.flyTo([selGem.lat, selGem.lng], 10, { duration: 1.0 });
+            markersMap[initialSelectedId].openPopup();
+          } else {
+            fitAllMarkers();
+          }
+        } else {
+          // Prioritas 3: Rentangkan peta mencakup semua marker
+          fitAllMarkers();
+        }
       } else if (data.type === 'PAN_BY') {
         map.panBy([data.x || 0, data.y || 0], { animate: true, duration: 0.3 });
       } else if (data.type === 'ZOOM_IN') {
@@ -296,6 +327,17 @@ export function generateLeafletHtml(config: LeafletMapConfig): string {
       } else if (data.type === 'ZOOM_OUT') {
         map.zoomOut();
       }
+    }
+
+    // Lampirkan ke window untuk direct call via injectJavaScript (Android & iOS)
+    window.handleIncomingMapMessage = handleIncomingMapMessage;
+
+    // Pasang listener di window dan document (kompatibilitas penuh WebView Android/iOS & Web Iframe)
+    window.addEventListener('message', function(event) {
+      handleIncomingMapMessage(event.data);
+    });
+    document.addEventListener('message', function(event) {
+      handleIncomingMapMessage(event.data);
     });
   </script>
 </body>

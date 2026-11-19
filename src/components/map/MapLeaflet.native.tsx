@@ -4,11 +4,20 @@ import { WebView } from 'react-native-webview';
 import { HiddenGem } from '../../types';
 import { generateLeafletHtml } from './leafletHtml';
 
+export interface ResetViewOptions {
+  lat?: number;
+  lng?: number;
+  zoom?: number;
+  id?: string;
+}
+
 export interface MapLeafletHandle {
   panBy: (x: number, y: number) => void;
   zoomIn: () => void;
   zoomOut: () => void;
-  resetView: () => void;
+  resetView: (options?: ResetViewOptions) => void;
+  centerToCoordinates: (lat: number, lng: number, zoom?: number) => void;
+  focusGem: (id: string) => void;
 }
 
 export interface MapLeafletProps {
@@ -31,18 +40,39 @@ export const MapLeaflet = forwardRef<MapLeafletHandle, MapLeafletProps>(
       zoom: selectedGem ? 8 : 5,
     });
 
+    const sendCommand = (type: string, payload?: Record<string, any>) => {
+      const msg = { type, ...(payload || {}) };
+      const jsonStr = JSON.stringify(msg);
+      // 1. Kirim via postMessage standar WebView
+      webViewRef.current?.postMessage(jsonStr);
+      // 2. Eksekusi langsung via injectJavaScript (100% andal di Android & iOS)
+      const jsCode = `
+        if (typeof window.handleIncomingMapMessage === 'function') {
+          window.handleIncomingMapMessage(${jsonStr});
+        }
+        true;
+      `;
+      (webViewRef.current as any)?.injectJavaScript(jsCode);
+    };
+
     useImperativeHandle(ref, () => ({
       panBy: (x: number, y: number) => {
-        webViewRef.current?.postMessage(JSON.stringify({ type: 'PAN_BY', x, y }));
+        sendCommand('PAN_BY', { x, y });
       },
       zoomIn: () => {
-        webViewRef.current?.postMessage(JSON.stringify({ type: 'ZOOM_IN' }));
+        sendCommand('ZOOM_IN');
       },
       zoomOut: () => {
-        webViewRef.current?.postMessage(JSON.stringify({ type: 'ZOOM_OUT' }));
+        sendCommand('ZOOM_OUT');
       },
-      resetView: () => {
-        webViewRef.current?.postMessage(JSON.stringify({ type: 'RESET_VIEW' }));
+      resetView: (options?: ResetViewOptions) => {
+        sendCommand('RESET_VIEW', options);
+      },
+      centerToCoordinates: (lat: number, lng: number, zoom = 10) => {
+        sendCommand('CENTER_TO', { lat, lng, zoom });
+      },
+      focusGem: (id: string) => {
+        sendCommand('FOCUS_GEM', { id });
       },
     }));
 
@@ -62,8 +92,7 @@ export const MapLeaflet = forwardRef<MapLeafletHandle, MapLeafletProps>(
 
     useEffect(() => {
       if (selectedGem && webViewRef.current) {
-        const payload = JSON.stringify({ type: 'FOCUS_GEM', id: selectedGem.id });
-        webViewRef.current.postMessage(payload);
+        sendCommand('FOCUS_GEM', { id: selectedGem.id });
       }
     }, [selectedGem]);
 
