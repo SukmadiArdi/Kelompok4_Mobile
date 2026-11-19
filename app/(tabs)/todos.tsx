@@ -263,16 +263,20 @@ export default function TodoListScreen() {
       {/* HEADER BAR: Biru tua dengan judul di kiri & tombol reload di kanan   */}
       {/* =================================================================== */}
       <View style={styles.header}>
-        {router.canGoBack() && (
-          <TouchableOpacity
-            style={styles.backButton}
-            activeOpacity={0.7}
-            onPress={() => router.back()}
-            accessibilityLabel="Kembali"
-          >
-            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.backButton}
+          activeOpacity={0.7}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.navigate('/(tabs)');
+            }
+          }}
+          accessibilityLabel="Kembali ke Beranda"
+        >
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Todo List App</Text>

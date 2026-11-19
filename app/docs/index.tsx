@@ -44,7 +44,12 @@ export default function DocsPage() {
 
       <PageButton
         title="Buka Todo List Async (Week 8/9)"
-        onPress={() => router.push('/(tabs)/todos' as any)}
+        onPress={() => {
+          router.dismissAll();
+          setTimeout(() => {
+            router.navigate('/(tabs)/todos' as any);
+          }, 100);
+        }}
       />
 
       {/* Navigasi router.back */}

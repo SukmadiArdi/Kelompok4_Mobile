@@ -264,7 +264,7 @@ export default function HomeScreen() {
 
         {/* Task Week 8/9: Todo List Async Quick Link */}
         <Pressable
-          onPress={() => router.push('/(tabs)/todos' as any)}
+          onPress={() => router.navigate('/(tabs)/todos' as any)}
           style={({ pressed }) => [
             styles.sensorBanner,
             { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', marginTop: -10 },

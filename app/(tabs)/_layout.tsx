@@ -113,7 +113,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="todos"
         options={{
-          href: null,
           title: 'Todos',
           tabBarIcon: renderTodoIcon,
         }}

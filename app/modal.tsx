@@ -65,8 +65,17 @@ export default function ModalScreen() {
       </View>
 
       <Pressable
-        onPress={() => router.push('/(tabs)/todos' as any)}
-        style={styles.todoBtn}>
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.dismiss();
+          }
+          setTimeout(() => {
+            router.navigate('/(tabs)/todos' as any);
+          }, 100);
+        }}
+        style={({ pressed }) => [styles.todoBtn, pressed && { opacity: 0.85 }]}>
         <Ionicons name="checkbox-outline" size={18} color="#FFF" style={{ marginRight: 8 }} />
         <Text style={styles.todoBtnText}>Buka Todo List Async (Week 8/9)</Text>
       </Pressable>
