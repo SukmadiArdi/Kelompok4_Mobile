@@ -1,16 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform, Image, Modal, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors } from '../../constants/Theme';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { DeviceNotificationView } from '../profile/DeviceNotificationView';
 
 interface HeaderProps {
   title?: string;
   subtitle?: string;
   showBack?: boolean;
   showCart?: boolean;
+  showNotification?: boolean;
   showProfile?: boolean;
   rightAction?: React.ReactNode;
 }
@@ -20,11 +22,13 @@ export const Header: React.FC<HeaderProps> = ({
   subtitle,
   showBack = false,
   showCart = true,
+  showNotification = true,
   showProfile = true,
   rightAction,
 }) => {
   const { cartCount } = useApp();
   const { user, isAuthenticated } = useAuth();
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   return (
     <View style={styles.headerContainer}>
@@ -68,6 +72,15 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.rightRow}>
         {rightAction}
 
+        {showNotification && (
+          <Pressable
+            onPress={() => setIsNotificationModalOpen(true)}
+            style={({ pressed }) => [styles.notificationButton, pressed && styles.buttonPressed]}>
+            <Ionicons name="notifications-outline" size={20} color={Colors.text} />
+            <View style={styles.notificationDot} />
+          </Pressable>
+        )}
+
         {showCart && (
           <Pressable
             onPress={() => router.push('/cart')}
@@ -102,6 +115,33 @@ export const Header: React.FC<HeaderProps> = ({
           </Pressable>
         )}
       </View>
+
+      {/* Modal Push Notification & Device Registration (Week 11 Task 01) */}
+      <Modal
+        visible={isNotificationModalOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsNotificationModalOpen(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalTopBar}>
+            <View style={styles.modalTitleGroup}>
+              <Ionicons name="notifications" size={20} color={Colors.primary} />
+              <Text style={styles.modalHeaderTitle}>Push Notification (Week 11)</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setIsNotificationModalOpen(false)}
+              hitSlop={8}>
+              <Ionicons name="close" size={22} color={Colors.text} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.modalScrollContent}>
+            <DeviceNotificationView />
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -232,6 +272,57 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 20,
+  },
+  notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    position: 'relative',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.primary,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  modalTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  modalTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalScrollContent: {
+    padding: 20,
+    paddingBottom: 40,
   },
 });
 

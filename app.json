@@ -42,8 +42,28 @@
           "cameraPermission": "Izinkan aplikasi mengakses kamera untuk mengambil foto profil dan bukti kunjungan langsung."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#FF6B00",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Izinkan aplikasi mengakses lokasi Anda untuk memetakan destinasi wisata terdekat dan memicu fitur geofencing saat memasuki area wisata.",
+          "locationWhenInUsePermission": "Izinkan aplikasi mengakses lokasi Anda untuk mendeteksi posisi dan rekomendasi destinasi terdekat."
+        }
+      ]
     ],
+    "extra": {
+      "eas": {
+        "projectId": "kelompok4-mobile-lokaltrip"
+      }
+    },
     "experiments": {
       "typedRoutes": true
     }

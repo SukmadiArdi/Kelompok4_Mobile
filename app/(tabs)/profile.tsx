@@ -22,6 +22,7 @@ import { Header } from '@/src/components/common/Header';
 import { getSupabaseStatus } from '@/src/services/supabaseClient';
 import { GemCard } from '@/src/components/map/GemCard';
 import { StorageManagerView } from '@/src/components/profile/StorageManagerView';
+import { DeviceNotificationView } from '@/src/components/profile/DeviceNotificationView';
 import { imagePickerService, ImagePickerResult } from '@/src/services/imagePickerService';
 import { hybridStorageService } from '@/src/services/hybridStorageService';
 import { ImageSourcePickerModal } from '@/src/components/common/ImageSourcePickerModal';
@@ -30,7 +31,7 @@ export default function ProfileScreen() {
   const { bookings, gems, savedGemIds, isOnline } = useApp();
   const { user, isAuthenticated, logout, loginDemo, updateProfile } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'storage' | 'cloud'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'saved' | 'storage' | 'cloud' | 'notifications'>('bookings');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -427,6 +428,33 @@ export default function ProfileScreen() {
               ]}
             />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('notifications')}
+            style={[
+              styles.tabPill,
+              activeTab === 'notifications' && styles.tabPillActive,
+            ]}
+            activeOpacity={0.75}>
+            <Ionicons
+              name="notifications-outline"
+              size={15}
+              color={activeTab === 'notifications' ? Colors.primary : Colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.tabPillText,
+                activeTab === 'notifications' && styles.tabPillTextActive,
+              ]}>
+              Notifikasi (W11)
+            </Text>
+            <View
+              style={[
+                styles.liveStatusDot,
+                { backgroundColor: Colors.primary },
+              ]}
+            />
+          </TouchableOpacity>
         </ScrollView>
 
         {/* Tab 1: Bookings */}
@@ -579,6 +607,13 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             </View>
+          </View>
+        )}
+
+        {/* Tab 5: Push Notification & Device Registration (Week 11 Task 01) */}
+        {activeTab === 'notifications' && (
+          <View style={styles.sectionBody}>
+            <DeviceNotificationView />
           </View>
         )}
       </ScrollView>
