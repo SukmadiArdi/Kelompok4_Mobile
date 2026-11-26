@@ -26,6 +26,8 @@ export interface UseSendNotificationReturn {
   setTitle: (title: string) => void;
   body: string;
   setBody: (body: string) => void;
+  targetScreen: string;
+  setTargetScreen: (screen: string) => void;
 
   // Pipeline & Status States
   isSending: boolean;
@@ -51,6 +53,7 @@ export function useSendNotification(): UseSendNotificationReturn {
   const [pushToken, setPushToken] = useState<string>(DEFAULT_DEMO_PUSH_TOKEN);
   const [title, setTitle] = useState<string>('Pengumuman Baru');
   const [body, setBody] = useState<string>('Jadwal perkuliahan telah diperbarui.');
+  const [targetScreen, setTargetScreen] = useState<string>('/notifications');
   const [isSending, setIsSending] = useState<boolean>(false);
   const [pipelineStage, setPipelineStage] = useState<NotificationPipelineStage>('idle');
   const [lastTicket, setLastTicket] = useState<ExpoPushTicket | null>(null);
@@ -193,6 +196,11 @@ export function useSendNotification(): UseSendNotificationReturn {
         body: body.trim(),
         data: {
           source: 'expo-push-server',
+          screen: targetScreen,
+          url: targetScreen,
+          targetRoute: targetScreen,
+          title: title.trim(),
+          body: body.trim(),
           sentTimestamp: Date.now(),
         },
       });
@@ -211,6 +219,11 @@ export function useSendNotification(): UseSendNotificationReturn {
         // Memicu notifikasi lokal agar penguji di Expo Go langsung melihat banner & popup di layar
         await triggerLocalNotification(title, body, {
           source: 'expo-push-server',
+          screen: targetScreen,
+          url: targetScreen,
+          targetRoute: targetScreen,
+          title: title.trim(),
+          body: body.trim(),
           ticketId: ticket.id,
           sentTimestamp: Date.now(),
         });
@@ -230,6 +243,11 @@ export function useSendNotification(): UseSendNotificationReturn {
         // Tetap tampilkan di layar agar pengujian alur modul tetap lulus
         await triggerLocalNotification(title, body, {
           source: 'local-simulation',
+          screen: targetScreen,
+          url: targetScreen,
+          targetRoute: targetScreen,
+          title: title.trim(),
+          body: body.trim(),
           note: 'Simulasi pengujian di Expo Go',
         });
 
@@ -244,7 +262,7 @@ export function useSendNotification(): UseSendNotificationReturn {
       setIsSending(false);
       return false;
     }
-  }, [pushToken, title, body, addLog]);
+  }, [pushToken, title, body, targetScreen, addLog]);
 
   /**
    * Simulasi instan langsung di perangkat (menampilkan banner notifikasi)
@@ -257,6 +275,11 @@ export function useSendNotification(): UseSendNotificationReturn {
     try {
       await triggerLocalNotification(title, body, {
         source: 'local-simulation',
+        screen: targetScreen,
+        url: targetScreen,
+        targetRoute: targetScreen,
+        title: title.trim(),
+        body: body.trim(),
         timestamp: Date.now(),
       });
       setPipelineStage('message_displayed');
@@ -267,7 +290,7 @@ export function useSendNotification(): UseSendNotificationReturn {
     } finally {
       setIsSending(false);
     }
-  }, [title, body, addLog]);
+  }, [title, body, targetScreen, addLog]);
 
   const dismissBanner = useCallback(() => {
     setCurrentBannerNotification(null);
@@ -285,17 +308,20 @@ export function useSendNotification(): UseSendNotificationReturn {
         case 'presidentku':
           setTitle('Pengumuman Baru');
           setBody('Jadwal perkuliahan telah diperbarui.');
-          addLog('idle', 'Memuat preset modul tugas: PresidentKu ("Pengumuman Baru")', 'info');
+          setTargetScreen('/notifications');
+          addLog('idle', 'Memuat preset: PresidentKu ("/notifications")', 'info');
           break;
         case 'lokaltrip_gem':
           setTitle('Hidden Gem Baru Ditemukan! 🌄');
-          setBody('Air Terjun Tumpak Sewu kini tersedia di katalog LokalTrip. Yuk jelajahi!');
-          addLog('idle', 'Memuat preset: Hidden Gem Baru', 'info');
+          setBody('Air Terjun Tanggedu di Sumba kini tersedia. Ketuk untuk membuka detail spot!');
+          setTargetScreen('/gem/gem-1');
+          addLog('idle', 'Memuat preset: Hidden Gem ("/gem/gem-1")', 'info');
           break;
         case 'lokaltrip_promo':
-          setTitle('Promo Penjelajah LokalTrip 🎟️');
-          setBody('Gunakan kode promo LOKALTRIP091 untuk diskon tiket destinasi favoritmu.');
-          addLog('idle', 'Memuat preset: Promo LokalTrip', 'info');
+          setTitle('Pengalaman Budaya Membatik 🎟️');
+          setBody('Membatik Canting Klasik & Pewarnaan Sogan diskon 20%! Ketuk untuk booking.');
+          setTargetScreen('/experience/exp-1');
+          addLog('idle', 'Memuat preset: Pengalaman Budaya ("/experience/exp-1")', 'info');
           break;
       }
     },
@@ -325,6 +351,8 @@ export function useSendNotification(): UseSendNotificationReturn {
     setTitle,
     body,
     setBody,
+    targetScreen,
+    setTargetScreen,
     isSending,
     pipelineStage,
     logs,

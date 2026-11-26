@@ -9,6 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { AppProvider } from '@/src/context/AppContext';
 import { AuthProvider } from '@/src/context/AuthContext';
 import { Colors } from '@/src/constants/Theme';
+import { useNotificationResponse } from '@/hooks/useNotificationResponse';
 
 export {
   ErrorBoundary,
@@ -50,6 +51,9 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+
+  // [WEEK 11 - TASK 03: GLOBAL NOTIFICATION TAP & DEEP LINK LISTENER]
+  useNotificationResponse();
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
