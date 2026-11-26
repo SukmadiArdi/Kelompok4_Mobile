@@ -54,6 +54,21 @@ export const DEFAULT_DEMO_USER: User = {
   provider: 'local',
 };
 
+/**
+ * Salted hash function untuk mengamankan password mock agar tidak pernah
+ * tersimpan dalam bentuk plain-text di AsyncStorage (Audit Keamanan Modul 4).
+ */
+export function hashPassword(password: string): string {
+  let hash = 0x811c9dc5;
+  const prime = 0x01000193;
+  const salted = `lokaltrip_sec_salt_2026_${password}`;
+  for (let i = 0; i < salted.length; i++) {
+    hash ^= salted.charCodeAt(i);
+    hash = Math.imul(hash, prime);
+  }
+  return 'lthash_' + (hash >>> 0).toString(16);
+}
+
 interface StoredUserAccount extends User {
   passwordHash: string;
 }
@@ -63,11 +78,11 @@ async function getStoredUsers(): Promise<StoredUserAccount[]> {
   try {
     const raw = await AsyncStorage.getItem(USERS_DB_KEY);
     if (!raw) {
-      // Seed initial demo account
+      // Seed initial demo account (password di-hash, tidak plain text)
       const initial: StoredUserAccount[] = [
         {
           ...DEFAULT_DEMO_USER,
-          passwordHash: 'password123',
+          passwordHash: hashPassword('password123'),
         },
       ];
       await AsyncStorage.setItem(USERS_DB_KEY, JSON.stringify(initial));
@@ -79,7 +94,7 @@ async function getStoredUsers(): Promise<StoredUserAccount[]> {
     return [
       {
         ...DEFAULT_DEMO_USER,
-        passwordHash: 'password123',
+        passwordHash: hashPassword('password123'),
       },
     ];
   }
@@ -265,8 +280,11 @@ class AuthService {
 
     // 4. Fallback ke Local Mock Store (Untuk testing & demo offline)
     const users = await getStoredUsers();
+    const targetHash = hashPassword(cleanPass);
     const matched = users.find(
-      (u) => u.email.toLowerCase() === cleanEmail && u.passwordHash === cleanPass
+      (u) =>
+        u.email.toLowerCase() === cleanEmail &&
+        (u.passwordHash === targetHash || u.passwordHash === cleanPass)
     );
 
     if (matched) {
@@ -407,7 +425,7 @@ class AuthService {
       role: 'traveler',
       createdAt: new Date().toISOString().split('T')[0],
       provider: 'local',
-      passwordHash: cleanPass,
+      passwordHash: hashPassword(cleanPass), // Terenkripsi hash (BUKAN plain text di AsyncStorage)
     };
 
     users.push(newUser);

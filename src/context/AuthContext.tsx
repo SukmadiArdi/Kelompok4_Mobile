@@ -73,8 +73,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     void restoreSession();
+
+    // Berlangganan perubahan sesi autentikasi secara real-time (Modul 4: onAuthStateChange)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+        console.log(`[Supabase Auth Event] ${event}`, session?.user?.id || 'No active session');
+
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.access_token) {
+            await SecureStore.setItemAsync('access_token', session.access_token).catch(() => {});
+          }
+          const currentUser = await authService.getCurrentUser();
+          if (currentUser && isMounted) {
+            setUser(currentUser);
+            setIsAuthenticated(true);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          await SecureStore.deleteItemAsync('access_token').catch(() => {});
+          if (isMounted) {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        }
+      }
+    );
+
     return () => {
       isMounted = false;
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
