@@ -14,6 +14,7 @@ import { Experience } from '../../types';
 import { Colors } from '../../constants/Theme';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { triggerLocalNotification } from '../../services/pushNotificationService';
 
 interface BookingModalProps {
   visible: boolean;
@@ -75,6 +76,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     );
     setConfirmedBookingId(booking.id);
     setIsSuccess(true);
+
+    // Kirim notifikasi nyata ke layar perangkat saat transaksi booking berhasil
+    triggerLocalNotification(
+      'E-Tiket Booking Diterbitkan! 🎟️',
+      `Jadwal ${experience.title} (${selectedDate} • ${currentSlot}) berhasil dikonfirmasi. Pemandu: ${experience.guide.name}.`,
+      {
+        screen: `/experience/${experience.id}`,
+        type: 'experience',
+        experienceId: experience.id,
+        bookingId: booking.id,
+      }
+    ).catch((err) => console.warn('[BookingModal] Gagal memicu notifikasi:', err));
 
     if (onSuccess) {
       onSuccess(booking.id);

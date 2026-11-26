@@ -16,6 +16,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/Theme';
 import { useApp } from '@/src/context/AppContext';
 import { Header } from '@/src/components/common/Header';
+import { triggerLocalNotification } from '@/src/services/pushNotificationService';
 
 export default function CartScreen() {
   const {
@@ -53,6 +54,16 @@ export default function CartScreen() {
       return;
     }
     setShowSuccessModal(true);
+    // Kirim notifikasi nyata ke layar perangkat saat transaksi checkout berhasil
+    triggerLocalNotification(
+      'Pesanan Budaya Dikonfirmasi! 🛍️',
+      `Pesanan ${cart.length} produk senilai ${formatPrice(grandTotal)} sedang diproses oleh pengrajin lokal.`,
+      {
+        screen: '/(tabs)/store',
+        type: 'order',
+        orderId: `ORD-${Date.now()}`,
+      }
+    ).catch((err) => console.warn('[CartScreen] Gagal memicu notifikasi:', err));
   };
 
   const handleFinishOrder = () => {
