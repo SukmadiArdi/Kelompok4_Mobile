@@ -81,6 +81,22 @@ export default function ModalScreen() {
       </Pressable>
 
       <Pressable
+        onPress={() => {
+          if (router.canDismiss()) {
+            router.dismiss();
+          } else if (router.canGoBack()) {
+            router.back();
+          }
+          setTimeout(() => {
+            router.push('/notifications' as any);
+          }, 80);
+        }}
+        style={({ pressed }) => [styles.notifBtn, pressed && { opacity: 0.85 }]}>
+        <Ionicons name="paper-plane-outline" size={18} color="#FFF" style={{ marginRight: 8 }} />
+        <Text style={styles.notifBtnText}>Uji Kirim Notifikasi — Task 02</Text>
+      </Pressable>
+
+      <Pressable
         onPress={() => router.push('/docs' as any)}
         style={styles.docsBtn}>
         <Ionicons name="book-outline" size={16} color="#FFF" style={{ marginRight: 6 }} />
@@ -187,6 +203,27 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     fontWeight: '700',
+  },
+  notifBtn: {
+    backgroundColor: '#EAB308',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    borderRadius: 12,
+    marginBottom: 10,
+    width: '100%',
+    shadowColor: '#CA8A04',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  notifBtnText: {
+    color: '#1E293B',
+    fontSize: 14,
+    fontWeight: '800',
   },
   docsBtn: {
     backgroundColor: '#222222',

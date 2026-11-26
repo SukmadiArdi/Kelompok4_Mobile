@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { Colors } from '../../constants/Theme';
 import { usePushNotification } from '../../hooks/usePushNotification';
 import { useAuth } from '../../context/AuthContext';
@@ -329,6 +330,16 @@ export const DeviceNotificationView: React.FC = () => {
             <Text style={styles.codeSpan}>src/services/notificationService.ts</Text> untuk mendeteksi tap notifikasi dan navigasi halaman.
           </Text>
         </View>
+
+        {/* Shortcut Navigasi Langsung ke Task 02 */}
+        <TouchableOpacity
+          style={styles.openTask02Btn}
+          onPress={() => router.push('/notifications')}
+          activeOpacity={0.85}>
+          <Ionicons name="paper-plane" size={16} color="#FFF" style={{ marginRight: 8 }} />
+          <Text style={styles.openTask02BtnText}>Buka Pengujian Task 02 (Kirim Notifikasi)</Text>
+          <Feather name="arrow-right" size={16} color="#FFF" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -657,5 +668,26 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     fontWeight: '700',
     color: Colors.primary,
+  },
+  openTask02Btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  openTask02BtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
   },
 });
