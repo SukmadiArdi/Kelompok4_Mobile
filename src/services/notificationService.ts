@@ -65,7 +65,6 @@ export async function setupAndroidNotificationChannel(): Promise<void> {
         enableLights: true,
         enableVibrate: true,
         showBadge: true,
-        sound: 'default',
       });
     } catch (err) {
       console.warn('[NotificationService] Gagal setup Android notification channel:', err);

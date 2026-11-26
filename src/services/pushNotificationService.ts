@@ -129,19 +129,22 @@ export async function triggerLocalNotification(
   data?: Record<string, any>
 ): Promise<string> {
   try {
-    // Pastikan channel notifikasi Android terdaftar dengan suara aktif dan prioritas MAX
+    // Pastikan channel notifikasi Android terdaftar dengan tingkat kepentingan MAX (suara aktif default)
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'PresidentKu & LokalTrip Notifications',
-        description: 'Saluran notifikasi pengumuman, booking, dan rekomendasi budaya',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF6B00',
-        enableLights: true,
-        enableVibrate: true,
-        showBadge: true,
-        sound: 'default',
-      });
+      try {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'PresidentKu & LokalTrip Notifications',
+          description: 'Saluran notifikasi pengumuman, booking, dan rekomendasi budaya',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF6B00',
+          enableLights: true,
+          enableVibrate: true,
+          showBadge: true,
+        });
+      } catch (chErr) {
+        console.warn('[NotificationService] setNotificationChannelAsync warning:', chErr);
+      }
     }
 
     const notificationId = await Notifications.scheduleNotificationAsync({
@@ -149,7 +152,7 @@ export async function triggerLocalNotification(
         title,
         body,
         data: data || { triggeredLocally: true, timestamp: Date.now() },
-        sound: 'default',
+        sound: true,
         priority: Notifications.AndroidNotificationPriority.MAX,
       },
       trigger: null, // null = tampilkan detik ini juga (instan)
