@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ExpoPushMessage,
@@ -128,12 +129,28 @@ export async function triggerLocalNotification(
   data?: Record<string, any>
 ): Promise<string> {
   try {
+    // Pastikan channel notifikasi Android terdaftar dengan suara aktif dan prioritas MAX
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'PresidentKu & LokalTrip Notifications',
+        description: 'Saluran notifikasi pengumuman, booking, dan rekomendasi budaya',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF6B00',
+        enableLights: true,
+        enableVibrate: true,
+        showBadge: true,
+        sound: 'default',
+      });
+    }
+
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body,
         data: data || { triggeredLocally: true, timestamp: Date.now() },
         sound: 'default',
+        priority: Notifications.AndroidNotificationPriority.MAX,
       },
       trigger: null, // null = tampilkan detik ini juga (instan)
     });

@@ -10,6 +10,7 @@ import { AppProvider } from '@/src/context/AppContext';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { Colors } from '@/src/constants/Theme';
 import { useNotificationResponse } from '@/hooks/useNotificationResponse';
+import { configureForegroundNotificationHandler } from '@/src/services/pushNotificationService';
 
 export {
   ErrorBoundary,
@@ -47,6 +48,10 @@ function RootLayoutNav({ fontsLoaded }: { fontsLoaded: boolean }) {
 
   // [WEEK 11 - TASK 03: GLOBAL NOTIFICATION TAP & DEEP LINK LISTENER]
   useNotificationResponse();
+
+  useEffect(() => {
+    configureForegroundNotificationHandler();
+  }, []);
 
   // Sembunyikan native splash screen setelah font & sesi auth siap dimuat
   useEffect(() => {
